@@ -1,0 +1,25 @@
+{
+  "name": "@mira/agent",
+  "version": "0.0.0",
+  "private": true,
+  "description": "mira-agent: Agent loop, tools, structured output, number injection, claim linter",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false src/main.ts",
+    "build": "tsx ../../scripts/build-service.ts",
+    "start": "node dist/main.js",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mira/runtime": "workspace:*",
+    "@mira/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}

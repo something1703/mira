@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^run_[a-z0-9]{6,64}$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "build_twin",
+        "match_shade",
+        "compose_look",
+        "proof_setup",
+        "proof_check_in",
+        "catalogue_ingest",
+        "demo"
+      ]
+    },
+    "userId": {
+      "type": "string",
+      "pattern": "^usr_[a-z0-9]{6,64}$"
+    },
+    "sessionId": {
+      "type": "string",
+      "pattern": "^ses_[a-z0-9]{6,64}$"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "running",
+        "partial",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "planId": {
+      "type": "string",
+      "pattern": "^plan_[a-z0-9]{6,64}$"
+    },
+    "quote": {
+      "type": "object",
+      "properties": {
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "nodeId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+              },
+              "label": {
+                "type": "string"
+              },
+              "feature": {
+                "type": "string"
+              },
+              "units": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "cached": {
+                "type": "boolean"
+              },
+              "optional": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "nodeId",
+              "label",
+              "feature",
+              "units",
+              "cached",
+              "optional"
+            ]
+          }
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sessionUnitsLeft": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "overCap": {
+          "type": "boolean"
+        },
+        "pricing": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "feature-cost",
+                "recorded"
+              ]
+            },
+            "pricedAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            }
+          },
+          "required": [
+            "source",
+            "pricedAt"
+          ]
+        }
+      },
+      "required": [
+        "lines",
+        "total",
+        "sessionUnitsLeft",
+        "overCap",
+        "pricing"
+      ]
+    },
+    "unitsSpent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "traceId": {
+      "type": "string",
+      "pattern": "^trc_[a-z0-9]{6,64}$"
+    },
+    "recorded": {
+      "type": "boolean"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "endedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "outputs": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "id",
+    "type",
+    "userId",
+    "sessionId",
+    "status",
+    "planId",
+    "quote",
+    "unitsSpent",
+    "traceId",
+    "recorded",
+    "startedAt"
+  ]
+}

@@ -1,0 +1,46 @@
+@import "../../../packages/ui/tokens/colors.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--mira-surface);
+  color: var(--mira-ink);
+  font-family: var(--font-ui), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.placeholder {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 96px 24px;
+}
+
+.placeholder svg {
+  width: 320px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.placeholder h1 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  font-size: 61px;
+  line-height: 64px;
+  margin: 48px 0 16px;
+}
+
+.placeholder p {
+  font-size: 20px;
+  line-height: 30px;
+  color: var(--mira-ink-2);
+  max-width: 34em;
+  margin: 0;
+}

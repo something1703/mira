@@ -1,0 +1,59 @@
+/*
+ * MIRA colour tokens (docs/DESIGN_SYSTEM.md §2). The only place raw colour values are allowed.
+ * Studio (light) is the default; Darkroom (dark) applies under [data-theme="dark"], or under
+ * prefers-color-scheme: dark unless the person chose light explicitly.
+ * --mira-mat is identical in both themes on purpose: the viewing surround stays constant.
+ */
+:root {
+  --mira-surface: #f2f2f2;
+  --mira-raised: #ffffff;
+  --mira-sunken: #e6e6e6;
+  --mira-ink: #202020;
+  --mira-ink-2: #555555;
+  --mira-ink-3: #6b6b6b;
+  --mira-rule: #d4d4d4;
+  --mira-mat: #777777;
+  --mira-accent: #3341d1;
+  --mira-accent-wash: rgb(51 65 209 / 0.1);
+  /* Text on an accent fill. */
+  --mira-on-accent: #ffffff;
+  /* Text and marks drawn on the mat (mat is L* ≈ 50 in both themes). */
+  --mira-on-mat: #ffffff;
+  --mira-drift: #8a5a00;
+  --mira-critical: #a1271b;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --mira-surface: #1e1e1e;
+  --mira-raised: #282828;
+  --mira-sunken: #161616;
+  --mira-ink: #ededed;
+  --mira-ink-2: #b5b5b5;
+  --mira-ink-3: #8f8f8f;
+  --mira-rule: #3a3a3a;
+  --mira-accent: #8c95ff;
+  --mira-accent-wash: rgb(140 149 255 / 0.14);
+  --mira-on-accent: #14163a;
+  --mira-drift: #e0a64a;
+  --mira-critical: #f2877b;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --mira-surface: #1e1e1e;
+    --mira-raised: #282828;
+    --mira-sunken: #161616;
+    --mira-ink: #ededed;
+    --mira-ink-2: #b5b5b5;
+    --mira-ink-3: #8f8f8f;
+    --mira-rule: #3a3a3a;
+    --mira-accent: #8c95ff;
+    --mira-accent-wash: rgb(140 149 255 / 0.14);
+    --mira-on-accent: #14163a;
+    --mira-drift: #e0a64a;
+    --mira-critical: #f2877b;
+    color-scheme: dark;
+  }
+}

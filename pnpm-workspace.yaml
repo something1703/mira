@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+  - services/*
+
+# Packages allowed to run install scripts (pnpm 11 blocks all others by default).
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+
+# Exact versions in every package.json; the lockfile is the source of truth.
+savePrefix: ""

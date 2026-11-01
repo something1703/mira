@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_]+)*$"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "feature": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "taskRunId": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "feature",
+            "version",
+            "taskRunId"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "within",
+            "small",
+            "clear",
+            "n/a"
+          ]
+        },
+        "measuredAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "kind": {
+          "type": "string",
+          "const": "number"
+        },
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "confidence",
+        "measuredAt",
+        "kind",
+        "value",
+        "unit"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_]+)*$"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "feature": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "taskRunId": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "feature",
+            "version",
+            "taskRunId"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "within",
+            "small",
+            "clear",
+            "n/a"
+          ]
+        },
+        "measuredAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "kind": {
+          "type": "string",
+          "const": "colour"
+        },
+        "lab": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "hex": {
+          "type": "string",
+          "pattern": "^#[0-9A-F]{6}$"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "confidence",
+        "measuredAt",
+        "kind",
+        "lab",
+        "hex"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_]+)*$"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "feature": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "taskRunId": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "feature",
+            "version",
+            "taskRunId"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "within",
+            "small",
+            "clear",
+            "n/a"
+          ]
+        },
+        "measuredAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "kind": {
+          "type": "string",
+          "const": "category"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "confidence",
+        "measuredAt",
+        "kind",
+        "value"
+      ]
+    }
+  ]
+}

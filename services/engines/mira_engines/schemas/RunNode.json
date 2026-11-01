@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^run_[a-z0-9]{6,64}$"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "youcam",
+        "engine",
+        "system"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "dependsOn": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+      }
+    },
+    "feature": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "params": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "cacheKey": {
+      "type": "string"
+    },
+    "fileId": {
+      "type": "string"
+    },
+    "taskId": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "running",
+        "waiting",
+        "done",
+        "cached",
+        "failed",
+        "skipped",
+        "cancelled"
+      ]
+    },
+    "unitsReserved": {
+      "default": 0,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "unitsCommitted": {
+      "default": 0,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "resultRef": {
+      "type": "string"
+    },
+    "audit": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "garment",
+            "lip",
+            "foundation",
+            "identity"
+          ]
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "drift",
+            "not_checked",
+            "withheld"
+          ]
+        },
+        "deltaE": {
+          "type": "number",
+          "minimum": 0
+        },
+        "directions": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "lighter",
+              "darker",
+              "warmer",
+              "cooler",
+              "more_muted",
+              "more_vivid"
+            ]
+          }
+        },
+        "reason": {
+          "type": "string"
+        },
+        "engineVersion": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "outcome",
+        "reason",
+        "engineVersion"
+      ]
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "upstream": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "unitsCharged": {
+          "type": "number",
+          "const": 0
+        }
+      },
+      "required": [
+        "code",
+        "retryable",
+        "unitsCharged"
+      ]
+    },
+    "attempts": {
+      "default": 0,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "optional": {
+      "default": false,
+      "type": "boolean"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "endedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    }
+  },
+  "required": [
+    "id",
+    "runId",
+    "kind",
+    "label",
+    "dependsOn",
+    "status"
+  ]
+}

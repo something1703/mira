@@ -1,0 +1,12 @@
+{
+  "name": "@mira/engines",
+  "version": "0.0.0",
+  "private": true,
+  "description": "mira-engines: Python measurement maths, wrapped so Turborepo runs it with the rest.",
+  "scripts": {
+    "dev": "uv run --frozen uvicorn mira_engines.api:app --host 0.0.0.0 --port ${PORT:-4040} --reload",
+    "lint": "uv run --frozen ruff check . && uv run --frozen ruff format --check .",
+    "typecheck": "uv run --frozen mypy",
+    "test": "uv run --frozen pytest"
+  }
+}

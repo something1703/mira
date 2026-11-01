@@ -1,0 +1,561 @@
+openapi: 3.0.0
+info:
+  title: AI Hair Color Virtual Try-On
+  description: >
+    # Overview
+
+    Explore a wide range of hair colors with our hair color changer! Try the
+    hair color you've always dreamed of and experiment with new shades you’ve
+    never tried before. Easily adjust the intensity of your chosen color with
+    sliders for a customized look.
+
+       * Upload Your Image
+
+    Upload the photo you want to change hair color for.
+
+       * Choose Preset Colors or Customize by Pattern and Palettes
+
+    Choose from predefined color presets or fine tune by adjusting the ombre
+    coverage and blend for unlimited possibilities!
+
+
+    > **Warning:** If both a preset and pattern + palettes are specified, the
+    preset will take priority.
+
+
+    > **Warning:** Your source image needs to contain the hair section for
+    dyeing, so double-check before applying. Make sure your source image
+    includes the hair area you want to dye — it's your responsibility to get it
+    right.
+
+
+    ![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/hair_color_s2_poster_dt_v2_49198cabc0.png)
+
+
+    ![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/01_1_1_8365c3b503.jpg)
+
+
+    ![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/01_2_1_abfcdb7eba.jpg)
+
+
+    ## File Specs & Errors
+
+    * Supported Formats & Dimensions
+
+
+    |AI Feature|Supported Dimensions|Supported File Size|Supported Formats|
+
+    |  ----  | ----  | ----  | ----  |
+
+    |AI Hair Color|long side < 1920, face width >= 100|< 10MB|jpg/jpeg/png|
+
+
+    * Error Codes
+
+
+    |Error Code|Description|
+
+    |  ----  | ----  |
+
+    |error_below_min_image_size|the size of the source image is smaller than
+    minimum (expect: width >= 320px, height >= 320px)
+
+    |error_exceed_max_image_size|the size of the source image is larger than
+    maximum (expect: width < 1920px, height < 1080px)
+
+
+    * Environment & Dependency
+
+
+    | Sample Code Language / Tool | Recommended Runtime Versions |
+
+    |---|---|
+
+    | cURL | - bash >= 3.2</br>   - curl >= 7.58 (modern TLS/HTTP
+    support)</br>   - jq >= 1.6 (robust JSON parsing) |
+
+    | Node.js (JavaScript) | Node >= 18 (for global fetch) |
+
+    | JavaScript | - Chrome / Edge >= 80</br>   - Firefox >= 74</br>   - Safari
+    >= 13.1 |
+
+    | PHP | PHP >= 7.4 (for modern TLS/compat), ext-curl (recommended) or
+    allow_url_fopen=On + ext-openssl, ext-json |
+
+    | Python | Python >= 3.10 (for f-strings), requests >= 2.20.0 |
+
+    | Java | Java 11+ (for HttpClient), Jackson Databind >= 2.12.0 |
+
+
+    ---
+
+
+    ## Unit Consumption
+
+
+    | AI Feature | Unit Consumed |
+
+    |---|---|
+
+    | AI Hair Color Virtual Try-On V1.0 | 1 unit for Full Mode <br> 1 unit for
+    Ombre Mode |
+
+
+    ---
+  version: ''
+  termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
+  contact:
+    email: YouCamOnlineEditor_API@perfectcorp.com
+  license:
+    name: Privacy policy
+    url: https://www.makeupar.com/perfectbeauty/youcam/privacy-policy-api
+servers:
+  - url: https://yce-api-01.makeupar.com
+tags:
+  - name: V1.0
+    description: >-
+      Change hair color on uploaded images using AI processing, supporting
+      presets and custom palettes.
+paths:
+  /s2s/v2.0/task/hair-color:
+    post:
+      summary: Run a Hair Color task.
+      description: >
+        This endpoint initiates the hair color change process. You must provide
+        a source file (via URL or File ID) and specify the color settings
+        (preset, pattern, or palettes). The task will be processed
+        asynchronously, and you can check its status using the task_id returned
+        in this response.
+      tags:
+        - V1.0
+      security:
+        - BearerAuthenticationV2: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunHairColorTaskV2'
+      responses:
+        '200':
+          description: Successful execution of the Hair Color task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicRunTaskResponseV2'
+        '400':
+          description: Failed execution of task
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/responses/RunError'
+        '401':
+          $ref: '#/components/responses/InvalidApiKey'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /s2s/v2.0/task/hair-color/{task_id}:
+    get:
+      summary: Check a Hair Color task status.
+      tags:
+        - V1.0
+      security:
+        - BearerAuthenticationV2: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
+          description: ID of task to check
+      responses:
+        '200':
+          description: Successful check of the Hair Color task status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatusResponseV2'
+        '400':
+          $ref: '#/components/responses/InvalidTaskId'
+        '401':
+          $ref: '#/components/responses/InvalidApiKey'
+        '500':
+          $ref: '#/components/responses/TaskTimeout'
+components:
+  securitySchemes:
+    BearerAuthenticationV2:
+      type: http
+      scheme: bearer
+      description: >-
+        Use the standard 'Bearer authentication'. Put your 'API Key' in header:
+        `Authorization:Bearer YOUR_API_KEY`. Notice that there is ' ' a space
+        between 'Bearer' and the 'YOUR_API_KEY'.
+  schemas:
+    EngineErrorCode:
+      type: string
+      nullable: true
+      enum:
+        - exceed_max_filesize
+        - invalid_parameter
+        - error_download_image
+        - error_decode_image
+        - error_nsfw_content_detected
+        - error_inference
+        - unknown_internal_error
+      description: |
+        Errors:
+
+        - `exceed_max_filesize` - Input file size exceeds the maximum limit
+
+        - `invalid_parameter` - Invalid parameter value
+
+        - `error_download_image` - Download source image error
+
+        - `error_decode_image` - Decode source image error
+
+        - `unknown_internal_error` - Others
+    FileV1.1:
+      title: File V1.1
+      description: This object represents a file.
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            required:
+              - content_type
+              - file_name
+              - file_size
+            properties:
+              content_type:
+                type: string
+                example: image/jpg
+                description: >-
+                  Content MIME type for this file. Currently available values
+                  are listed in the enum.
+              file_name:
+                type: string
+                example: my-selfie.jpg
+                description: Name of this file
+              file_size:
+                type: integer
+                example: 50000
+                description: >-
+                  Content length for this file in bytes. Should not be larger
+                  than 10MB.
+    BasicFileResponse:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            properties:
+              content_type:
+                type: string
+                example: image/jpg
+                description: Content MIME type for this file.
+              file_name:
+                type: string
+                example: my-selfie.jpg
+                description: Name of this file
+              file_id:
+                type: string
+                example: >-
+                  U8aqJbsXGT537jtGnEDFHqxdDXqh8+oTF/cSkLimzuvVwMP+Jb1XbjPsf7ZgUgLY
+                description: ID of this file. Other run task API will need this `file_id`.
+              requests:
+                type: array
+                description: >-
+                  Using upload `url`, `headers`, `method` below to upload file.
+                  After completion, the `file_id` is used to proceed with
+                  calling run task API.
+                items:
+                  type: object
+                  properties:
+                    headers:
+                      type: object
+                      example:
+                        Content-Type: image/jpg
+                        Content-Length: 50000
+                      description: Headers to include when uploading the file
+                    url:
+                      type: string
+                      example: https://example.com/presigned-upload-url
+                      description: URL to upload this file
+                    method:
+                      type: string
+                      example: PUT
+                      description: HTTP method to upload this file
+    FileResponseV2:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+          description: Response status
+        data:
+          $ref: '#/components/schemas/BasicFileResponse'
+    BasicRunTaskV2SrcFileUrl:
+      title: Run task with src file url
+      type: object
+      required:
+        - src_file_url
+      properties:
+        src_file_url:
+          type: string
+          description: Url of the file to run task. The url should be publicly accessible.
+          example: https://example.com/selfie.jpg
+    BasicRunTaskV2SrcFileId:
+      title: Run task with src file ID
+      type: object
+      required:
+        - src_file_id
+      properties:
+        src_file_id:
+          type: string
+          description: ID of file to run task. File ID from upload file API.
+          example: pfNK5PuRe0MrwLHcGA3DOmB1ahwfXTbYHjv+KoBIxbE=
+    BasicRunTaskV2:
+      title: BasicRunTaskV2
+      anyOf:
+        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+    RunHairColorTaskParams:
+      type: object
+      properties:
+        preset:
+          type: string
+          description: |
+            (optional; required if neither "pattern" nor "palettes" is provided)
+            Default hair color preset. Available for full mode: ['Jet Black',
+            'Chocolate Brown', 'Honey Blonde', 'Platinum Blonde', 'Ash Gray',
+            'Rose Gold', 'Burgundy', 'Copper Red', 'Lavender', 'Teal Blue']
+            Available for ombre mode: ['Dark Brown/Caramel Blonde', 'Jet
+            Black/Silver Gray', 'Ash Brown/Lavender', 'Rose Gold/Peach Blonde',
+            'Burgundy/Magenta Pink', 'Deep Blue/Teal Green', 'Plum Purple/Pastel
+            Lilac', 'Copper Red/Golden Blonde', 'Dark Gray/Ice Blonde',
+            'Midnight Blue/Denim Blue']
+          enum:
+            - Jet Black
+            - Chocolate Brown
+            - Honey Blonde
+            - Platinum Blonde
+            - Ash Gray
+            - Rose Gold
+            - Burgundy
+            - Copper Red
+            - Lavender
+            - Teal Blue
+            - Dark Brown/Caramel Blonde
+            - Jet Black/Silver Gray
+            - Ash Brown/Lavender
+            - Rose Gold/Peach Blonde
+            - Burgundy/Magenta Pink
+            - Deep Blue/Teal Green
+            - Plum Purple/Pastel Lilac
+            - Copper Red/Golden Blonde
+            - Dark Gray/Ice Blonde
+            - Midnight Blue/Denim Blue
+        pattern:
+          type: object
+          description: (optional; required if "preset" is not provided)
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              enum:
+                - ombre
+                - full
+              description: Pattern type (required)
+            blend_strength:
+              type: integer
+              minimum: 0
+              maximum: 100
+              description: (optional; required for ombre) Blend strength (0–100)
+            line_offset:
+              type: number
+              minimum: -0.99
+              maximum: 0.99
+              description: |
+                (optional; required for ombre) Vertical offset (–0.99 to 0.99).
+                0.99: top color covers 99% of bottom half;   –0.99: bottom color
+                covers 99% of top half
+            coloring_section:
+              type: string
+              enum:
+                - top
+              description: (optional; required for ombre) Section to color
+        palettes:
+          type: array
+          description: |
+            (optional; required if "preset" is not provided)   Array length 1
+            for full mode, 2 for ombre mode
+          minItems: 1
+          maxItems: 2
+          items:
+            type: object
+            required:
+              - color
+            properties:
+              color:
+                type: string
+                pattern: ^#([A-Fa-f0-9]{6})$
+                description: Hex color code
+              color_intensity:
+                type: integer
+                minimum: 0
+                maximum: 100
+                description: Color intensity (0–100)
+              shine_intensity:
+                type: integer
+                minimum: 0
+                maximum: 100
+                description: Shine intensity (0–100)
+    RunHairColorTaskV2:
+      title: RunHairColorTaskV2
+      description: This object represents a run AI Hair Color task.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: '#/components/schemas/RunHairColorTaskParams'
+    BasicRunTaskResponseV2:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 200
+        data:
+          type: object
+          properties:
+            task_id:
+              type: string
+              description: >-
+                ID of this task. Task result is valid to query by this ID for 24
+                hours.
+              example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
+    TaskStatusResponseBodySingleUrlResultsV2:
+      type: object
+      properties:
+        url:
+          type: string
+          description: URL to download this result. Valid for 2 hours
+          example: https://example.com/sample-result-url
+    TaskStatusResponseV2:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 200
+        data:
+          type: object
+          properties:
+            task_status:
+              type: string
+              enum:
+                - running
+                - success
+                - error
+              description: Status of this task
+            error:
+              $ref: '#/components/schemas/EngineErrorCode'
+            error_message:
+              type: string
+              description: Detailed description of error
+            results:
+              $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+  responses:
+    InvalidParameters:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 400
+                description: Response status
+              error:
+                type: string
+                description: Error message
+                example: The operation could not be completed
+              error_code:
+                type: string
+                enum:
+                  - InvalidParameters
+    InvalidApiKey:
+      description: Invalid API Key or Inactive API Key or Expired API Key
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 401
+                description: Response status
+              error_code:
+                type: string
+                enum:
+                  - InvalidApiKey
+                  - InactiveApiKey
+                  - ExpiredApiKey
+    TooManyRequests:
+      description: Too many requests within a given amount of time
+    RunError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 400
+        error:
+          type: string
+          description: Error message
+          example: The operation could not be completed
+        error_code:
+          type: string
+          enum:
+            - CreditInsufficiency
+            - InvalidStyleGroup
+            - InvalidStyle
+            - BadRequest
+            - InvalidParameters
+    TaskTimeout:
+      description: The task has no response in the expected time
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                description: Response status
+                example: 500
+              error_code:
+                type: string
+                enum:
+                  - TaskTimeout
+    InvalidTaskId:
+      description: Invalid task id
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                description: Response status
+                example: 400
+              error_code:
+                type: string
+                enum:
+                  - InvalidTaskId

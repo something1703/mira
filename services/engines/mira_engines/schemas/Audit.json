@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "garment",
+        "lip",
+        "foundation",
+        "identity"
+      ]
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "verified",
+        "drift",
+        "not_checked",
+        "withheld"
+      ]
+    },
+    "deltaE": {
+      "type": "number",
+      "minimum": 0
+    },
+    "directions": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "lighter",
+          "darker",
+          "warmer",
+          "cooler",
+          "more_muted",
+          "more_vivid"
+        ]
+      }
+    },
+    "reason": {
+      "type": "string"
+    },
+    "engineVersion": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "kind",
+    "outcome",
+    "reason",
+    "engineVersion"
+  ]
+}

@@ -1,0 +1,56 @@
+# Builds every service image and deploys it to Cloud Run. Run by a Cloud Build trigger on main,
+# or by hand: gcloud builds submit --config infra/cloudbuild.yaml --substitutions=_REGION=asia-south1
+substitutions:
+  _REGION: asia-south1
+  _REPO: mira
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  - id: web
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "infra/docker/web.Dockerfile", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/mira-web:$SHORT_SHA", "."]
+    waitFor: ["-"]
+  - id: engines
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "infra/docker/engines.Dockerfile", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/mira-engines:$SHORT_SHA", "."]
+    waitFor: ["-"]
+  - id: agent
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "infra/docker/node-service.Dockerfile", "--build-arg", "PACKAGE=@mira/agent", "--build-arg", "PACKAGE_DIR=apps/agent", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/mira-agent:$SHORT_SHA", "."]
+    waitFor: ["-"]
+  - id: workflows
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "infra/docker/node-service.Dockerfile", "--build-arg", "PACKAGE=@mira/workflows", "--build-arg", "PACKAGE_DIR=apps/workflows", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/mira-workflows:$SHORT_SHA", "."]
+    waitFor: ["-"]
+  - id: webhook
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "infra/docker/node-service.Dockerfile", "--build-arg", "PACKAGE=@mira/webhook", "--build-arg", "PACKAGE_DIR=apps/webhook", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/mira-webhook:$SHORT_SHA", "."]
+    waitFor: ["-"]
+  - id: mcp
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "infra/docker/node-service.Dockerfile", "--build-arg", "PACKAGE=@mira/mira-mcp", "--build-arg", "PACKAGE_DIR=packages/mira-mcp", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/mira-mcp:$SHORT_SHA", "."]
+    waitFor: ["-"]
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        for s in web engines agent workflows webhook mcp; do
+          docker push ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/mira-$$s:$SHORT_SHA
+        done
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        for s in web engines agent workflows webhook mcp; do
+          gcloud run deploy mira-$$s --region ${_REGION} \
+            --image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/mira-$$s:$SHORT_SHA --quiet
+        done

@@ -1,0 +1,18 @@
+pnpm-lock.yaml
+node_modules/
+.next/
+dist/
+coverage/
+.turbo/
+.mira/
+playwright-report/
+test-results/
+services/engines/
+infra/
+packages/youcam-client/openapi/
+packages/youcam-client/src/generated/
+packages/fixtures/recorded/
+assets/
+# Hand-written reference documents; formatting them would churn prose tables
+*.md
+mira-ui-reference.html

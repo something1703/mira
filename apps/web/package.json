@@ -1,0 +1,32 @@
+{
+  "name": "@mira/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "mira-web: Next.js UI, JS Camera Kit capture, brand console.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port ${PORT:-3000}",
+    "build": "next build",
+    "start": "next start --port ${PORT:-3000}",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@mira/schemas": "workspace:*",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint-config-next": "16.4.3",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}

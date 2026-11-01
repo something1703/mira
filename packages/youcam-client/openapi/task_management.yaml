@@ -1,0 +1,105 @@
+openapi: 3.0.0
+info:
+  title: Task Management
+  version: ''
+  termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
+  contact:
+    email: YouCamOnlineEditor_API@perfectcorp.com
+  license:
+    name: Privacy policy
+    url: https://www.makeupar.com/perfectbeauty/youcam/privacy-policy-api
+servers:
+  - url: https://yce-api-01.makeupar.com
+paths:
+  /s2s/v2.0/task/delete:
+    post:
+      summary: Delete a task and its files.
+      description: >-
+        Delete a finished task identified by task_id, including all associated
+        input files and generated outputs. Provide the `task_id` returned by the
+        task's run endpoint.
+      security:
+        - BearerAuthenticationV2: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - task_id
+              properties:
+                task_id:
+                  type: string
+                  description: The task id returned by the task's run endpoint.
+                  example: >-
+                    grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
+      responses:
+        '200':
+          description: The task and its files were deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: Response status
+                    example: 200
+        '400':
+          description: Failed to delete the task
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/responses/DeleteTaskError'
+        '401':
+          $ref: '#/components/responses/InvalidApiKey'
+components:
+  responses:
+    DeleteTaskError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 400
+        error:
+          type: string
+          description: Error message
+          example: Operation not supported
+        error_code:
+          type: string
+          enum:
+            - OperationNotSupport
+            - OperationInvalid
+            - InvalidTaskId
+            - InvalidParameters
+          description: |
+            Error code:
+              * OperationNotSupport - The provided task_id is not accepted; use the task_id returned by the run endpoint
+              * OperationInvalid - The task has not finished yet and cannot be deleted
+              * InvalidTaskId - The task_id is malformed or no matching task was found
+              * InvalidParameters - task_id is missing
+    InvalidApiKey:
+      description: Invalid or missing API key
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 401
+                description: Response status
+              error:
+                type: string
+                example: Invalid API key
+  securitySchemes:
+    BearerAuthenticationV2:
+      type: http
+      scheme: bearer
+      description: >-
+        Use the standard 'Bearer authentication'. Put your 'API Key' in header:
+        `Authorization:Bearer YOUR_API_KEY`. Notice that there is ' ' a space
+        between 'Bearer' and the 'YOUR_API_KEY'.

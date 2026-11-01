@@ -1,0 +1,641 @@
+openapi: 3.0.0
+info:
+  title: AI Hair Frizziness Detection
+  description: >
+    # Overview
+
+    180° Full View Hair Frizz Analysis with Just 3 Photos
+
+
+    Our AI Frizzy Hair Analyzer delivers precise hair frizz analysis in seconds
+    by simply uploading 3 photos—front, left, and right views of the hair.
+
+
+    This efficient process delivers accurate results in seconds, enabling
+    businesses to offer tailored hair solutions and defrizz hair products based
+    on hair frizz levels, without the need for time-consuming in-person
+    consultations, complicated hair quizzes, or specialized hardware
+    installations.
+
+    ![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/hair_frizzy_S_02_enu_b80c238858.jpg)
+
+
+    ## Integration Guide
+
+
+    1. **Upload a Selfie**
+      You can provide the source image in one of two ways:
+
+      - **Use an Existing Public Image URL**
+        Instead of uploading, you may supply a publicly accessible image URL directly when initiating the AI task.
+
+      - **Upload via File API**
+        Use the endpoint:
+        ```
+        POST /s2s/v2.0/file
+        ```
+        This returns a `file_id` for subsequent task execution.
+
+        - ***Important***: Simply calling the File API does not upload your file. You must **manually upload** the file to the **URL provided in the File API response**. That URL is your upload destination, make sure the file is successfully transferred there before proceeding.
+
+        Before calling the AI API, ensure your file has been successfully uploaded. Use the File API to retrieve an upload URL, then upload your file to that location. Once the upload is complete, you'll receive a ***file_id*** in the response, this ID is what you'll use to access AI features related to that file.
+
+          > **Warning:** Please note that, you will get an 500 Server Error / unknown_internal_error or 404 Not Found error when using AI APIs if you do not upload the file to the URL provided in the File API response.
+
+    2.  **Run an AI Task to Obtain a Task ID**
+        Execute the AI task using /s2s/v2.0/task/hair-frizziness-detection. For the target user image, provide either ``src_file_url`` or ``src_file_id``. And a stype ``template_id`` to apply and obtain a ``task_id``.
+
+    3.  **Poll to Check the Status of a Task Until It Succeeds or Fails**
+        Use the ``task_id`` to monitor the task status by polling GET /s2s/v2.0/task/hair-frizziness-detection to retrieve the current engine status. Until the engine completes the task, the status will remain as running, and no units will be consumed during this stage.
+        You can also implement a webhook to receive notifications when an AI task succeeds or fails. Refer to the **[Webhook](../../../../develop/webhook)** section for details.
+
+        > **Warning:** Polling to check the status of a task within its retention period is mandatory. A task will time out if there is no polling request within the retention period, even if the task is processed successfully. Your units will still be consumed.
+
+        > **Warning:** You will receive an InvalidTaskId error if you check the status of a timed-out task. Therefore, once you run an AI task, you must poll to check the status within the retention period until the status becomes either success or error.
+
+    4.  **Retrieve the Result of an AI Task Once Successful**
+        The task status will change to success after the engine processes your input file and generates the resulting image. You will receive a URL for the processed image.
+
+    ## Inputs & Outputs
+
+    * Input format
+
+    ![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/hair_frizzy_step_01_ac5c651ea4.png)
+
+    Upload 3 photos - front, left, and right views of the hair.
+
+    You can utilize the JS Camera Kit to implement a Javascript camera module to
+    take 3 qualified photos.
+
+
+
+    * Output format
+
+    AI Frizzy Hair Analyzer assesses hair types and identifies 4 distinct
+    degrees of hair frizz - from smooth hair to extremely frizzy hair, offering
+    precise insights into hair frizz condition.
+
+
+    | **Mapping (0–3)** | **Term**            |
+    **Description**                                           |
+
+    | ----------------- | ------------------- |
+    --------------------------------------------------------- |
+
+    | 0             | Not Frizzy      | Hair appears smooth with minimal or no
+    visible frizz.     |
+
+    | 1            | Slightly Frizzy | Light frizz visible; mild surface texture
+    irregularities. |
+
+    | 2             | Frizzy         | Noticeable frizz across hair; clear
+    texture disruption.   |
+
+    | 3             | Extreme Frizzy  | Strong, widespread frizz; highly
+    irregular hair texture.  |
+
+
+    ![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/hair_frizzy_S_01_enu_fcd10905ff.jpg)
+
+
+    * Sample Output
+
+    ```json
+
+    {
+      "mapping": 1, // number; the key to map of result, alternatives: [0, 1, 2, 3]
+      "term": "Slightly Frizzy" // string; 1-1 map to the "mapping", alternatives: ["Not Frizzy", "Slightly Frizzy", "Frizzy", "Extreme Frizzy"]
+    }
+
+    ```
+
+
+    ## File Specs & Errors
+
+    * Supported Formats & Dimensions
+
+
+    |Type|Supported Dimensions|Supported File Size|Supported Formats|
+
+    |  ----  | ----  | ----  | ----  |
+
+    |AI Hair Frizziness Detection|The image must be at least 320 pixels wide and
+    tall, and no more than 4096 pixels in either dimension. If one side of your
+    image is longer than 1080 pixels, it will be resized automatically to fit
+    within that limit for analysis.|< 10MB|jpg/png|
+
+
+    * Error Codes
+
+
+    |Error Code|Description|
+
+    |  ----  | ----  |
+
+    |error_mismatch_image_size|Make sure all your face photos (front, left, and
+    right) are the same size|
+
+    |error_below_min_image_size|If your image is smaller than 320 pixels in
+    width or height, it's too small to use|
+
+    |error_face_position_invalid|Your face needs to be fully visible in the
+    image, without any parts cut off|
+
+    |error_face_position_too_small|The face in your photo is too small to
+    analyze properly|
+
+    |error_face_position_out_of_boundary|Your face is either too large or
+    partially outside the edges of the photo|
+
+    |error_insufficient_lighting|The lighting is too dim, which makes analysis
+    difficult|
+
+    |error_face_angle_invalid|Your face angle isn't quite right. For
+    front-facing shots, keep your head within 10 degrees of straight. For
+    side-facing shots, the angle should be more than 15 degrees|
+
+
+    * Environment & Dependency
+
+
+    | Sample Code Language / Tool | Recommended Runtime Versions |
+
+    |---|---|
+
+    | cURL | - bash >= 3.2</br>   - curl >= 7.58 (modern TLS/HTTP
+    support)</br>   - jq >= 1.6 (robust JSON parsing) |
+
+    | Node.js (JavaScript) | Node >= 18 (for global fetch) |
+
+    | JavaScript | - Chrome / Edge >= 80</br>   - Firefox >= 74</br>   - Safari
+    >= 13.1 |
+
+    | PHP | PHP >= 7.4 (for modern TLS/compat), ext-curl (recommended) or
+    allow_url_fopen=On + ext-openssl, ext-json |
+
+    | Python | Python >= 3.10 (for f-strings), requests >= 2.20.0 |
+
+    | Java | Java 11+ (for HttpClient), Jackson Databind >= 2.12.0 |
+
+
+    ---
+
+
+    ## JS Camera Kit
+
+    {% partial file="/_partials/js-camera-kit.md" /%}
+
+
+    ---
+
+
+    ## Unit Consumption
+
+
+    | AI Feature | Unit Consumed |
+
+    |---|---|
+
+    | AI Hair Frizziness Detection V1.0 | 2 |
+
+
+    ---
+  version: ''
+  termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
+  contact:
+    email: YouCamOnlineEditor_API@perfectcorp.com
+  license:
+    name: Privacy policy
+    url: https://www.makeupar.com/perfectbeauty/youcam/privacy-policy-api
+servers:
+  - url: https://yce-api-01.makeupar.com
+tags:
+  - name: V1.0
+    description: >-
+      AI Hair Frizziness Detection API allows you to detect the frizziness of
+      hair in images using three-angle input (front, right, left).
+paths:
+  /s2s/v2.0/task/hair-frizziness-detection:
+    post:
+      summary: Run an Hair Frizziness Detection task.
+      description: Please refer to the polling guide for checking task status.
+      tags:
+        - V1.0
+      security:
+        - BearerAuthenticationV2: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicFaceAttrReqFaceThreeAngle'
+      responses:
+        '200':
+          description: Successful execution of the task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicRunTaskResponseV2'
+        '400':
+          description: Failed execution of task
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/responses/RunError'
+        '401':
+          $ref: '#/components/responses/InvalidApiKey'
+        '429':
+          description: Too many requests within a given amount of time
+          content:
+            application/json:
+              schema:
+                type: object
+  /s2s/v2.0/task/hair-frizziness-detection/{task_id}:
+    get:
+      summary: Check an Hair Frizziness Detection task status.
+      tags:
+        - V1.0
+      security:
+        - BearerAuthenticationV2: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
+          description: ID of task to check
+      responses:
+        '200':
+          description: Successful check of the task status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatusResponseHairFrizz'
+        '400':
+          $ref: '#/components/responses/InvalidTaskId'
+        '401':
+          $ref: '#/components/responses/InvalidApiKey'
+        '500':
+          $ref: '#/components/responses/TaskTimeout'
+components:
+  schemas:
+    FileV1.1:
+      title: File V1.1
+      description: This object represents a file.
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            required:
+              - content_type
+              - file_name
+              - file_size
+            properties:
+              content_type:
+                type: string
+                example: image/jpg
+                description: >-
+                  Content MIME type for this file. Currently available values
+                  are listed in the enum.
+              file_name:
+                type: string
+                example: my-selfie.jpg
+                description: Name of this file
+              file_size:
+                type: integer
+                example: 50000
+                description: >-
+                  Content length for this file in bytes. Should not be larger
+                  than 10MB.
+    BasicFileResponse:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            properties:
+              content_type:
+                type: string
+                example: image/jpg
+                description: Content MIME type for this file.
+              file_name:
+                type: string
+                example: my-selfie.jpg
+                description: Name of this file
+              file_id:
+                type: string
+                example: >-
+                  U8aqJbsXGT537jtGnEDFHqxdDXqh8+oTF/cSkLimzuvVwMP+Jb1XbjPsf7ZgUgLY
+                description: ID of this file. Other run task API will need this `file_id`.
+              requests:
+                type: array
+                description: >-
+                  Using upload `url`, `headers`, `method` below to upload file.
+                  After completion, the `file_id` is used to proceed with
+                  calling run task API.
+                items:
+                  type: object
+                  properties:
+                    headers:
+                      type: object
+                      example:
+                        Content-Type: image/jpg
+                        Content-Length: 50000
+                      description: Headers to include when uploading the file
+                    url:
+                      type: string
+                      example: https://example.com/presigned-upload-url
+                      description: URL to upload this file
+                    method:
+                      type: string
+                      example: PUT
+                      description: HTTP method to upload this file
+    FileResponseV2:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+          description: Response status
+        data:
+          $ref: '#/components/schemas/BasicFileResponse'
+    BasicFaceAttrReqFaceThreeAngleWithSrcFileUrls:
+      title: Run task with 3 angle src file urls
+      type: object
+      required:
+        - src_file_urls
+      properties:
+        src_file_urls:
+          type: array
+          minItems: 3
+          maxItems: 3
+          description: >-
+            The file URLs from upload file API. The file IDs for the sequence of
+            source images are 'frontFace', 'rightFace', and 'leftFace'. Should
+            provide either 'src_file_urls' or 'src_file_ids'.
+          example:
+            - https://example.com/selfie.jpg
+            - https://example.com/selfie.jpg
+            - https://example.com/selfie.jpg
+          items:
+            type: string
+    BasicFaceAttrReqFaceThreeAngleWithSrcFileIds:
+      title: Run task with 3 angle src file IDs
+      type: object
+      required:
+        - src_file_ids
+      properties:
+        src_file_ids:
+          type: array
+          minItems: 3
+          maxItems: 3
+          description: >-
+            The file IDs from upload file API. The file IDs for the sequence of
+            source images are 'frontFace', 'rightFace', and 'leftFace'. Should
+            provide either 'src_file_urls' or 'src_file_ids'.
+          example:
+            - pfNK5PuRe0MrwLHcGA3DOmB1ahwfXTbYHjv+KoBIxbE=
+            - pkVzplMv8Y1QPgHbqtKfyJmg+xJDUbTP16YijZ3qARNf
+            - B5LNohvvO+7d/78Ymuhp6vMiSooN/5DX9oVuupzkKctf
+          items:
+            type: string
+    BasicFaceAttrReqFaceThreeAngle:
+      anyOf:
+        - $ref: '#/components/schemas/BasicFaceAttrReqFaceThreeAngleWithSrcFileUrls'
+        - $ref: '#/components/schemas/BasicFaceAttrReqFaceThreeAngleWithSrcFileIds'
+    BasicRunTaskResponseV2:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 200
+        data:
+          type: object
+          properties:
+            task_id:
+              type: string
+              description: >-
+                ID of this task. Task result is valid to query by this ID for 24
+                hours.
+              example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
+    EngineErrorCode:
+      type: string
+      nullable: true
+      enum:
+        - exceed_max_filesize
+        - invalid_parameter
+        - error_download_image
+        - error_download_mask
+        - error_decode_image
+        - error_decode_mask
+        - error_nsfw_content_detected
+        - error_no_face
+        - error_pose
+        - error_face_parsing
+        - error_inference
+        - exceed_nsfw_retry_limits
+        - error_upload
+        - unknown_internal_error
+      description: >
+        Errors:
+
+        - `exceed_max_filesize` - Input file size exceeds the maximum limit
+
+        - `invalid_parameter` - Invalid parameter value
+
+        - `error_download_image` - Download source image error
+
+        - `error_download_mask` - Download mask image error
+
+        - `error_decode_image` - Decode source image error
+
+        - `error_decode_mask` - Decode mask image error
+
+        - `error_nsfw_content_detected` - NSFW content detected in source image
+
+        - `error_no_face` - No face detected on source image
+
+        - `error_pose` - Failed to detect pose on source image
+
+        - `error_face_parsing` - Failed to do face segmentation on source image
+
+        - `error_inference` - Inference pipeline error
+
+        - `exceed_nsfw_retry_limits` - Exceed the retry limits to avoid
+        generated NSFW image
+
+        - `error_upload` - Upload result image error
+
+        - `unknown_internal_error` - Others
+    BasicFaceAttrRespHairFrizziness:
+      type: object
+      properties:
+        mapping:
+          type: number
+          description: The key to map of result
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        term:
+          type: string
+          description: 1-1 map to the "mapping"
+          enum:
+            - Not Frizzy
+            - Slightly Frizzy
+            - Frizzy
+            - Extreme Frizzy
+    TaskStatusResponseHairFrizz:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 200
+        data:
+          type: object
+          properties:
+            task_status:
+              type: string
+              enum:
+                - running
+                - success
+                - error
+              description: Status of this task
+            error:
+              $ref: '#/components/schemas/EngineErrorCode'
+            error_message:
+              type: string
+              description: Detailed description of error
+            results:
+              allOf:
+                - type: object
+                  properties:
+                    hair_frizziness:
+                      $ref: '#/components/schemas/BasicFaceAttrRespHairFrizziness'
+  responses:
+    InvalidParameters:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 400
+                description: Response status
+              error:
+                type: string
+                description: Error message
+                example: The operation could not be completed
+              error_code:
+                type: string
+                enum:
+                  - InvalidParameters
+                description: |
+                  Error code:
+                    * InvalidParameters - Invalid request parameters or body
+    InvalidApiKey:
+      description: Invalid API Key or Inactive API Key or Expired API Key
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 401
+                description: Response status
+              error_code:
+                type: string
+                enum:
+                  - InvalidApiKey
+                  - InactiveApiKey
+                  - ExpiredApiKey
+                description: |
+                  Error code:
+                    * InvalidApiKey - API Key is not given or not valid
+                    * InactiveApiKey - API Key is inactivated
+                    * ExpiredApiKey - API Key is expired
+    RunError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 400
+        error:
+          type: string
+          description: Error message
+          example: The operation could not be completed
+        error_code:
+          type: string
+          enum:
+            - CreditInsufficiency
+            - InvalidStyleGroup
+            - InvalidStyle
+            - BadRequest
+            - InvalidParameters
+          description: |
+            Error code:
+              * CreditInsufficiency - Insufficient unit to run
+              * BadRequest - Unexpected request parameter
+              * InvalidStyleGroup - Invalid style group id
+              * InvalidStyle - Invalid style id
+              * InvalidParameters - Invalid request parameters
+    InvalidTaskId:
+      description: Invalid task id
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                description: Response status
+                example: 400
+              error_code:
+                type: string
+                enum:
+                  - InvalidTaskId
+                description: |
+                  Error code:
+                    * InvalidTaskId - Invalid task id
+    TooManyRequests:
+      description: Too many requests within a given amount of time
+    TaskTimeout:
+      description: The task has no response in the expected time
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                description: Response status
+                example: 500
+              error_code:
+                type: string
+                enum:
+                  - TaskTimeout
+                description: |
+                  Error code:
+                    * TaskTimeout - The task has no response in the expected time
+  securitySchemes:
+    BearerAuthenticationV2:
+      type: http
+      scheme: bearer
+      description: >-
+        Use the standard 'Bearer authentication'. Put your 'API Key' in header:
+        `Authorization:Bearer YOUR_API_KEY`. Notice that there is ' ' a space
+        between 'Bearer' and the 'YOUR_API_KEY'.

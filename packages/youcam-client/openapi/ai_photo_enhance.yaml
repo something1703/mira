@@ -1,0 +1,376 @@
+openapi: 3.0.0
+info:
+  title: AI Photo Enhance
+  description: "# Overview\nAI Photo Enhance uses advanced AI and deep learning to analyze image details and improve resolution, making low-resolution images clear & fix motion blur.\n * No More Pixelation: Eliminate pixelation for smoother, more defined images.\n * Fix Blurry Photos: Remove blurriness to reveal sharper, crisper details.\n * Enhance Quality: Bring out finer details, making every part of your image stand out.\n * Sharpen Images: Increase sharpness for clearer and more vivid images.\n * Improve Clarity: Boost overall clarity to make your photos look fresh and professional.\n * Face Enhancement: Refine facial features for more lifelike, enhanced portraits in motional images.\n\nBefore sample:\n![AI Photo Enhance](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_s5_poster_1_0779bbdbdb.jpg \"AI Photo Enhance\")\n\nAfter sample:\n![AI Photo Enhance](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_s5_poster_2_a2e15250ef.jpg \"AI Photo Enhance\")\n\n\nBefore sample:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_s2_poster_1_4cd6425807.jpg)\n\nAfter sample:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_s2_poster_2_7674281362.jpg)\n\n---\n\n## File Specs & Errors\n* Supported Formats & Dimensions\n\n| AI Feature | Supported Dimensions | Supported File Size | Supported Formats |\n| ---- | ---- | ----  | ---- |\n| AI Photo Enhance | long side <= 4096 | < 10MB | jpg/jpeg/png |\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n| exceed_max_filesize |\tInput file size exceeds the maximum limit |\n| invalid_parameter |\tInvalid parameter value |\n| error_download_image\t| Download source image error |\n| error_decode_image\t| Decode source image error |\n| error_nsfw_content_detected\t| NSFW content detected in source image |\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Photo Enhance V1.0 | 2 |\n\n---\n"
+  version: ''
+  termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
+  contact:
+    email: YouCamOnlineEditor_API@perfectcorp.com
+  license:
+    name: Privacy policy
+    url: https://www.makeupar.com/perfectbeauty/youcam/privacy-policy-api
+servers:
+  - url: https://yce-api-01.makeupar.com
+tags:
+  - name: V1.0
+    description: >-
+      Improve image quality, resolution, and clarity using AI-powered
+      enhancement tools.
+paths:
+  /s2s/v2.0/task/enhance:
+    post:
+      summary: Run an AI Photo Enhance task.
+      description: >
+        This endpoint initiates the photo enhancement process. You must provide
+        a file ID obtained from the file upload API. The task will be processed
+        asynchronously, and you can check its status using the task_id returned
+        in this response.
+      tags:
+        - V1.0
+      security:
+        - BearerAuthenticationV2: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - type: object
+                  required:
+                    - scale
+                  properties:
+                    scale:
+                      type: integer
+                      description: Scaling ratio. Available values are 1, 2, 4.
+                      enum:
+                        - 1
+                        - 2
+                        - 4
+                      example: 1
+      responses:
+        '200':
+          description: Successful execution of the task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicRunTaskResponseV2'
+        '400':
+          description: Failed execution of task
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/responses/RunError'
+        '401':
+          $ref: '#/components/responses/InvalidApiKey'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /s2s/v2.0/task/enhance/{task_id}:
+    get:
+      summary: Check an AI Photo Enhance task status.
+      tags:
+        - V1.0
+      security:
+        - BearerAuthenticationV2: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
+          description: ID of task to check
+      responses:
+        '200':
+          description: Successful check of the task status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatusResponseV2'
+        '400':
+          $ref: '#/components/responses/InvalidTaskId'
+        '401':
+          $ref: '#/components/responses/InvalidApiKey'
+        '500':
+          $ref: '#/components/responses/TaskTimeout'
+components:
+  securitySchemes:
+    BearerAuthenticationV2:
+      type: http
+      scheme: bearer
+      description: >-
+        Use the standard 'Bearer authentication'. Put your 'API Key' in header:
+        `Authorization:Bearer YOUR_API_KEY`. Notice that there is ' ' a space
+        between 'Bearer' and the 'YOUR_API_KEY'.
+  schemas:
+    EngineErrorCode:
+      type: string
+      nullable: true
+      enum:
+        - exceed_max_filesize
+        - invalid_parameter
+        - error_download_image
+        - error_download_mask
+        - error_decode_image
+        - error_decode_mask
+        - error_nsfw_content_detected
+        - error_no_face
+        - error_pose
+        - error_face_parsing
+        - error_inference
+        - exceed_nsfw_retry_limits
+        - error_upload
+        - unknown_internal_error
+      description: |
+        Errors:
+        - `exceed_max_filesize` - Input file size exceeds the maximum limit
+        - `invalid_parameter` - Invalid parameter value
+        - `error_download_image` - Download source image error
+        - `error_decode_image` - Decode source image error
+        - `unknown_internal_error` - Others
+    FileV1.1:
+      title: File V1.1
+      description: This object represents a file.
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            required:
+              - content_type
+              - file_name
+              - file_size
+            properties:
+              content_type:
+                type: string
+                example: image/jpg
+                description: >-
+                  Content MIME type for this file. Currently available values
+                  are listed in the enum.
+              file_name:
+                type: string
+                example: my-selfie.jpg
+                description: Name of this file
+              file_size:
+                type: integer
+                example: 50000
+                description: >-
+                  Content length for this file in bytes. Should not be larger
+                  than 10MB.
+    BasicFileResponse:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            properties:
+              content_type:
+                type: string
+                example: image/jpg
+                description: Content MIME type for this file.
+              file_name:
+                type: string
+                example: my-selfie.jpg
+                description: Name of this file
+              file_id:
+                type: string
+                example: >-
+                  U8aqJbsXGT537jtGnEDFHqxdDXqh8+oTF/cSkLimzuvVwMP+Jb1XbjPsf7ZgUgLY
+                description: ID of this file. Other run task API will need this `file_id`.
+              requests:
+                type: array
+                description: >-
+                  Using upload `url`, `headers`, `method` below to upload file.
+                  After completion, the `file_id` is used to proceed with
+                  calling run task API.
+                items:
+                  type: object
+                  properties:
+                    headers:
+                      type: object
+                      example:
+                        Content-Type: image/jpg
+                        Content-Length: 50000
+                      description: Headers to include when uploading the file
+                    url:
+                      type: string
+                      example: https://example.com/presigned-upload-url
+                      description: URL to upload this file
+                    method:
+                      type: string
+                      example: PUT
+                      description: HTTP method to upload this file
+    FileResponseV2:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+          description: Response status
+        data:
+          $ref: '#/components/schemas/BasicFileResponse'
+    BasicRunTaskV2SrcFileUrl:
+      title: Run task with src file url
+      type: object
+      required:
+        - src_file_url
+      properties:
+        src_file_url:
+          type: string
+          description: Url of the file to run task. The url should be publicly accessible.
+          example: https://example.com/selfie.jpg
+    BasicRunTaskV2SrcFileId:
+      title: Run task with src file ID
+      type: object
+      required:
+        - src_file_id
+      properties:
+        src_file_id:
+          type: string
+          description: ID of file to run task. File ID from upload file API.
+          example: pfNK5PuRe0MrwLHcGA3DOmB1ahwfXTbYHjv+KoBIxbE=
+    BasicRunTaskV2:
+      title: BasicRunTaskV2
+      anyOf:
+        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+    BasicRunTaskResponseV2:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 200
+        data:
+          type: object
+          properties:
+            task_id:
+              type: string
+              description: >-
+                ID of this task. Task result is valid to query by this ID for 24
+                hours.
+              example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
+    TaskStatusResponseBodySingleUrlResultsV2:
+      type: object
+      properties:
+        url:
+          type: string
+          description: URL to download this result. Valid for 2 hours
+          example: https://example.com/sample-result-url
+    TaskStatusResponseV2:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 200
+        data:
+          type: object
+          properties:
+            task_status:
+              type: string
+              enum:
+                - running
+                - success
+                - error
+              description: Status of this task
+            error:
+              $ref: '#/components/schemas/EngineErrorCode'
+            error_message:
+              type: string
+              description: Detailed description of error
+            results:
+              $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+  responses:
+    InvalidParameters:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 400
+                description: Response status
+              error:
+                type: string
+                description: Error message
+                example: The operation could not be completed
+              error_code:
+                type: string
+                enum:
+                  - InvalidParameters
+    InvalidApiKey:
+      description: Invalid API Key or Inactive API Key or Expired API Key
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 401
+                description: Response status
+              error_code:
+                type: string
+                enum:
+                  - InvalidApiKey
+                  - InactiveApiKey
+                  - ExpiredApiKey
+    RunError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Response status
+          example: 400
+        error:
+          type: string
+          description: Error message
+          example: The operation could not be completed
+        error_code:
+          type: string
+          enum:
+            - CreditInsufficiency
+            - InvalidStyleGroup
+            - InvalidStyle
+            - BadRequest
+            - InvalidParameters
+    TooManyRequests:
+      description: Too many requests within a given amount of time
+    TaskTimeout:
+      description: The task has no response in the expected time
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                description: Response status
+                example: 500
+              error_code:
+                type: string
+                enum:
+                  - TaskTimeout
+    InvalidTaskId:
+      description: Invalid task id
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                description: Response status
+                example: 400
+              error_code:
+                type: string
+                enum:
+                  - InvalidTaskId

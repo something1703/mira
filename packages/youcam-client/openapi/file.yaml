@@ -1,0 +1,172 @@
+openapi: 3.0.0
+info:
+  title: File Management
+  version: ''
+  termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
+  contact:
+    email: YouCamOnlineEditor_API@perfectcorp.com
+  license:
+    name: Privacy policy
+    url: https://www.makeupar.com/perfectbeauty/youcam/privacy-policy-api
+servers:
+  - url: https://yce-api-01.makeupar.com
+paths:
+  /s2s/v2.0/file:
+    post:
+      summary: Create a new file.
+      description: >-
+        To upload a new file, you'll first need to use the File API. It will
+        give you a URL – use that URL to upload your file. Once the upload is
+        finished, you can use the file_id from the same response to start using
+        our AI features.
+      security:
+        - BearerAuthenticationV2: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/FileV1.1'
+      responses:
+        '200':
+          description: Successful retrieval of file upload information
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/FileResponseV2'
+        '400':
+          $ref: '#/components/responses/InvalidParameters'
+        '401':
+          $ref: '#/components/responses/InvalidApiKey'
+components:
+  securitySchemes:
+    BearerAuthenticationV2:
+      type: http
+      scheme: bearer
+      description: >-
+        Use the standard 'Bearer authentication'. Put your 'API Key' in header:
+        `Authorization:Bearer YOUR_API_KEY`. Notice that there is ' ' a space
+        between 'Bearer' and the 'YOUR_API_KEY'.
+  schemas:
+    FileV1.1:
+      title: File V1.1
+      description: This object represents a file.
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            required:
+              - content_type
+              - file_name
+              - file_size
+            properties:
+              content_type:
+                type: string
+                example: image/jpg
+                description: >-
+                  Specifies the file's content MIME type. Supported values
+                  currently include image and video formats, such as image/jpg
+                  and video/mp4.
+              file_name:
+                type: string
+                example: my-selfie.jpg
+                description: Name of this file
+              file_size:
+                type: integer
+                example: 50000
+                description: >-
+                  File size in bytes. Supported limits are 10 MB for image files
+                  and 100 MB for video files.
+    BasicFileResponse:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            properties:
+              content_type:
+                type: string
+                example: image/jpg
+                description: Content MIME type for this file.
+              file_name:
+                type: string
+                example: my-selfie.jpg
+                description: Name of this file
+              file_id:
+                type: string
+                example: >-
+                  U8aqJbsXGT537jtGnEDFHqxdDXqh8+oTF/cSkLimzuvVwMP+Jb1XbjPsf7ZgUgLY
+                description: >-
+                  ID of this file. Other run task API will need this
+                  \`file_id\`.
+              requests:
+                type: array
+                description: >-
+                  Using upload \`url\`, \`headers\`, \`method\` below to upload
+                  file. After completion, the \`file_id\` is used to proceed
+                  with calling run task API.
+                items:
+                  type: object
+                  properties:
+                    headers:
+                      type: object
+                      example:
+                        Content-Type: image/jpg
+                        Content-Length: 50000
+                      description: Headers to include when uploading the file
+                    url:
+                      type: string
+                      example: https://example.com/presigned-upload-url
+                      description: URL to upload this file
+                    method:
+                      type: string
+                      example: PUT
+                      description: HTTP method to upload this file
+    FileResponseV2:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+          description: Response status
+        data: null
+      $ref: '#/components/schemas/BasicFileResponse'
+  responses:
+    InvalidParameters:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 400
+                description: Response status
+              error:
+                type: string
+                example: Invalid parameter value
+              error_code:
+                type: string
+                example: InvalidParameters
+    InvalidApiKey:
+      description: Invalid or missing API key
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 401
+                description: Response status
+              error:
+                type: string
+                example: Invalid API key

@@ -1,0 +1,39 @@
+{
+  "name": "mira",
+  "private": true,
+  "description": "MIRA — look, measured. Built on Perfect Corp's YouCam API.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@11.5.3",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "MIRA_MODE=live turbo run dev --env-mode=loose",
+    "dev:mock": "MIRA_MODE=mock turbo run dev --env-mode=loose",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e --filter=@mira/web",
+    "lint": "turbo run lint && pnpm lint:format && pnpm lint:claims",
+    "lint:format": "prettier --check .",
+    "lint:claims": "tsx packages/schemas/scripts/lint-claims.ts",
+    "format": "prettier --write .",
+    "typecheck": "turbo run typecheck",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e",
+    "fixtures:record": "tsx scripts/fixtures-record.ts",
+    "smoke:live": "tsx scripts/smoke-live.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "26.6.6",
+    "esbuild": "0.28.2",
+    "eslint": "9.39.5",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "turbo": "2.11.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.0.5"
+  }
+}
