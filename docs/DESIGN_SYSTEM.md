@@ -45,7 +45,7 @@ All colours are CSS variables in `packages/ui/tokens/colors.css`. Components nev
 | `--mira-rule` | `#3A3A3A` |
 | `--mira-mat` | `#777777` (unchanged on purpose: the viewing surround stays constant across themes) |
 | `--mira-accent` | `#8C95FF` |
-| `--mira-accent-wash` | `rgb(140 149 255 / 0.14)` |
+| `--mira-accent-wash` | `rgb(140 149 255 / 0.10)` |
 | `--mira-drift` | `#E0A64A` |
 | `--mira-critical` | `#F2877B` |
 

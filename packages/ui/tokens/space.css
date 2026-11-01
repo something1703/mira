@@ -1,0 +1,29 @@
+/*
+ * MIRA space, radius and elevation tokens (docs/DESIGN_SYSTEM.md §4–5).
+ * Radius follows hierarchy: swatches 2, controls 6, panels 12, the Ring and avatars a full circle.
+ * Surfaces have no shadow; only modal dialogs get one.
+ */
+:root {
+  --mira-space-1: 4px;
+  --mira-space-2: 8px;
+  --mira-space-3: 12px;
+  --mira-space-4: 16px;
+  --mira-space-5: 24px;
+  --mira-space-6: 32px;
+  --mira-space-7: 48px;
+  --mira-space-8: 64px;
+  --mira-space-9: 96px;
+
+  --mira-radius-swatch: 2px;
+  --mira-radius-control: 6px;
+  --mira-radius-panel: 12px;
+  --mira-radius-round: 9999px;
+
+  --mira-shadow-dialog: 0 12px 32px rgb(0 0 0 / 0.18);
+
+  --mira-content-max: 1200px;
+  --mira-gutter: 24px;
+  --mira-touch: 44px;
+  --mira-focus: 2px solid var(--mira-accent);
+  --mira-focus-offset: 2px;
+}

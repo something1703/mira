@@ -21,6 +21,9 @@
   --mira-on-mat: #ffffff;
   --mira-drift: #8a5a00;
   --mira-critical: #a1271b;
+  /* Scrim behind modal dialogs, and the highlight sweeping across a loading plate. */
+  --mira-overlay: rgb(0 0 0 / 0.5);
+  --mira-shimmer: rgb(255 255 255 / 0.16);
   color-scheme: light;
 }
 
@@ -33,7 +36,7 @@
   --mira-ink-3: #8f8f8f;
   --mira-rule: #3a3a3a;
   --mira-accent: #8c95ff;
-  --mira-accent-wash: rgb(140 149 255 / 0.14);
+  --mira-accent-wash: rgb(140 149 255 / 0.1);
   --mira-on-accent: #14163a;
   --mira-drift: #e0a64a;
   --mira-critical: #f2877b;
@@ -50,7 +53,7 @@
     --mira-ink-3: #8f8f8f;
     --mira-rule: #3a3a3a;
     --mira-accent: #8c95ff;
-    --mira-accent-wash: rgb(140 149 255 / 0.14);
+    --mira-accent-wash: rgb(140 149 255 / 0.1);
     --mira-on-accent: #14163a;
     --mira-drift: #e0a64a;
     --mira-critical: #f2877b;
