@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const WORKFLOWS_PORT = Number(process.env.E2E_WORKFLOWS_PORT ?? 4120);
 const WEBHOOK_PORT = Number(process.env.E2E_WEBHOOK_PORT ?? 4130);
+const ENGINES_PORT = Number(process.env.E2E_ENGINES_PORT ?? 4140);
 /** A throwaway secret for the test servers only. */
 const WEBHOOK_SECRET = `whsec_${Buffer.from("e2e-only-secret-not-a-real-one").toString("base64")}`;
 
@@ -55,7 +56,20 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
       // A small session cap so one demo run (40 units) brings the "units left" banner up.
-      env: { MIRA_MODE: "mock", PORT: String(WORKFLOWS_PORT), MIRA_SESSION_UNIT_CAP: "45" },
+      env: {
+        MIRA_MODE: "mock",
+        PORT: String(WORKFLOWS_PORT),
+        MIRA_SESSION_UNIT_CAP: "45",
+        MIRA_ENGINES_URL: `http://localhost:${ENGINES_PORT}`,
+      },
+    },
+    {
+      // The measurement engines: Build Twin derives colour and the repeat-capture spread here.
+      command: `uv run --frozen uvicorn mira_engines.api:app --host 127.0.0.1 --port ${ENGINES_PORT}`,
+      cwd: "../../services/engines",
+      url: `http://localhost:${ENGINES_PORT}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 90_000,
     },
   ],
 });

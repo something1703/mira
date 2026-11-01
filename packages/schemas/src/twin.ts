@@ -135,3 +135,26 @@ export function groupOf(id: string): TwinGroupName {
   if (id.startsWith("hair.")) return "hair";
   throw new Error(`Metric ${id} belongs to no profile group`);
 }
+
+// ---------------------------------------------------------------------------------------------
+// Privacy: what is stored about a person, and what was deleted (docs/UX_FLOWS.md §11).
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * What a deletion removed, kept afterwards as counts only (never the values), so the privacy screen
+ * can say "deleted on 1 Nov: 31 readings, 2 saved looks" and prove it happened.
+ */
+export const DeletionRecord = z.object({
+  id: z.string().min(1),
+  at: z.iso.datetime(),
+  removed: z.object({
+    readings: z.number().int().nonnegative(),
+    proofs: z.number().int().nonnegative(),
+    savedLooks: z.number().int().nonnegative(),
+    savedImages: z.number().int().nonnegative(),
+    uploads: z.number().int().nonnegative(),
+    runs: z.number().int().nonnegative(),
+    cachedResults: z.number().int().nonnegative(),
+  }),
+});
+export type DeletionRecord = z.infer<typeof DeletionRecord>;

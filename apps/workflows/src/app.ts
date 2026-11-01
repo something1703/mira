@@ -6,7 +6,16 @@ import {
   type ServiceContext,
   type EventBus,
 } from "@mira/runtime";
-import { Run, RunNode, SessionId, UserId, WorkItem } from "@mira/schemas";
+import {
+  Run,
+  RunNode,
+  SessionId,
+  Twin,
+  TwinGroupName,
+  UserId,
+  WorkItem,
+  newId,
+} from "@mira/schemas";
 import { getDoc, listDocs } from "@mira/runtime";
 import { ReplayYouCam, type YouCamApi } from "@mira/youcam-client";
 import { fixtureDownloader, hasRecordings, loadFixtures } from "@mira/fixtures";
@@ -14,6 +23,12 @@ import { FakeYouCam } from "@mira/youcam-client/testing";
 import { z } from "zod";
 import { DEMO_PRICES, demoExecutors, newDemoSession, seedDemoFake, startDemoRun } from "./demo";
 import { createEngine, type Engine } from "./engine";
+import { createTwinExecutors } from "./graphs/build-twin";
+import { planTwinBuild, type BuildError } from "./twin/build";
+import { HttpEngineClient, type EngineClient } from "./twin/engine-client";
+import { deleteProfile, exportProfile, inventory, uploadsPrefix } from "./twin/profile";
+import { seedTwinFake } from "./twin/synthetic";
+import { UPLOAD_LIMITS, checkUpload } from "./twin/uploads";
 import { fetchDownloader } from "./lifecycle/download";
 import { liveYouCam } from "./lifecycle/live-api";
 import { RUN_EVENTS_TOPIC, type Downloader } from "./lifecycle/types";
@@ -35,6 +50,8 @@ export interface WorkflowsOptions {
    * live mode refuses everything.
    */
   authenticateQueue?: (headers: Record<string, string | string[] | undefined>) => Promise<boolean>;
+  /** The measurement engines. Defaults to HTTP against `MIRA_ENGINES_URL`. */
+  engineClient?: EngineClient;
 }
 
 export interface WorkflowsContext extends ServiceContext {
@@ -57,8 +74,15 @@ export function buildApp(
     );
   }
   const ports = options.ports ?? createMockPorts(options.dataDir ? { dir: options.dataDir } : {});
-  const fake = new FakeYouCam({ clock: ports.clock, prices: DEMO_PRICES });
+  // Mock mode quotes with the real price list read from YouCam on 2026-11-01 (D26); the demo's
+  // three features are priced by the same list. Without a snapshot it falls back to DEMO_PRICES.
+  const snapshot = loadFixtures().skus;
+  const fake = new FakeYouCam({
+    clock: ports.clock,
+    ...(snapshot.length > 0 ? { skus: snapshot } : { prices: DEMO_PRICES }),
+  });
   seedDemoFake(fake);
+  seedTwinFake(fake);
   // With real recordings on disk (MIRA_FIXTURES=recorded) mock mode replays them; with none it
   // says so and shows the synthetic demo instead. It never pretends the demo is a recording.
   const replaying = mock && process.env.MIRA_FIXTURES === "recorded" && hasRecordings();
@@ -73,12 +97,15 @@ export function buildApp(
             { apiKey: env.YOUCAM_API_KEY ?? "", baseUrl: env.YOUCAM_API_BASE_URL },
             ports.clock,
           ).api);
+  const synthetic = mock && options.api === undefined && !replaying;
+  const engines: EngineClient =
+    options.engineClient ?? new HttpEngineClient({ baseUrl: env.MIRA_ENGINES_URL });
   const engine = createEngine({
     ports,
     api,
     download: options.download ?? (replaying ? fixtureDownloader() : fetchDownloader),
     engineVersion: ENGINE_VERSION,
-    executors: demoExecutors,
+    executors: { ...demoExecutors, ...createTwinExecutors({ ports, engine: engines, synthetic }) },
     caps: { session: env.MIRA_SESSION_UNIT_CAP },
     log: (message, fields) => {
       logger.info(fields ?? {}, message);
@@ -130,7 +157,7 @@ export function buildApp(
     if (!run) return await reply.status(404).send({ error: "run_not_found", traceId: req.traceId });
     const nodes = (await listDocs(ports.state, `runs/${runId}/nodes`, RunNode)).map((n) => n.value);
     const ledger = await engine.ledger.entries(runId);
-    return { run, nodes, ledger, synthetic: mock && options.api === undefined && !replaying };
+    return { run, nodes, ledger, synthetic };
   });
 
   app.get("/internal/runs/:runId/events", (req, reply) => {
@@ -177,7 +204,7 @@ export function buildApp(
       return await reply.status(400).send({ error: "invalid_session", traceId: req.traceId });
     }
     const b = await engine.ledger.budget(id.data);
-    const cap = env.MIRA_SESSION_UNIT_CAP;
+    const cap = await engine.ledger.sessionCap(id.data);
     return {
       cap,
       reserved: b.reserved,
@@ -185,6 +212,154 @@ export function buildApp(
       left: Math.max(0, cap - b.reserved - b.committed),
     };
   });
+
+  // ---- uploads: the person's captures, held until the run that reads them ends ----
+  // Raw image bytes in the body, so the browser sends a file as it is (no multipart parser).
+  app.addContentTypeParser(/^image\/(jpeg|png)$/, { parseAs: "buffer" }, (_req, body, done) => {
+    done(null, body);
+  });
+  app.post("/internal/uploads", async (req, reply) => {
+    const who = z.object({ userId: UserId }).safeParse(req.query);
+    if (!who.success)
+      return await reply.status(400).send({ error: "invalid_user", traceId: req.traceId });
+    if (!Buffer.isBuffer(req.body)) {
+      return await reply.status(415).send({ error: "unsupported_type", traceId: req.traceId });
+    }
+    const bytes = new Uint8Array(req.body);
+    const checked = checkUpload(bytes);
+    if (!checked.ok) {
+      const status = checked.error.code === "unsupported_type" ? 415 : 422;
+      return await reply
+        .status(status)
+        .send({ ...checked.error, error: checked.error.code, traceId: req.traceId });
+    }
+    const held = await ports.blobs.list(uploadsPrefix(who.data.userId));
+    if (held.length >= UPLOAD_LIMITS.maxHeld) {
+      return await reply.status(429).send({ error: "too_many_uploads", traceId: req.traceId });
+    }
+    const ext = checked.value.info.type === "image/png" ? "png" : "jpg";
+    const key = `${uploadsPrefix(who.data.userId)}${newId("up")}.${ext}`;
+    await ports.blobs.put(key, bytes, checked.value.info.type);
+    return await reply.status(201).send({
+      key,
+      width: checked.value.info.width,
+      height: checked.value.info.height,
+      bytes: checked.value.bytes,
+      hdCapable: checked.value.hdCapable,
+    });
+  });
+  app.delete("/internal/uploads", async (req, reply) => {
+    const q = z.object({ userId: UserId, key: z.string().min(1) }).safeParse(req.query);
+    if (!q.success || !q.data.key.startsWith(uploadsPrefix(q.data.userId)))
+      return await reply.status(400).send({ error: "invalid_upload", traceId: req.traceId });
+    await ports.blobs.delete(q.data.key);
+    return await reply.status(204).send();
+  });
+
+  // ---- the Twin: quote, build, read, download, delete ----
+  const blobKey = z.string().min(1).max(200);
+  const BuildBody = z.object({
+    userId: UserId,
+    sessionId: SessionId,
+    capture: z.object({
+      face: blobKey,
+      repeats: z.array(blobKey).max(2).optional(),
+      hair: z
+        .object({ front: blobKey, right: blobKey.optional(), left: blobKey.optional() })
+        .optional(),
+      mode: z.enum(["hd", "sd"]),
+      source: z.enum(["camera", "upload"]),
+      qualityChecksPassed: z.boolean().nullable(),
+      only: z.array(TwinGroupName).min(1).optional(),
+    }),
+    removed: z.array(z.string().min(1)).max(20).optional(),
+    confirmedTotal: z.number().int().nonnegative().optional(),
+  });
+  const buildStatus = (e: BuildError): number =>
+    e.code === "upload_foreign"
+      ? 400
+      : e.code === "upload_missing"
+        ? 422
+        : e.code === "quote_failed"
+          ? e.detail.code === "price_unavailable"
+            ? 502
+            : 422
+          : e.code === "graph_rejected"
+            ? 500
+            : 409;
+  for (const start of [false, true]) {
+    app.post(start ? "/internal/twin/build" : "/internal/twin/quote", async (req, reply) => {
+      const body = BuildBody.safeParse(req.body);
+      if (!body.success)
+        return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+      const planned = await planTwinBuild(engine, ports, body.data, start);
+      if (!planned.ok) {
+        return await reply
+          .status(buildStatus(planned.error))
+          .send({ ...planned.error, error: planned.error.code, traceId: req.traceId });
+      }
+      return await reply.status(start ? 201 : 200).send({ ...planned.value, synthetic });
+    });
+  }
+  const userParam = (req: { params: unknown }) =>
+    UserId.safeParse((req.params as { userId: string }).userId);
+  app.get("/internal/twin/:userId", async (req, reply) => {
+    const id = userParam(req);
+    if (!id.success)
+      return await reply.status(400).send({ error: "invalid_user", traceId: req.traceId });
+    const inv = await inventory(ports, id.data);
+    if (!inv.twin)
+      return await reply
+        .status(404)
+        .send({ error: "no_profile", deletions: inv.deletions, traceId: req.traceId });
+    return { twin: inv.twin, synthetic: inv.twin.synthetic };
+  });
+  app.get("/internal/twin/:userId/inventory", async (req, reply) => {
+    const id = userParam(req);
+    if (!id.success)
+      return await reply.status(400).send({ error: "invalid_user", traceId: req.traceId });
+    return await inventory(ports, id.data);
+  });
+  app.get("/internal/twin/:userId/export", async (req, reply) => {
+    const id = userParam(req);
+    if (!id.success)
+      return await reply.status(400).send({ error: "invalid_user", traceId: req.traceId });
+    return await exportProfile(ports, id.data);
+  });
+  app.delete("/internal/twin/:userId", async (req, reply) => {
+    const id = userParam(req);
+    if (!id.success)
+      return await reply.status(400).send({ error: "invalid_user", traceId: req.traceId });
+    const deleted = await deleteProfile(ports, id.data);
+    if (!deleted.ok)
+      return await reply
+        .status(409)
+        .send({ ...deleted.error, error: deleted.error.code, traceId: req.traceId });
+    return deleted.value;
+  });
+
+  // ---- mock only: lets a test give one session its own unit cap, so suites that need a larger
+  // budget do not change the default cap other tests rely on. Absent in live mode. ----
+  if (mock) {
+    app.post("/internal/dev/session-cap", async (req, reply) => {
+      const body = z
+        .object({ sessionId: SessionId, cap: z.number().int().min(0).max(100_000) })
+        .safeParse(req.body);
+      if (!body.success)
+        return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+      await engine.ledger.setSessionCap(body.data.sessionId, body.data.cap);
+      return { ok: true };
+    });
+    // Writes a profile as given, so a test can show every state of the profile screen without
+    // arranging for YouCam to fail in just the right way. The body is checked as a real Twin.
+    app.post("/internal/dev/twin", async (req, reply) => {
+      const body = Twin.safeParse(req.body);
+      if (!body.success)
+        return await reply.status(400).send({ error: "invalid_twin", traceId: req.traceId });
+      await ports.state.set(`twins/${body.data.userId}`, body.data);
+      return await reply.status(201).send({ ok: true });
+    });
+  }
 
   // ---- the demo graph (mock only: it uses a synthetic YouCam) ----
   const fallbackSession = newDemoSession();

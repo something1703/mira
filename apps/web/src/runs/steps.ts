@@ -7,6 +7,11 @@ const WORDS: Record<string, string> = {
   "step.measure_band": "Measuring the skin tone band",
   "step.measure_face": "Measuring face proportions",
   "step.summarise": "Putting the readings together",
+  "step.measure_skin": "Measuring your skin",
+  "step.measure_hair": "Measuring your hair",
+  "step.derive_colour": "Working out your colour measurements",
+  "step.estimate_noise": "Comparing your repeat captures",
+  "step.write_profile": "Saving your measured profile",
 };
 
 export const stepLabel = (key: string): string => WORDS[key] ?? key;

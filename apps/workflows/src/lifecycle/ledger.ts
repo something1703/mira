@@ -34,6 +34,7 @@ export interface NodeRef {
 }
 
 const budgetPath = (sessionId: string) => `budgets/${sessionId}`;
+const capPath = (sessionId: string) => `budget-caps/${sessionId}`;
 const key = (n: Pick<NodeRef, "runId" | "nodeId">) => `${n.runId}:${n.nodeId}`;
 
 /**
@@ -58,6 +59,7 @@ export class Ledger {
     liveBalance: number | undefined,
   ): Promise<Result<number, LedgerError>> {
     const wanted = Math.ceil(units);
+    const sessionCap = await this.sessionCap(node.sessionId);
     // A holder, because TypeScript cannot see assignments made inside the update callback.
     const out: { failure?: LedgerError; alreadyOpen: boolean } = { alreadyOpen: false };
     await updateDoc(this.state, budgetPath(node.sessionId), BudgetSchema, (cur) => {
@@ -73,11 +75,11 @@ export class Ledger {
         out.failure = { code: "over_cap", scope: "node", cap: this.caps.node, wanted, used: 0 };
       else if (runUsed + wanted > this.caps.run)
         out.failure = { code: "over_cap", scope: "run", cap: this.caps.run, wanted, used: runUsed };
-      else if (sessionUsed + wanted > this.caps.session)
+      else if (sessionUsed + wanted > sessionCap)
         out.failure = {
           code: "over_cap",
           scope: "session",
-          cap: this.caps.session,
+          cap: sessionCap,
           wanted,
           used: sessionUsed,
         };
@@ -141,7 +143,19 @@ export class Ledger {
   /** Units a session can still spend under its cap, counting open reserves. */
   async sessionUnitsLeft(sessionId: string): Promise<number> {
     const b = await this.budget(sessionId);
-    return Math.max(0, this.caps.session - b.reserved - b.committed);
+    return Math.max(0, (await this.sessionCap(sessionId)) - b.reserved - b.committed);
+  }
+
+  /** The session's unit cap: the deploy default, unless a test set its own (mock mode only). */
+  async sessionCap(sessionId: string): Promise<number> {
+    const raw = await this.state.get(capPath(sessionId));
+    const cap = (raw as { cap?: unknown } | undefined)?.cap;
+    return typeof cap === "number" && Number.isFinite(cap) && cap >= 0 ? cap : this.caps.session;
+  }
+
+  /** Test and demo knob. The only caller is a route that exists in mock mode alone. */
+  async setSessionCap(sessionId: string, cap: number): Promise<void> {
+    await this.state.set(capPath(sessionId), { cap });
   }
 
   async entries(runId: string): Promise<LedgerEntry[]> {

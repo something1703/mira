@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AskMiraPanel } from "./AskMiraPanel";
 import { BudgetBanner } from "./BudgetBanner";
+import { FlashToast } from "./FlashToast";
 import { SessionBanners } from "./SessionBanners";
 import { ThemeSwitch } from "./ThemeSwitch";
 
@@ -21,6 +22,10 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link href="/" className="shell__home" aria-label="MIRA home">
             <Lockup className="shell__lockup" />
           </Link>
+          <nav className="shell__nav" aria-label="Main">
+            <Link href="/profile">Profile</Link>
+            <Link href="/settings/privacy">Privacy</Link>
+          </nav>
           <div className="shell__tools">
             <ThemeSwitch />
             <AskMiraPanel />
@@ -34,6 +39,7 @@ export function Shell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+      <FlashToast />
     </div>
   );
 }

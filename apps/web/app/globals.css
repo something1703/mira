@@ -67,6 +67,31 @@ a {
   width: auto;
   display: block;
 }
+.shell__nav {
+  display: flex;
+  gap: var(--mira-space-4);
+  margin-right: auto;
+  margin-left: var(--mira-space-5);
+}
+.shell__nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--mira-ink-2);
+  text-decoration: none;
+  border-radius: var(--mira-radius-control);
+}
+.shell__nav a:hover {
+  color: var(--mira-ink);
+  text-decoration: underline;
+}
+@media (max-width: 640px) {
+  .shell__nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+  }
+}
 .shell__tools {
   display: flex;
   align-items: center;
@@ -248,4 +273,121 @@ a {
 }
 .runview__table .num {
   text-align: right;
+}
+
+/* ---------- Measured profile ---------- */
+.profile {
+  display: grid;
+  gap: var(--mira-space-6);
+}
+.profile h1 {
+  margin: 0 0 var(--mira-space-3);
+}
+.profile .lead {
+  margin-bottom: 0;
+}
+.profile__group {
+  display: grid;
+  gap: var(--mira-space-4);
+  padding-top: var(--mira-space-5);
+  border-top: 1px solid var(--mira-rule);
+}
+.profile__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mira-space-2) var(--mira-space-4);
+}
+.profile__head h2 {
+  margin: 0;
+}
+.profile__head p {
+  margin: 0;
+  margin-right: auto;
+}
+.profile__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--mira-space-5) var(--mira-space-6);
+}
+.profile__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mira-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.profile__chip {
+  display: grid;
+  gap: 2px;
+  width: 112px;
+}
+.profile__mat {
+  display: grid;
+  place-items: center;
+  height: 96px;
+  background: var(--mira-mat);
+  border-radius: var(--mira-radius-panel);
+}
+.profile__sample {
+  width: 64px;
+  height: 64px;
+  background: var(--chip);
+  border: 1px solid var(--mira-rule);
+  border-radius: var(--mira-radius-swatch);
+}
+.profile__chip-name {
+  margin-top: 6px;
+  font: 400 var(--mira-small) var(--mira-font-ui);
+}
+
+/* ---------- Privacy ---------- */
+.privacy {
+  display: grid;
+  gap: var(--mira-space-6);
+  max-width: 52rem;
+}
+.privacy h1 {
+  margin: 0 0 var(--mira-space-3);
+}
+.privacy .lead {
+  margin-bottom: 0;
+}
+.privacy__section {
+  display: grid;
+  gap: var(--mira-space-3);
+  padding-top: var(--mira-space-5);
+  border-top: 1px solid var(--mira-rule);
+}
+.privacy__section p {
+  margin: 0;
+}
+.privacy__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--mira-space-2) 0;
+}
+.privacy__table caption {
+  text-align: left;
+  font: 600 var(--mira-body) var(--mira-font-ui);
+  padding-bottom: var(--mira-space-2);
+}
+.privacy__table th,
+.privacy__table td {
+  text-align: left;
+  padding: var(--mira-space-2) var(--mira-space-3) var(--mira-space-2) 0;
+  border-bottom: 1px solid var(--mira-rule);
+  font-weight: 400;
+  vertical-align: top;
+}
+.privacy__table thead th {
+  font: 600 var(--mira-small) var(--mira-font-ui);
+  color: var(--mira-ink-2);
+}
+.privacy__list {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: var(--mira-space-1);
 }

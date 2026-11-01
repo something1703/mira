@@ -48,22 +48,22 @@ export const TWIN_EXECUTORS = {
 export interface HairCapture {
   front: string;
   /** Type and frizziness need all three angles (docs/YOUCAM_API.md §2). */
-  right?: string;
-  left?: string;
+  right?: string | undefined;
+  left?: string | undefined;
 }
 
 /** Blob keys of the captures, as `uploads/...` paths the lifecycle can read. */
 export interface TwinCapture {
   face: string;
   /** Up to two more face captures seconds apart, for the same-session estimate. */
-  repeats?: readonly string[];
-  hair?: HairCapture;
+  repeats?: readonly string[] | undefined;
+  hair?: HairCapture | undefined;
   mode: "hd" | "sd";
   source: "camera" | "upload";
   /** Null for an upload, which has no live quality checks. */
   qualityChecksPassed: boolean | null;
   /** A retry of some groups only; the rest is kept from the existing profile. */
-  only?: readonly TwinGroupName[];
+  only?: readonly TwinGroupName[] | undefined;
 }
 
 const blob = (key: string) => `blob:${key}`;
