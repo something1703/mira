@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { currentSession } from "../budget";
+import { internalFetch } from "../internal";
 import { workflowsUrl } from "../runs/api";
 import { SESSION_MAX_AGE_SECONDS, type Session } from "../session";
 
@@ -23,11 +24,7 @@ export async function toWorkflows(
   timeoutMs = 15_000,
 ): Promise<Response> {
   try {
-    return await fetch(`${workflowsUrl()}${path}`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(timeoutMs),
-      ...init,
-    });
+    return await internalFetch(workflowsUrl(), path, { ...init, timeoutMs });
   } catch {
     return Response.json({ error: "workflows_unreachable" }, { status: 502 });
   }

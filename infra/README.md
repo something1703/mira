@@ -27,7 +27,7 @@ terraform init -backend-config="bucket=<project>-tfstate"
 terraform plan
 ```
 
-Before `terraform apply`, read the running-cost estimate. Then add secret values by hand (never through Terraform, so they never enter state):
+Before `terraform apply`, read the running-cost estimate. Services read their secrets from Secret Manager at start-up (`version = "latest"`), so **every secret needs a value before the services will start**. Add the values by hand (never through Terraform, so they never enter state):
 
 ```bash
 printf '%s' "$YOUCAM_API_KEY" | gcloud secrets versions add youcam-api-key --data-file=-

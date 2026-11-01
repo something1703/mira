@@ -14,6 +14,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@mira/runtime": "workspace:*",
     "@mira/schemas": "workspace:*",
     "@mira/ui": "workspace:*",
     "@mira/youcam-client": "workspace:*",

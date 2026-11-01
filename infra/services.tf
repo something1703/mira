@@ -18,7 +18,7 @@ resource "google_cloud_run_v2_service" "svc" {
 
     scaling {
       min_instance_count = contains(var.warm_services, each.key) ? 1 : 0
-      max_instance_count = var.max_instances
+      max_instance_count = each.key == "workflows" ? var.workflows_max_instances : var.max_instances
     }
 
     containers {
@@ -67,14 +67,35 @@ resource "google_cloud_run_v2_service" "svc" {
         name  = "GCS_BUCKET_SAVED"
         value = google_storage_bucket.saved.name
       }
+
+      dynamic "env" {
+        for_each = local.service_env[each.key]
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
+
+      # Secrets come from Secret Manager at start-up and never appear in this file or in state.
+      dynamic "env" {
+        for_each = local.service_secrets[each.key]
+        content {
+          name = env.key
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.secrets[env.value].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
     }
   }
 
   lifecycle {
-    # CI deploys new images and per-service env; Terraform owns the shape of the service.
+    # CI deploys new images; Terraform owns the shape of the service, including its environment.
     ignore_changes = [
       template[0].containers[0].image,
-      template[0].containers[0].env,
       client,
       client_version,
     ]
@@ -83,8 +104,10 @@ resource "google_cloud_run_v2_service" "svc" {
   depends_on = [google_project_service.apis, google_artifact_registry_repository.mira]
 }
 
-# Public entry points: the web app, the YouCam callback receiver (verifies signatures itself) and
-# the MCP server (bearer-token auth).
+# The one public entry point is the web app. YouCam's callback (`/webhooks/youcam`) and the MCP
+# endpoint (`/mcp`) reach their services through it, and the web app calls them with its own
+# identity (apps/web/src/proxy.ts). The webhook verifies YouCam's signature and the MCP server
+# checks its bearer token, so a leaked address alone lets nobody in.
 resource "google_cloud_run_v2_service_iam_member" "public" {
   for_each = { for k, v in local.services : k => v if v.public }
   name     = google_cloud_run_v2_service.svc[each.key].name
@@ -98,6 +121,8 @@ locals {
   invocations = {
     "web-agent"           = { caller = "web", target = "agent" }
     "web-workflows"       = { caller = "web", target = "workflows" }
+    "web-webhook"         = { caller = "web", target = "webhook" }
+    "web-mcp"             = { caller = "web", target = "mcp" }
     "agent-workflows"     = { caller = "agent", target = "workflows" }
     "agent-engines"       = { caller = "agent", target = "engines" }
     "workflows-workflows" = { caller = "workflows", target = "workflows" } # Cloud Tasks OIDC

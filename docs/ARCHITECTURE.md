@@ -20,9 +20,11 @@ Request path: `mira-web` → `mira-agent` → (plan, quote, user confirms) → `
 | `mira-web` | Next.js on Cloud Run | Yes | UI, JS Camera Kit capture, live progress, brand console |
 | `mira-agent` | Node on Cloud Run | No (called by web) | Agent loop, tools, structured output, number injection, linter |
 | `mira-workflows` | Node on Cloud Run, driven by Cloud Tasks | No | Graph runner, node lifecycle, ledger, cache |
-| `mira-webhook` | Node on Cloud Run | Yes (signed callbacks only) | Receives YouCam task callbacks, advances graphs |
+| `mira-webhook` | Node on Cloud Run | No (called by web, which proxies YouCam's callback; the signature is still verified) | Receives YouCam task callbacks, advances graphs |
 | `mira-engines` | Python FastAPI on Cloud Run | No | Measurement math |
-| `mira-mcp` | Node on Cloud Run | Yes (token auth) | Exposes MIRA's engines as MCP tools for other agents (phase 10) |
+| `mira-mcp` | Node on Cloud Run | No (called by web, which proxies `/mcp`; the bearer token is still checked) | Exposes MIRA's engines as MCP tools for other agents (phase 10) |
+
+Only `mira-web` has a public address. Every other service accepts a call only from a service account allowed to invoke it, carrying a Google ID token for that service (`packages/runtime/src/identity.ts`, sent as `X-Serverless-Authorization`). `mira-workflows` runs as a single instance because YouCam's request limit is counted inside each process (D29, D35).
 
 Managed services: Firestore (state), Cloud Storage (images, 1-day lifecycle), Cloud Tasks (node execution, rate limit, retries, delayed polls), Pub/Sub (progress events), BigQuery (anonymised brand aggregates), Cloud Scheduler (Proof reminders, cleanup), Secret Manager (keys), Cloud Logging and Trace (one trace ID per run).
 

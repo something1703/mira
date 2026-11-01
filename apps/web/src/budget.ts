@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { z } from "zod";
+import { internalFetch } from "./internal";
 import { workflowsUrl } from "./runs/api";
 import { SESSION_COOKIE, sessionSecret, verifySession, type Session } from "./session";
 
@@ -20,9 +21,8 @@ export async function currentBudget(): Promise<Budget | undefined> {
   const session = await currentSession();
   if (!session) return undefined;
   try {
-    const res = await fetch(`${workflowsUrl()}/internal/budgets/${session.sessionId}`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(1_500),
+    const res = await internalFetch(workflowsUrl(), `/internal/budgets/${session.sessionId}`, {
+      timeoutMs: 1_500,
     });
     if (!res.ok) return undefined;
     return Budget.parse(await res.json());

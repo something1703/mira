@@ -1,8 +1,12 @@
+import { Identity } from "@mira/runtime/identity";
+
 /**
  * `mira-web` is the only public service (docs/ARCHITECTURE.md §2), so the two public callbacks, the
  * YouCam webhook and the MIRA MCP endpoint, reach their services through it. Route handlers read
  * their targets at run time; `next.config` rewrites would bake the URLs in at build time.
  */
+const identity = new Identity();
+
 export interface ProxyOptions {
   /** Base URL of the internal service, no trailing slash. */
   target: string;
@@ -15,6 +19,15 @@ export interface ProxyOptions {
 
 export async function proxy(req: Request, o: ProxyOptions): Promise<Response> {
   const headers = new Headers();
+  // Live, the target is a private Cloud Run service and needs this service's identity.
+  if (process.env.MIRA_MODE === "live") {
+    try {
+      const who = o.fetch ? new Identity({ fetch: o.fetch }) : identity;
+      for (const [k, v] of Object.entries(await who.headers(o.target))) headers.set(k, v);
+    } catch {
+      return Response.json({ error: "upstream_unavailable" }, { status: 502 });
+    }
+  }
   for (const name of o.forward) {
     const value = req.headers.get(name);
     if (value !== null) headers.set(name, value);

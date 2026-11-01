@@ -1,3 +1,4 @@
+import { readAtMost } from "../../../src/twin/body";
 import { isResponse, relay, requireSession, toWorkflows } from "../../../src/twin/server";
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -19,7 +20,11 @@ export async function POST(req: Request) {
   if (length > MAX_BYTES) {
     return Response.json({ error: "too_large", maxBytes: MAX_BYTES }, { status: 413 });
   }
-  const bytes = await req.arrayBuffer();
+  // The header can lie and a chunked body has none, so the bytes themselves are counted.
+  const bytes = await readAtMost(req, MAX_BYTES);
+  if (bytes === undefined) {
+    return Response.json({ error: "too_large", maxBytes: MAX_BYTES }, { status: 413 });
+  }
   const res = await toWorkflows(
     `/internal/uploads?userId=${session.userId}&kind=${kind}`,
     { method: "POST", headers: { "content-type": type }, body: bytes },

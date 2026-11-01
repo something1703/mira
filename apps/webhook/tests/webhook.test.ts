@@ -173,3 +173,35 @@ describe("POST /webhooks/youcam", () => {
     expect((await post(app, headers())).statusCode).toBe(503);
   });
 });
+
+describe("calling workflows in live mode", () => {
+  it("sends the service's ID token for workflows, and none in mock mode", async () => {
+    const jwt = `h.${Buffer.from(JSON.stringify({ exp: 4_000_000_000 })).toString("base64url")}.s`;
+    const seen: { url: string; auth: string | null }[] = [];
+    const fetchImpl = ((url: string, init: RequestInit) => {
+      seen.push({ url, auth: new Headers(init.headers).get("x-serverless-authorization") });
+      if (url.includes("metadata.google.internal")) return Promise.resolve(new Response(jwt));
+      return Promise.resolve(new Response(JSON.stringify({ known: true })));
+    }) as typeof fetch;
+    const live = {
+      MIRA_MODE: "live",
+      YOUCAM_WEBHOOK_SECRET: SECRET,
+      GOOGLE_CLOUD_PROJECT: "p",
+      GOOGLE_CLOUD_REGION: "r",
+      MIRA_WORKFLOWS_URL: "https://mira-workflows-1.run.app",
+    };
+    const { app } = buildApp(live, { fetch: fetchImpl, now: () => NOW * 1000 });
+    const res = await app.inject({
+      method: "POST",
+      url: "/webhooks/youcam",
+      headers: headers(),
+      payload: body,
+    });
+    expect(res.statusCode).toBe(200);
+    const forward = seen.find((c) => c.url.endsWith("/internal/webhook"));
+    expect(forward?.auth).toBe(`Bearer ${jwt}`);
+    expect(
+      seen.some((c) => c.url.includes("audience=https%3A%2F%2Fmira-workflows-1.run.app")),
+    ).toBe(true);
+  });
+});

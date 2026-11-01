@@ -1,6 +1,7 @@
 import { Twin, type DeletionRecord } from "@mira/schemas";
 import { z } from "zod";
 import { currentSession } from "../budget";
+import { internalFetch } from "../internal";
 import { workflowsUrl } from "../runs/api";
 
 export type ProfileLoad =
@@ -11,9 +12,8 @@ export async function loadProfile(): Promise<ProfileLoad> {
   const session = await currentSession();
   if (!session) return { kind: "none", deleted: false };
   try {
-    const res = await fetch(`${workflowsUrl()}/internal/twin/${session.userId}`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(5_000),
+    const res = await internalFetch(workflowsUrl(), `/internal/twin/${session.userId}`, {
+      timeoutMs: 5_000,
     });
     if (res.status === 404) {
       const body = z

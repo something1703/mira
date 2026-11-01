@@ -1,6 +1,7 @@
 import { DeletionRecord, Run, Twin } from "@mira/schemas";
 import { z } from "zod";
 import { currentSession } from "../budget";
+import { internalFetch } from "../internal";
 import { workflowsUrl } from "../runs/api";
 
 /** Everything MIRA stores about the person, as mira-workflows reports it (apps/workflows twin/profile.ts). */
@@ -28,9 +29,8 @@ export async function loadInventory(): Promise<Inventory | undefined> {
   const session = await currentSession();
   if (!session) return undefined;
   try {
-    const res = await fetch(`${workflowsUrl()}/internal/twin/${session.userId}/inventory`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(5_000),
+    const res = await internalFetch(workflowsUrl(), `/internal/twin/${session.userId}/inventory`, {
+      timeoutMs: 5_000,
     });
     if (!res.ok) return undefined;
     const parsed = Inventory.safeParse(await res.json());

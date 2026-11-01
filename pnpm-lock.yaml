@@ -66,6 +66,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@mira/runtime':
+        specifier: workspace:*
+        version: link:../../packages/runtime
       '@mira/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas

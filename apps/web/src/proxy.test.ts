@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { proxy } from "./proxy";
 
 function upstream(status = 200, body = "{}") {
@@ -100,5 +100,50 @@ describe("proxy", () => {
     });
     expect(res.status).toBe(502);
     expect(JSON.stringify(await res.json())).not.toContain("10.0.0.7");
+  });
+});
+
+describe("proxy in live mode", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("adds the service's ID token without touching the caller's own Authorization", async () => {
+    vi.stubEnv("MIRA_MODE", "live");
+    const jwt = `h.${Buffer.from(JSON.stringify({ exp: 4_000_000_000 })).toString("base64url")}.s`;
+    const seen: { url: string; headers: Headers }[] = [];
+    const fetchImpl = ((url: string, init: RequestInit) => {
+      seen.push({ url, headers: new Headers(init.headers) });
+      if (url.includes("metadata.google.internal")) return Promise.resolve(new Response(jwt));
+      return Promise.resolve(
+        new Response("{}", { headers: { "content-type": "application/json" } }),
+      );
+    }) as typeof fetch;
+    const req = new Request("http://web.test/mcp", {
+      method: "POST",
+      headers: { authorization: "Bearer mcp-token" },
+      body: "{}",
+    });
+    await proxy(req, {
+      target: "https://mira-mcp-1.run.app",
+      path: "/mcp",
+      forward: ["authorization"],
+      fetch: fetchImpl,
+    });
+    const call = seen.find((c) => c.url === "https://mira-mcp-1.run.app/mcp");
+    expect(call?.headers.get("authorization")).toBe("Bearer mcp-token");
+    expect(call?.headers.get("x-serverless-authorization")).toBe(`Bearer ${jwt}`);
+  });
+
+  it("answers 502 rather than calling without an identity", async () => {
+    vi.stubEnv("MIRA_MODE", "live");
+    const fetchImpl = (() => Promise.resolve(new Response("no", { status: 403 }))) as typeof fetch;
+    const res = await proxy(new Request("http://web.test/x", { method: "POST", body: "{}" }), {
+      target: "https://t.run.app",
+      path: "/x",
+      forward: [],
+      fetch: fetchImpl,
+    });
+    expect(res.status).toBe(502);
   });
 });

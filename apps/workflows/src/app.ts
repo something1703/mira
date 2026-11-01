@@ -1,5 +1,6 @@
 import {
   createService,
+  Identity,
   createMockPorts,
   type CreateServiceOptions,
   type Ports,
@@ -105,9 +106,15 @@ export function buildApp(
             { apiKey: env.YOUCAM_API_KEY ?? "", baseUrl: env.YOUCAM_API_BASE_URL },
             ports.clock,
           ).api);
+  const identity = new Identity();
   const synthetic = mock && options.api === undefined && !replaying;
   const engines: EngineClient =
-    options.engineClient ?? new HttpEngineClient({ baseUrl: env.MIRA_ENGINES_URL });
+    options.engineClient ??
+    new HttpEngineClient({
+      baseUrl: env.MIRA_ENGINES_URL,
+      // The engines are a private Cloud Run service: live, a call needs an ID token for it.
+      headers: () => (mock ? Promise.resolve({}) : identity.headers(env.MIRA_ENGINES_URL)),
+    });
   const engine = createEngine({
     ports,
     api,

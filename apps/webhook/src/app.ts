@@ -1,4 +1,9 @@
-import { createService, type CreateServiceOptions, type ServiceContext } from "@mira/runtime";
+import {
+  Identity,
+  createService,
+  type CreateServiceOptions,
+  type ServiceContext,
+} from "@mira/runtime";
 import { z } from "zod";
 import { verifyWebhook, WebhookPayload } from "./verify";
 
@@ -23,6 +28,8 @@ export function buildApp(
   const { app, env } = ctx;
   const doFetch = deps.fetch ?? ((url, init) => fetch(url, init));
   const now = deps.now ?? (() => Date.now());
+  const mock = env.MIRA_MODE === "mock";
+  const identity = new Identity(deps.fetch ? { fetch: deps.fetch } : {});
 
   // Signature checks need the exact bytes, so keep the body as a string.
   app.addContentTypeParser("application/json", { parseAs: "string" }, (_req, body, done) => {
@@ -62,9 +69,10 @@ export function buildApp(
     }
 
     try {
+      const auth = mock ? {} : await identity.headers(env.MIRA_WORKFLOWS_URL);
       const res = await doFetch(`${env.MIRA_WORKFLOWS_URL}/internal/webhook`, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-mira-trace": req.traceId },
+        headers: { "content-type": "application/json", "x-mira-trace": req.traceId, ...auth },
         body: JSON.stringify({ taskId: payload.data.task_id, webhookId: verified.value.id }),
       });
       if (!res.ok) throw new Error(`workflows answered ${String(res.status)}`);
