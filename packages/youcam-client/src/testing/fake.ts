@@ -44,6 +44,7 @@ export class FakeYouCam implements YouCamApi {
   units: number;
   private nextId = 1;
   private readonly scripts: Record<string, FakeTaskScript[]> = {};
+  private readonly defaults: Record<string, FakeTaskScript> = {};
   private rateLimited = 0;
   private networkFailures = 0;
 
@@ -54,6 +55,12 @@ export class FakeYouCam implements YouCamApi {
   /** Queue the script for the next task created for a feature. */
   script(slug: string, script: FakeTaskScript): this {
     (this.scripts[slug] ??= []).push(script);
+    return this;
+  }
+
+  /** Every future task for a feature behaves like this unless a one-off `script` is queued. */
+  respondWith(slug: string, script: FakeTaskScript): this {
+    this.defaults[slug] = script;
     return this;
   }
 
@@ -147,7 +154,7 @@ export class FakeYouCam implements YouCamApi {
     this.tasks.set(taskId, {
       feature: feature.slug,
       createdAt: this.options.clock.now(),
-      script: this.scripts[feature.slug]?.shift() ?? {},
+      script: this.scripts[feature.slug]?.shift() ?? this.defaults[feature.slug] ?? {},
       charged: false,
     });
     return Promise.resolve(ok({ taskId }));

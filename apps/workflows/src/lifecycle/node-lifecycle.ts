@@ -62,6 +62,34 @@ export function pollDelayMs(n: number): number {
 export class NodeLifecycle {
   constructor(private readonly d: LifecycleDeps) {}
 
+  /**
+   * Whether this step would be a cache hit right now, so the quote can list it at zero units. It
+   * uses the same key and freshness rules as `start`.
+   */
+  async wouldHit(spec: {
+    feature?: string | undefined;
+    params?: Record<string, unknown> | undefined;
+    inputs?: Record<string, string> | undefined;
+  }): Promise<boolean> {
+    const feature =
+      spec.feature === undefined
+        ? undefined
+        : (featureOf(spec.feature as FeatureSlug) as Feature | undefined);
+    if (!feature) return false;
+    const probe = RunNode.parse({
+      id: "probe",
+      runId: "run_probe0",
+      kind: "youcam",
+      label: "probe",
+      dependsOn: [],
+      status: "queued",
+      params: spec.params ?? {},
+      inputs: spec.inputs ?? {},
+    });
+    const key = await this.keyFor(probe, feature);
+    return key !== undefined && (await this.lookup(key)) !== undefined;
+  }
+
   // ------------------------------------------------------------------ steps 1–4: start
 
   async start(runId: string, nodeId: string): Promise<void> {

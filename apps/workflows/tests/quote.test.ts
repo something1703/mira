@@ -60,6 +60,27 @@ describe("buildQuote", () => {
     expect(res.value.total).toBe(2);
   });
 
+  it("the lifecycle's own cache probe marks a stored result as saved, and only that one", async () => {
+    const h = makeHarness();
+    h.fake.script("skin-tone-analysis", { results: { color: { skin_color: "#C79A78" } } });
+    const src = await h.photo("face");
+    const spec = youcam("tone", "skin-tone-analysis", { inputs: { src } });
+    expect(await h.engine.runner.lifecycle.wouldHit(spec)).toBe(false);
+    await h.start({ type: "demo", nodes: [spec] });
+    await h.settle();
+    expect(await h.engine.runner.lifecycle.wouldHit(spec)).toBe(true);
+    expect(
+      await h.engine.runner.lifecycle.wouldHit({ ...spec, params: { strictness: "strict" } }),
+    ).toBe(false);
+    expect(
+      await h.engine.runner.lifecycle.wouldHit({
+        ...spec,
+        inputs: { src: await h.photo("other", new Uint8Array([7])) },
+      }),
+    ).toBe(false);
+    expect(await h.engine.runner.lifecycle.wouldHit({ feature: "nope" })).toBe(false);
+  });
+
   it("is over the cap when the total exceeds the units left in the session", async () => {
     const h = makeHarness({ caps: { session: 10 } });
     const res = await run(h, graph);

@@ -34,7 +34,11 @@ export const CONFIG = {
     runCap: setting(120, "Product choice", false),
     sessionCap: setting(300, "Product choice; tune to the demo allowance", false),
     /** The live balance is re-read at most this often. */
-    balanceCacheSeconds: setting(15, "Product choice; polls share a 250 / 5 min rate budget", false),
+    balanceCacheSeconds: setting(
+      15,
+      "Product choice; polls share a 250 / 5 min rate budget",
+      false,
+    ),
   },
   agent: {
     maxToolDepth: setting(6, "docs/AGENT_RUNTIME.md §1", true),

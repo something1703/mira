@@ -23,7 +23,7 @@ describe("Ledger", () => {
     expect(results.filter((r) => r.ok)).toHaveLength(5);
     const refused = results.filter((r) => !r.ok);
     expect(refused).toHaveLength(5);
-    expect(refused.map((r) => (r.ok ? "ok" : r.error.code))).toEqual(
+    expect(refused.map((r) => ("error" in r ? r.error.code : "ok"))).toEqual(
       Array<string>(5).fill("over_cap"),
     );
     expect((await ledger.budget("ses_aaaaaa")).reserved).toBe(25);

@@ -41,7 +41,16 @@ export type TaskIndex = z.infer<typeof TaskIndex>;
 /** What a queue delivery asks the worker to do. */
 export const WorkItem = z.discriminatedUnion("op", [
   z.object({ op: z.literal("start"), runId: RunId, nodeId: NodeId }),
-  z.object({ op: z.literal("poll"), runId: RunId, nodeId: NodeId, n: z.number().int().nonnegative() }),
-  z.object({ op: z.literal("cleanup"), runId: RunId, attempt: z.number().int().nonnegative().default(0) }),
+  z.object({
+    op: z.literal("poll"),
+    runId: RunId,
+    nodeId: NodeId,
+    n: z.number().int().nonnegative(),
+  }),
+  z.object({
+    op: z.literal("cleanup"),
+    runId: RunId,
+    attempt: z.number().int().nonnegative().default(0),
+  }),
 ]);
 export type WorkItem = z.infer<typeof WorkItem>;
