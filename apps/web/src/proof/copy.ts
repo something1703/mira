@@ -86,7 +86,7 @@ export function calendarFile(product: string, due: Date): string {
     `DTSTAMP:${stamp(new Date())}`,
     `DTSTART:${stamp(due)}`,
     "DURATION:PT15M",
-    `SUMMARY:MIRA check-in: ${product.replace(/[,;\n]/g, " ")}`,
+    `SUMMARY:MIRA check-in: ${product.replace(/[\p{Cc},;\\]/gu, " ")}`,
     "DESCRIPTION:Take three photos on this day for your MIRA progress check.",
     "END:VEVENT",
     "END:VCALENDAR",

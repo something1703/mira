@@ -26,24 +26,38 @@ export function buildApp(
   const engines =
     deps.engines ?? httpEngines(env.MIRA_ENGINES_URL, { live: env.MIRA_MODE === "live" });
 
-  app.post("/mcp", async (req, reply) => {
-    const token = authenticate(req.headers.authorization, tokens);
-    if (!token) {
-      return await reply
-        .status(401)
-        .header("www-authenticate", 'Bearer realm="mira"')
-        .send({ error: "unauthorised", traceId: req.traceId });
-    }
-    const server = buildServer({ engines, ledger, token });
-    const transport = new StreamableHTTPServerTransport({});
-    reply.hijack();
-    reply.raw.on("close", () => {
-      void transport.close();
-      void server.close();
-    });
-    await server.connect(transport);
-    await transport.handleRequest(req.raw, reply.raw, req.body);
-  });
+  // Two pictures a little over 5 MB each (the audit_render ceiling) as base64 text, plus the JSON
+  // around them. A body over this is refused before it is read.
+  const bodyLimit = 12 * 1024 * 1024;
+  app.post(
+    "/mcp",
+    {
+      bodyLimit,
+      // Checked before the body is read, so a caller with no token cannot make MIRA buffer one.
+      onRequest: async (req, reply) => {
+        if (!authenticate(req.headers.authorization, tokens)) {
+          return await reply
+            .status(401)
+            .header("www-authenticate", 'Bearer realm="mira"')
+            .send({ error: "unauthorised", traceId: req.traceId });
+        }
+      },
+    },
+    async (req, reply) => {
+      const token = authenticate(req.headers.authorization, tokens);
+      if (!token)
+        return await reply.status(401).send({ error: "unauthorised", traceId: req.traceId });
+      const server = buildServer({ engines, ledger, token });
+      const transport = new StreamableHTTPServerTransport({});
+      reply.hijack();
+      reply.raw.on("close", () => {
+        void transport.close();
+        void server.close();
+      });
+      await server.connect(transport);
+      await transport.handleRequest(req.raw, reply.raw, req.body);
+    },
+  );
   // Stateless: there is no stream to open or session to end.
   for (const method of ["get", "delete"] as const) {
     app[method](

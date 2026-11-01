@@ -869,7 +869,9 @@ export function buildApp(
 
   // ---- Brand: the range, the cohort-limited views, and the person's choice to contribute ----
   const BRAND = { id: "sample-brand", name: "Sample brand" } as const;
-  const brandPath = `brand/catalogue/${BRAND.id}`;
+  // In mock mode each browser session has its own demo brand, so tests and visitors never share one.
+  const brandPath = (userId: string) => `brand/catalogue/${userId}`;
+  const Who = z.object({ userId: UserId });
   const kMin = env.MIRA_K_ANON_MIN;
   app.get("/internal/prefs/:userId", async (req, reply) => {
     const id = UserId.safeParse((req.params as { userId: string }).userId);
@@ -890,7 +892,10 @@ export function buildApp(
     // is closed rather than open to anyone who can reach it (D41).
     if (!mock)
       return await reply.status(403).send({ error: "console_closed", traceId: req.traceId });
-    const catalogue = await getDoc(ports.state, brandPath, BrandCatalogue);
+    const who = Who.safeParse(req.query);
+    if (!who.success)
+      return await reply.status(400).send({ error: "invalid_query", traceId: req.traceId });
+    const catalogue = await getDoc(ports.state, brandPath(who.data.userId), BrandCatalogue);
     const real = {
       demand: await readRows(ports, "shade_demand", ShadeDemandRow),
       outcomes: await readRows(ports, "efficacy_outcomes", EfficacyOutcome),
@@ -924,7 +929,7 @@ export function buildApp(
   app.post("/internal/brand/catalogue/csv", async (req, reply) => {
     if (!mock)
       return await reply.status(403).send({ error: "console_closed", traceId: req.traceId });
-    const body = z.object({ csv: z.string().min(1).max(LIMITS.bytes) }).safeParse(req.body);
+    const body = Who.extend({ csv: z.string().min(1).max(LIMITS.bytes) }).safeParse(req.body);
     if (!body.success)
       return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
     const made = catalogueFromCsv(body.data.csv, BRAND, new Date(ports.clock.now()).toISOString());
@@ -932,18 +937,16 @@ export function buildApp(
       return await reply
         .status(422)
         .send({ error: "invalid_csv", problems: made.problems.slice(0, 20) });
-    await ports.state.set(brandPath, made.catalogue);
+    await ports.state.set(brandPath(body.data.userId), made.catalogue);
     return await reply.status(201).send({ catalogue: made.catalogue });
   });
   app.post("/internal/brand/catalogue/ranges", async (req, reply) => {
     if (!mock)
       return await reply.status(403).send({ error: "console_closed", traceId: req.traceId });
-    const body = z
-      .object({
-        ranges: z.array(ShadeRange).min(1).max(LIMITS.products),
-        source: z.enum(["links", "sample"]),
-      })
-      .safeParse(req.body);
+    const body = Who.extend({
+      ranges: z.array(ShadeRange).min(1).max(LIMITS.products),
+      source: z.enum(["links", "sample"]),
+    }).safeParse(req.body);
     if (!body.success)
       return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
     const made = catalogueFromRanges(
@@ -952,13 +955,16 @@ export function buildApp(
       new Date(ports.clock.now()).toISOString(),
       body.data.source,
     );
-    await ports.state.set(brandPath, made);
+    await ports.state.set(brandPath(body.data.userId), made);
     return await reply.status(201).send({ catalogue: made });
   });
   app.delete("/internal/brand/catalogue", async (req, reply) => {
     if (!mock)
       return await reply.status(403).send({ error: "console_closed", traceId: req.traceId });
-    await ports.state.delete(brandPath);
+    const who = Who.safeParse(req.query);
+    if (!who.success)
+      return await reply.status(400).send({ error: "invalid_query", traceId: req.traceId });
+    await ports.state.delete(brandPath(who.data.userId));
     return await reply.status(204).send();
   });
 

@@ -55,11 +55,11 @@ def test_hue_angle_wraps_to_0_360() -> None:
 
 
 def test_empty_inputs_are_refused() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="skin colour"):
         brand.gap_map([], [LIGHT])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="shade"):
         brand.gap_map([LIGHT], [])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="finite"):
         brand.gap_map([(math.nan, 0.0, 0.0)], [LIGHT])
 
 
@@ -75,6 +75,16 @@ def test_the_endpoint_answers_with_the_threshold_it_used() -> None:
 
 
 def test_the_endpoint_refuses_unknown_fields_and_oversize_requests() -> None:
-    assert client.post("/brand/gap-map", json={"points": [[1, 2, 3]], "shades": [[1, 2, 3]], "x": 1}).status_code == 422
+    assert (
+        client.post(
+            "/brand/gap-map", json={"points": [[1, 2, 3]], "shades": [[1, 2, 3]], "x": 1}
+        ).status_code
+        == 422
+    )
     big = [[50.0, 10.0, 10.0]] * 401
-    assert client.post("/brand/gap-map", json={"points": [[50.0, 1.0, 1.0]], "shades": big}).status_code == 422
+    assert (
+        client.post(
+            "/brand/gap-map", json={"points": [[50.0, 1.0, 1.0]], "shades": big}
+        ).status_code
+        == 422
+    )

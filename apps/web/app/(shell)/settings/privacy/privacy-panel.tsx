@@ -1,5 +1,6 @@
 "use client";
 
+import { ContributeChoice } from "../../../../src/brand/ContributeChoice";
 import { Banner, Button, Dialog, EmptyState, buttonClass } from "@mira/ui";
 import { groupOf, type TwinGroupName } from "@mira/schemas";
 import Link from "next/link";
@@ -78,6 +79,8 @@ export function PrivacyPanel({ inventory }: { inventory: Inventory }) {
           waiting for a later one. MIRA keeps numbers only, and every one is listed here.
         </p>
       </header>
+
+      <ContributeChoice />
 
       {phase === "blocked" ? (
         <Banner kind="info">

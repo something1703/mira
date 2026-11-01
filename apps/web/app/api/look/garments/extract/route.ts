@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { internalFetch } from "../../../../../src/internal";
 import { agentUrl } from "../../../../../src/runs/api";
+import { RateLimit } from "../../../../../src/twin/rate";
 import { isResponse, relay, requireSession } from "../../../../../src/twin/server";
+
+// A page read is a request MIRA makes to somebody else's website, so it is limited per person.
+const limit = new RateLimit(12, 60 * 60_000);
 
 /** Reads a garment from a pasted product page (the agent fetches it with the SSRF guard). */
 export async function POST(req: Request) {
@@ -11,6 +15,9 @@ export async function POST(req: Request) {
     .object({ url: z.string().min(1).max(2_000) })
     .safeParse(await req.json().catch(() => undefined));
   if (!body.success) return Response.json({ error: "invalid_body" }, { status: 400 });
+  if (!limit.take(session.userId)) {
+    return Response.json({ error: "too_many_reads" }, { status: 429 });
+  }
   try {
     return await relay(
       await internalFetch(agentUrl(), "/internal/extract/garment", {

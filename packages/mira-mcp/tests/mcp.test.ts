@@ -144,6 +144,27 @@ describe("the server", () => {
     await ctx.app.close();
   });
 
+  it("answers a caller with no token before the body, and refuses a body over the limit", async () => {
+    const ctx = buildApp({}, { engines: fakeEngines(), tokens: TOKENS });
+    const big = JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/list",
+      pad: "x".repeat(12 * 1024 * 1024 + 1),
+    });
+    const headers = { "content-type": "application/json" };
+    const anon = await ctx.app.inject({ method: "POST", url: "/mcp", headers, payload: big });
+    expect(anon.statusCode).toBe(401);
+    const known = await ctx.app.inject({
+      method: "POST",
+      url: "/mcp",
+      headers: { ...headers, authorization: `Bearer ${SECRET}` },
+      payload: big,
+    });
+    expect(known.statusCode).toBe(413);
+    await ctx.app.close();
+  });
+
   it("with no tokens configured nobody gets in", async () => {
     const ctx = buildApp({}, { engines: fakeEngines(), tokens: [] });
     const res = await ctx.app.inject({

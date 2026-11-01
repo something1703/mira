@@ -52,3 +52,7 @@ export type BrandCatalogue = z.infer<typeof BrandCatalogue>;
 
 /** A cell the cohort rule hides: how many are missing is shown, who they are never is. */
 export const HIDDEN = "Fewer than the minimum shoppers; hidden to protect privacy." as const;
+
+/** The person's choice to let anonymised readings feed brand summaries (off until they say yes). */
+export const Prefs = z.object({ contribute: z.boolean() });
+export type Prefs = z.infer<typeof Prefs>;

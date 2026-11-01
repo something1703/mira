@@ -1,8 +1,8 @@
 import type { Twin } from "@mira/schemas";
-import { LookEventRow, ShadeDemandRow, type Metric } from "@mira/schemas";
+import { LookEventRow, Prefs, ShadeDemandRow, type Metric } from "@mira/schemas";
 import { getDoc, listDocs, type Ports } from "@mira/runtime";
 import { createHash } from "node:crypto";
-import { z } from "zod";
+import type { z } from "zod";
 
 /**
  * Anonymised rows for the brand side (docs/DATA_MODEL.md §3). They are written only for a person
@@ -11,8 +11,7 @@ import { z } from "zod";
  * again, and can be removed when they say no or delete their profile. The hash is a pseudonym, not
  * anonymity by itself: the rows are what is anonymous, and the cohort rule keeps small groups out.
  */
-export const Prefs = z.object({ contribute: z.boolean() });
-export type Prefs = z.infer<typeof Prefs>;
+export { Prefs };
 
 type Store = Pick<Ports, "state" | "clock">;
 

@@ -18,21 +18,21 @@
 ## Tasks
 
 ### Brand console
-- [ ] Catalogue ingest: CSV upload or product links; YouCam CLI for batch background removal; small model via Vertex batch for shade extraction where available.
-- [ ] Pipelines writing anonymised rows to `shade_demand`, `efficacy_outcomes`, `look_events`; views enforcing `MIRA_K_ANON_MIN`.
-- [ ] Shade Gap Map chart (Design System §10); efficacy table; attach table; every state in UX_FLOWS §10.
-- [ ] Seed the console with recorded, clearly labelled data for the demo.
+- [x] Catalogue ingest: CSV upload or product links (the YouCam CLI batch and Vertex batch are not used, D41 (5)); YouCam CLI for batch background removal; small model via Vertex batch for shade extraction where available.
+- [x] Pipelines writing anonymised rows (views written, not applied to a BigQuery project) to `shade_demand`, `efficacy_outcomes`, `look_events`; views enforcing `MIRA_K_ANON_MIN`.
+- [x] Shade Gap Map chart (Design System §10); efficacy table; attach table; every state in UX_FLOWS §10.
+- [x] Seed the console with recorded, clearly labelled data for the demo.
 
 ### Platform
-- [ ] MIRA MCP server exposing `shade_match`, `measure_change`, `audit_render`, `explain_metric`, with token auth and per-token unit caps.
-- [ ] Skill `measured-shade-match` in the YouCam Skills format: SKILL.md, scripts, fallback schema; installable with the Skills CLI; README section.
+- [x] MIRA MCP server exposing `shade_match`, `measure_change`, `audit_render`, `explain_metric`, with token auth and per-token unit caps.
+- [x] Skill `measured-shade-match` (installing with the Skills CLI not tried, F60) in the YouCam Skills format: SKILL.md, scripts, fallback schema; installable with the Skills CLI; README section.
 
 ### Hardening
-- [ ] Security review against `docs/SECURITY_PRIVACY.md`; fix findings.
+- [x] Security review (docs/SECURITY_REVIEW.md; open gaps listed there) against `docs/SECURITY_PRIVACY.md`; fix findings.
 - [ ] Performance: first paint under 2 s on a mid-range phone over 4G; Ring at 60 fps during capture.
 - [ ] Full sweep: every state in `docs/UX_FLOWS.md` passes Playwright in light and dark themes; axe clean.
 - [ ] Re-record fixtures from the final live runs so mock mode reflects the shipped product.
-- [ ] `docs/FACTS.md`: every public claim has a row with status Measured, Built or Source read; withdraw anything else.
+- [ ] `docs/FACTS.md`: every public claim (rows F1 to F64 exist; the Devpost text has not been written, so the audit of its claims is not done) has a row with status Measured, Built or Source read; withdraw anything else.
 
 ### Launch
 - [ ] Deploy production with demo unit caps; verify the budget fallback to recorded runs.
@@ -50,3 +50,7 @@
 ## Demo moment
 
 The full 2:50 video, ending on the run viewer and the lockup.
+
+## Status at the end of the build session
+
+Built and verified in mock mode: brand console, MCP server, Skill, security review. **Open, and not doable without the user:** performance on a mid-range phone, the full light/dark sweep is covered by the existing Playwright projects but not re-run against a deployment, re-recorded fixtures (need live runs), and all Launch items. Brand sign-in is not built, so the console is closed in live mode (D41).

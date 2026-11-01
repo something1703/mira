@@ -285,6 +285,7 @@ describe("contributing anonymised rows", () => {
 });
 
 describe("the brand routes", () => {
+  const u = newId("usr");
   const make = () => {
     const clock = new FakeClock();
     const ports = createMockPorts({ clock });
@@ -295,7 +296,9 @@ describe("the brand routes", () => {
 
   it("with no range yet says so; the person's choice to contribute starts off", async () => {
     const t = make();
-    expect((await t.ctx.app.inject({ url: "/internal/brand/summary" })).json()).toMatchObject({
+    expect(
+      (await t.ctx.app.inject({ url: `/internal/brand/summary?userId=${u}` })).json(),
+    ).toMatchObject({
       catalogue: null,
     });
     const userId = newId("usr");
@@ -332,10 +335,10 @@ describe("the brand routes", () => {
     const up = await t.ctx.app.inject({
       method: "POST",
       url: "/internal/brand/catalogue/csv",
-      payload: { csv: "product,shade,hex\nFoundation,Ivory,#F1D5BF\n" },
+      payload: { userId: u, csv: "product,shade,hex\nFoundation,Ivory,#F1D5BF\n" },
     });
     expect(up.statusCode).toBe(201);
-    const s = (await t.ctx.app.inject({ url: "/internal/brand/summary" })).json<{
+    const s = (await t.ctx.app.inject({ url: `/internal/brand/summary?userId=${u}` })).json<{
       recorded: boolean;
       gap: { state: string };
       efficacy: unknown[];
@@ -353,13 +356,15 @@ describe("the brand routes", () => {
     const up = await t.ctx.app.inject({
       method: "POST",
       url: "/internal/brand/catalogue/csv",
-      payload: { csv: "product,shade,hex\nF,Ivory,tan\n" },
+      payload: { userId: u, csv: "product,shade,hex\nF,Ivory,tan\n" },
     });
     expect([up.statusCode, up.json<{ problems: unknown[] }>().problems]).toEqual([
       422,
       [{ line: 2, reason: "not_a_colour" }],
     ]);
-    expect((await t.ctx.app.inject({ url: "/internal/brand/summary" })).json()).toMatchObject({
+    expect(
+      (await t.ctx.app.inject({ url: `/internal/brand/summary?userId=${u}` })).json(),
+    ).toMatchObject({
       catalogue: null,
     });
   });
@@ -384,9 +389,9 @@ describe("the brand routes", () => {
     await t.ctx.app.inject({
       method: "POST",
       url: "/internal/brand/catalogue/csv",
-      payload: { csv: "product,shade,hex\nF,Ivory,#F1D5BF\n" },
+      payload: { userId: u, csv: "product,shade,hex\nF,Ivory,#F1D5BF\n" },
     });
-    const s = (await t.ctx.app.inject({ url: "/internal/brand/summary" })).json<{
+    const s = (await t.ctx.app.inject({ url: `/internal/brand/summary?userId=${u}` })).json<{
       efficacy: { product: string }[];
     }>();
     expect(s.efficacy.map((c) => c.product)).toContain("Real serum");

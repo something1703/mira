@@ -924,3 +924,81 @@ a {
 .event {
   padding-bottom: var(--mira-space-8, 4rem);
 }
+
+/* ---------- Brand console ---------- */
+.brand {
+  display: grid;
+  gap: var(--mira-space-5);
+  max-width: 64rem;
+  padding-bottom: var(--mira-space-8, 4rem);
+}
+.brand h1 {
+  margin: 0 0 var(--mira-space-2);
+}
+.brand__view,
+.brand__ingest {
+  display: grid;
+  gap: var(--mira-space-4);
+  justify-items: start;
+}
+.brand__chart {
+  margin: 0;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+.brand__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 26rem;
+  overflow: hidden;
+}
+.brand__mat {
+  fill: var(--mira-mat);
+}
+.brand__cell {
+  fill: var(--mira-accent);
+}
+.brand__hatch {
+  stroke: var(--mira-ink);
+  stroke-width: 1.5;
+}
+.brand__shade {
+  stroke: var(--mira-raised);
+  stroke-width: 1.5;
+}
+.brand__tick,
+.brand__axis {
+  fill: var(--mira-ink-2);
+  font-size: 12px;
+}
+.brand__gaps,
+.brand__problems {
+  margin: 0;
+  padding-left: var(--mira-space-5);
+}
+.brand__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.brand__table th,
+.brand__table td {
+  text-align: left;
+  padding: var(--mira-space-2) var(--mira-space-3);
+  border-bottom: 1px solid var(--mira-rule);
+}
+.brand__table caption {
+  text-align: left;
+  color: var(--mira-ink-2);
+  padding-bottom: var(--mira-space-2);
+}
+.brand textarea {
+  font: inherit;
+  width: 100%;
+  background: var(--mira-surface);
+  color: var(--mira-ink);
+  border: 1px solid var(--mira-rule);
+  border-radius: var(--mira-radius-control);
+  padding: var(--mira-space-3);
+}
