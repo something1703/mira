@@ -197,3 +197,55 @@ a {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--mira-space-5);
 }
+
+/* ---------- Run viewer ---------- */
+.runview {
+  display: grid;
+  gap: var(--mira-space-6);
+}
+.runview__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mira-space-5);
+}
+.runview__head h1 {
+  margin: 0;
+}
+.runview__head p {
+  margin: var(--mira-space-1) 0 0;
+}
+.runview__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--mira-space-6);
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .runview__grid {
+    grid-template-columns: 1fr;
+  }
+}
+.runview__table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 var(--mira-small) var(--mira-font-ui);
+}
+.runview__table th,
+.runview__table td {
+  padding: 10px var(--mira-space-3) 10px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--mira-rule);
+  font-weight: 400;
+}
+.runview__table thead th {
+  font-weight: 600;
+  color: var(--mira-ink-2);
+}
+.runview__table th[scope="row"] {
+  font-weight: 600;
+}
+.runview__table .num {
+  text-align: right;
+}

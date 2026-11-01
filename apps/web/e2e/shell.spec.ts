@@ -2,16 +2,16 @@ import { expect, test } from "@playwright/test";
 import { expectAccessible } from "./helpers";
 
 test.describe("App shell", () => {
-  test("recorded-run banner shows in mock mode and stays dismissed for the session", async ({
+  test("sample-results banner shows in mock mode and stays dismissed for the session", async ({
     page,
   }) => {
     await page.goto("/");
-    const banner = page.getByRole("status").filter({ hasText: "You are viewing a recorded run" });
+    const banner = page.getByRole("status").filter({ hasText: "You are viewing sample results" });
     await expect(banner).toBeVisible();
     await page.getByRole("button", { name: "Dismiss for this session" }).click();
     await expect(banner).toHaveCount(0);
     await page.goto("/consent");
-    await expect(page.getByText("You are viewing a recorded run")).toHaveCount(0);
+    await expect(page.getByText("You are viewing sample results")).toHaveCount(0);
   });
 
   test("offline banner appears and clears", async ({ page, context }) => {

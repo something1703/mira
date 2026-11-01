@@ -15,6 +15,7 @@ Words in MIRA have one job each: help a person understand what was measured and 
 | Skin concern | what the scan measured (e.g. visible pores) | problem area, flaw, imperfection |
 | Units | units | credits, tokens, coins |
 | Recorded run | recorded run | demo data, fake |
+| Placeholder results (until fixtures are recorded) | sample results | recorded run (it would claim real captures that do not exist) |
 
 ## 2. Patterns
 

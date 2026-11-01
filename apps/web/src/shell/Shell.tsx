@@ -8,6 +8,8 @@ import { ThemeSwitch } from "./ThemeSwitch";
 /** App shell: header with the lockup, theme switch, banner slot and the Ask MIRA panel. */
 export function Shell({ children }: { children: ReactNode }) {
   const mock = process.env.MIRA_MODE !== "live";
+  // "Recorded run" is only true once real YouCam responses have been captured (Phase 3 fixtures).
+  const recorded = process.env.MIRA_FIXTURES === "recorded";
   return (
     <div className="shell">
       <a href="#main" className="skip-link">
@@ -24,7 +26,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <div className="shell__banners">
-          <SessionBanners mock={mock} />
+          <SessionBanners mock={mock} recorded={recorded} />
         </div>
         <main id="main" tabIndex={-1} className="shell__main">
           {children}

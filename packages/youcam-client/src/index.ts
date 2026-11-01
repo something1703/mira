@@ -6,3 +6,6 @@ export * from "./pricing";
 export * from "./schemas/envelopes";
 export * from "./schemas/results";
 export { BlushEffect, ConcealerEffect, FoundationEffect, LipColorEffect } from "./schemas/makeup";
+export * from "./canonical";
+export * from "./fixtures";
+export * from "./mock/replay";

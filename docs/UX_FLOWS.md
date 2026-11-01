@@ -6,7 +6,8 @@ A screen is done only when every state listed here is implemented and has a Play
 
 | State | Trigger | What the person sees | Actions |
 | --- | --- | --- | --- |
-| Recorded run | `MIRA_MODE=mock` or budget fallback | Banner: "You are viewing a recorded run. Results are real YouCam outputs captured earlier." | Dismiss for this session |
+| Sample results | `MIRA_MODE=mock` before real fixtures are recorded | Banner: "You are viewing sample results. Nothing on this screen was measured on you." | Dismiss for this session |
+| Recorded run | `MIRA_MODE=mock` with recorded fixtures (`MIRA_FIXTURES=recorded`), or budget fallback | Banner: "You are viewing a recorded run. Results are real YouCam outputs captured earlier." | Dismiss for this session |
 | Offline | Browser offline | Banner: "You are offline. Measurements will resume when you reconnect." Actions that need the network are disabled with that reason | — |
 | Session budget low | Under 20% of session cap | Banner: "Units left in this session: N." | See what uses units |
 | Session budget reached | Cap reached | QuoteSheet "over cap" state on the next action | Use a recorded run, start new session |
