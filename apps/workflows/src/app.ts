@@ -10,6 +10,7 @@ import {
 import {
   Run,
   RunNode,
+  ShadeRange,
   SessionId,
   Twin,
   TwinGroupName,
@@ -19,11 +20,15 @@ import {
 } from "@mira/schemas";
 import { getDoc, listDocs } from "@mira/runtime";
 import { ReplayYouCam, type YouCamApi } from "@mira/youcam-client";
-import { fixtureDownloader, hasRecordings, loadFixtures } from "@mira/fixtures";
+import { fixtureDownloader, hasRecordings, loadCatalogues, loadFixtures } from "@mira/fixtures";
 import { FakeYouCam } from "@mira/youcam-client/testing";
 import { z } from "zod";
 import { DEMO_PRICES, demoExecutors, newDemoSession, seedDemoFake, startDemoRun } from "./demo";
 import { createEngine, type Engine } from "./engine";
+import { createShadeExecutors } from "./graphs/match-shade";
+import { planShadeMatch, type ShadeBuildError } from "./shade/build";
+import { planShade } from "./shade/plan";
+import { seedShadeFake, syntheticDownloader } from "./shade/synthetic";
 import { cleanupRun } from "./runner/cleanup";
 import { createTwinExecutors } from "./graphs/build-twin";
 import { planTwinBuild, type BuildError } from "./twin/build";
@@ -92,6 +97,7 @@ export function buildApp(
   });
   seedDemoFake(fake);
   seedTwinFake(fake);
+  seedShadeFake(fake);
   // With real recordings on disk (MIRA_FIXTURES=recorded) mock mode replays them; with none it
   // says so and shows the synthetic demo instead. It never pretends the demo is a recording.
   const replaying = mock && process.env.MIRA_FIXTURES === "recorded" && hasRecordings();
@@ -118,9 +124,20 @@ export function buildApp(
   const engine = createEngine({
     ports,
     api,
-    download: options.download ?? (replaying ? fixtureDownloader() : fetchDownloader),
+    download:
+      options.download ??
+      (replaying
+        ? fixtureDownloader()
+        : mock && options.api === undefined
+          ? // Synthetic renders have no real image to fetch: they get the placeholder picture.
+            syntheticDownloader(fake, fetchDownloader)
+          : fetchDownloader),
     engineVersion: ENGINE_VERSION,
-    executors: { ...demoExecutors, ...createTwinExecutors({ ports, engine: engines, synthetic }) },
+    executors: {
+      ...demoExecutors,
+      ...createTwinExecutors({ ports, engine: engines, synthetic }),
+      ...createShadeExecutors({ engine: engines }),
+    },
     caps: {
       session: env.MIRA_SESSION_UNIT_CAP,
       // Mock mode shares one server between many test runs, so the daily cap applies only if asked.
@@ -293,8 +310,89 @@ export function buildApp(
     return await reply.status(204).send();
   });
 
-  // ---- the Twin: quote, build, read, download, delete ----
   const blobKey = z.string().min(1).max(200);
+  // ---- Shade: ranges, the free pre-rank, quote, build, and the preview images ----
+  const catalogues = loadCatalogues();
+  app.get("/internal/shade/ranges", () => ({ ranges: catalogues }));
+  const ShadeBody = z.object({
+    userId: UserId,
+    sessionId: SessionId,
+    range: ShadeRange,
+    photo: blobKey,
+    topN: z.number().int().min(1).max(20).optional(),
+    shadeIds: z.array(z.string().min(1)).min(1).max(5).optional(),
+    removedShadeIds: z.array(z.string().min(1)).max(20).optional(),
+    concealer: z.boolean().optional(),
+    confirmedTotal: z.number().int().nonnegative().optional(),
+  });
+  const shadeStatus = (e: ShadeBuildError): number =>
+    e.code === "upload_foreign"
+      ? 400
+      : e.code === "upload_missing" || e.code === "no_shades_chosen"
+        ? 422
+        : e.code === "plan_failed"
+          ? e.detail.code === "engine_failed"
+            ? 502
+            : 409
+          : e.code === "quote_failed"
+            ? e.detail.code === "price_unavailable"
+              ? 502
+              : 422
+            : e.code === "graph_rejected"
+              ? 500
+              : 409; // over the cap, a changed price, or a concealer that was not suggested
+  // Ranking the whole range costs nothing, so it needs no photo and no quote.
+  app.post("/internal/shade/prerank", async (req, reply) => {
+    const body = z.object({ userId: UserId, range: ShadeRange }).safeParse(req.body);
+    if (!body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    const plan = await planShade(ports, engines, body.data.userId, body.data.range);
+    if (!plan.ok) {
+      const status = plan.error.code === "engine_failed" ? 502 : 409;
+      return await reply
+        .status(status)
+        .send({ ...plan.error, error: plan.error.code, traceId: req.traceId });
+    }
+    return plan.value;
+  });
+  for (const start of [false, true]) {
+    app.post(start ? "/internal/shade/build" : "/internal/shade/quote", async (req, reply) => {
+      const body = ShadeBody.safeParse(req.body);
+      if (!body.success)
+        return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+      if (start && body.data.confirmedTotal === undefined) {
+        return await reply
+          .status(400)
+          .send({ error: "confirmed_total_required", traceId: req.traceId });
+      }
+      const planned = await planShadeMatch(engine, ports, engines, body.data, start);
+      if (!planned.ok) {
+        return await reply
+          .status(shadeStatus(planned.error))
+          .send({ ...planned.error, error: planned.error.code, traceId: req.traceId });
+      }
+      const { plan, ...rest } = planned.value;
+      return await reply.status(start ? 201 : 200).send({
+        ...rest,
+        finish: plan.finish,
+        coverage: plan.coverage,
+        synthetic,
+      });
+    });
+  }
+  // A preview image while the run's review window is open (it is deleted when the window closes).
+  app.get("/internal/runs/:runId/images/:nodeId", async (req, reply) => {
+    const { runId, nodeId } = req.params as { runId: string; nodeId: string };
+    const node = await getDoc(ports.state, `runs/${runId}/nodes/${nodeId}`, RunNode);
+    const blob = node?.resultRef === undefined ? undefined : await ports.blobs.get(node.resultRef);
+    if (!blob) return await reply.status(404).send({ error: "image_gone", traceId: req.traceId });
+    return await reply
+      .header("content-type", blob.contentType)
+      .header("cache-control", "no-store")
+      .send(Buffer.from(blob.bytes));
+  });
+
+  // ---- the Twin: quote, build, read, download, delete ----
   const BuildBody = z.object({
     userId: UserId,
     sessionId: SessionId,

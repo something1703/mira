@@ -1,4 +1,13 @@
-import { Twin, type Metric, type TwinGroup } from "@mira/schemas";
+import {
+  Run,
+  RunNode,
+  ShadeResult,
+  Twin,
+  type Metric,
+  type TwinGroup,
+  type ShadeOutcome,
+} from "@mira/schemas";
+import { placeholderPng } from "@mira/fixtures/placeholder";
 import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
 
 export const WORKFLOWS = `http://localhost:${process.env.E2E_WORKFLOWS_PORT ?? 4120}`;
@@ -215,4 +224,123 @@ export async function buildFor(
   });
   const body = (await build.json()) as { runId?: string };
   return { status: build.status(), ...(body.runId ? { runId: body.runId } : {}), total };
+}
+
+const hexOf = (i: number) => `#${(0xc0a080 + i * 0x101010).toString(16).toUpperCase()}`;
+
+/** One shade's outcome for a crafted result. Verified by default, with a blend that grows by rank. */
+export function outcome(i: number, over: Partial<ShadeOutcome> = {}): ShadeOutcome {
+  return {
+    shadeId: `s${String(i)}`,
+    name: `Shade ${String(i)}`,
+    hex: hexOf(i),
+    verdict: "verified",
+    blendDe: 0.8 + i * 0.6,
+    renderNode: `render-${String(i)}`,
+    preDe: 1 + i,
+    ...over,
+  };
+}
+
+export function shadeResult(
+  outcomes: ShadeOutcome[],
+  over: Partial<ShadeResult> = {},
+): ShadeResult {
+  const best = outcomes.find((o) => o.verdict === "verified");
+  return ShadeResult.parse({
+    rangeId: "sample-warm",
+    finish: "satin",
+    finishReason: "no_skin_type",
+    coverage: "light",
+    coverageReason: "default_light",
+    tZoneNote: false,
+    outcomes,
+    ...(best ? { bestShadeId: best.shadeId } : {}),
+    noClosePick: best === undefined,
+    closestLabel: "blends_closely",
+    checkedFree: 20,
+    thresholds: { matchDe: 2, closeDe: 3.5, calibrated: false },
+    ...over,
+  });
+}
+
+/**
+ * A finished shade run as `/api/runs/:id` would return it, for states the mock server cannot be
+ * made to produce (a drifting render, a failed one). It goes through the real Run and RunNode
+ * schemas, so a change to either breaks the test instead of silently passing.
+ */
+export function shadeRunView(userId: string, runId: string, result: ShadeResult | undefined) {
+  const at = "2026-11-01T09:00:00.000Z";
+  const run = Run.parse({
+    id: runId,
+    type: "match_shade",
+    userId,
+    sessionId: "ses_crafted0001",
+    status: result ? "succeeded" : "failed",
+    planId: "plan_crafted001",
+    quote: {
+      lines: [],
+      total: 0,
+      sessionUnitsLeft: 100,
+      overCap: false,
+      pricing: { source: "feature-cost", pricedAt: at },
+    },
+    unitsSpent: 0,
+    traceId: "trc_crafted0001",
+    recorded: false,
+    startedAt: at,
+    endedAt: at,
+  });
+  const node = (id: string, extra: object = {}) =>
+    RunNode.parse({
+      id,
+      runId,
+      kind: "system",
+      label: "step.rank_shades",
+      status: "done",
+      dependsOn: [],
+      ...extra,
+    });
+  const nodes = [
+    ...(result?.outcomes ?? []).map((o) =>
+      node(o.renderNode ?? "render-1", {
+        kind: "youcam",
+        feature: "makeup-vto",
+        label: "step.render_shade",
+      }),
+    ),
+    node("assemble", {
+      params: {
+        shades: (result?.outcomes ?? []).map((o) => ({ id: o.shadeId, name: o.name, hex: o.hex })),
+      },
+      ...(result
+        ? { output: result }
+        : {
+            status: "failed",
+            error: { code: "nothing_measured", retryable: false, unitsCharged: 0 },
+          }),
+    }),
+  ];
+  return { run, nodes, ledger: [], synthetic: false };
+}
+
+/** Serves a crafted run, and a placeholder picture for every preview, instead of the real routes. */
+export async function serveCraftedRun(
+  page: Page,
+  userId: string,
+  runId: string,
+  result: ShadeResult | undefined,
+  options: { previewsGone?: boolean } = {},
+): Promise<void> {
+  await page.route(`**/api/runs/${runId}`, (route) =>
+    route.fulfill({ json: shadeRunView(userId, runId, result) }),
+  );
+  await page.route(`**/api/runs/${runId}/images/*`, (route) =>
+    options.previewsGone
+      ? route.fulfill({ status: 404, json: { error: "image_gone" } })
+      : route.fulfill({
+          contentType: "image/png",
+          body: Buffer.from(placeholderPng({ hex: "#C79A78" })),
+        }),
+  );
 }

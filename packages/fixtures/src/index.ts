@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { ShadeRange } from "@mira/schemas";
 import { COST_SNAPSHOT_FILE, Fixture, type Sku } from "@mira/youcam-client";
 import { z } from "zod";
 
@@ -99,3 +100,22 @@ export function fixtureDownloader(dir: string = RECORDED_DIR) {
     });
   };
 }
+
+export const CATALOGUES_DIR = join(import.meta.dirname, "../catalogues");
+
+/** Every shade range on disk, checked against the schema, sorted by id. A bad file fails loudly. */
+export function loadCatalogues(dir: string = CATALOGUES_DIR): ShadeRange[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".json"))
+    .map((f) => ShadeRange.parse(JSON.parse(readFileSync(join(dir, f), "utf8"))))
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** A saved product page for mock mode, by name (`fixture:<name>` in the shade-range extractor). */
+export function loadCataloguePage(name: string, dir: string = CATALOGUES_DIR): string | undefined {
+  if (!/^[a-z0-9-]{1,64}$/.test(name)) return undefined;
+  const path = join(dir, "pages", `${name}.html`);
+  return existsSync(path) ? readFileSync(path, "utf8") : undefined;
+}
+export * from "./placeholder";

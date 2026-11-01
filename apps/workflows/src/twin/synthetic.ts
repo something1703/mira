@@ -6,6 +6,19 @@ import { concernsFor } from "./extract";
  * §2). They are invented numbers for a person who does not exist, never a measurement: a profile
  * built from them is stored with `synthetic: true` and the screen says so (D25).
  */
+/** What the synthetic person's colours read as. Invented, and the same every time. */
+export const SYNTHETIC_TONE = {
+  color: {
+    skin_color: "#C79A78",
+    lip_color: "#A5504F",
+    eyebrow_color: "#3A2A20",
+    eye_color: "#4A3326",
+    eye_color_name: "brown",
+    hair_color: "#42280E",
+    hair_color_name: "dark brown",
+  },
+} as const;
+
 export function seedTwinFake(fake: FakeYouCam): void {
   const scores = [38, 44, 52, 29, 47, 33, 41, 58];
   fake
@@ -19,20 +32,7 @@ export function seedTwinFake(fake: FakeYouCam): void {
         })),
       },
     })
-    .respondWith("skin-tone-analysis", {
-      latencyMs: 4_000,
-      results: {
-        color: {
-          skin_color: "#C79A78",
-          lip_color: "#A5504F",
-          eyebrow_color: "#3A2A20",
-          eye_color: "#4A3326",
-          eye_color_name: "brown",
-          hair_color: "#42280E",
-          hair_color_name: "dark brown",
-        },
-      },
-    })
+    .respondWith("skin-tone-analysis", { latencyMs: 4_000, results: SYNTHETIC_TONE })
     .respondWith("fitzpatrick-scale-analyzer", {
       latencyMs: 2_500,
       results: { fitzpatrick_scale: "III" },

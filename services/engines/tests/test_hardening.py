@@ -137,3 +137,27 @@ class TestFinishReadsProfileIds:
     @pytest.mark.parametrize("key", ["hd_pore", "skin.hd_pore.whole"])
     def test_other_concerns_do_not(self, key: str) -> None:
         assert finish_and_coverage("normal", {key: 10.0}).coverage == "light"
+
+
+class TestClosedLoopLabel:
+    def test_the_blend_is_labelled_on_the_same_lines_as_the_pre_rank(self) -> None:
+        from mira_engines.shade import closed_loop
+
+        skin = (60.0, 15.0, 20.0)
+        assert closed_loop(skin, (62.0, 15.0, 21.0), (60.2, 15.0, 20.2)).label == "blends_closely"
+        assert closed_loop(skin, (62.0, 15.0, 21.0), (61.5, 15.5, 20.5)).label in {
+            "blends_closely",
+            "close",
+        }
+        assert closed_loop(skin, (75.0, 15.0, 30.0), (75.0, 15.0, 30.0)).label == "not_close"
+
+
+class TestConcealerSuggestion:
+    def test_a_low_dark_circle_reading_suggests_concealer_but_does_not_raise_coverage(self) -> None:
+        out = finish_and_coverage("normal", {"skin.hd_dark_circle.left_eye": 20.0})
+        assert out.concealer_suggested is True
+        assert out.coverage == "light"
+
+    def test_a_high_or_missing_reading_does_not(self) -> None:
+        assert finish_and_coverage("normal", {"dark_circle": 80.0}).concealer_suggested is False
+        assert finish_and_coverage("normal", {}).concealer_suggested is False

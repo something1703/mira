@@ -22,9 +22,10 @@ Phases 1 to 4 are built and verified as far as they can be without a YouCam key 
 | 2 Design system | Done. 18 components, tokens in CSS and TypeScript (a test keeps them equal), contrast test, gallery, Welcome, Consent, sessions, budget banner, error screen, icons and manifest | Nothing blocking. The budget banner's "See what uses units" link waits for a units page |
 | 3 YouCam client and lifecycle | Done for everything testable without a key. Request builders are validated against the saved OpenAPI bundles, every documented error code is mapped, a client-side limiter keeps under YouCam's rate limit, saved looks are copied out before cleanup | Needs a consented photo or a deploy: recorded fixtures (1 of 15 recorded, live price list and one real task done), the `_confirm_` items, live adapters (Firestore, Cloud Tasks, Pub/Sub, Cloud Storage), OIDC verification of Cloud Tasks calls. Not built: image resizing and the face-crop helper, accessory and jewellery builders (Phase 8) |
 | 5 Capture and the Twin | Built and tested in mock mode: capture flow (Camera Kit bridge, plain camera, upload path, repeats, body, hand, hair), upload checks, Build Twin graph and metrics, quote then build, profile screen with every state, privacy screen (inventory, download, delete), held-photo sweep | Needs a real phone and a consented person: the 10-attempt pass rate (DoD), Camera Kit specifics (F33), skin-type mapping (F34), a recorded live Build Twin. Not built: face-crop helper (F35), glasses or fringe detection |
+| 6 Shade | Built and tested in mock mode: range choice (sample ranges and pasted links read by the agent), free pre-rank, quote, unretouched renders, re-measure, blend ranking, every UX_FLOWS §5 state, retry missing, concealer second pass, protocol for F1 and F8 | Needs a consented person and a go-ahead: F1 (38 units) and F8 (420 units), a live run with a real brand range, a real range file in `packages/fixtures/catalogues` (today two invented samples) |
 | 4 Engines | Done: colour, ΔE2000 (all 34 Sharma pairs), shade, look, garment, audit, identity, noise floor, phantom, every endpoint, generated Python models with a contract test | Needs a deploy: Cloud Run with service-account auth. `faces.py` needs a BlazeFace `.tflite` model via `MIRA_FACE_MODEL_PATH` (not bundled; untested until supplied) |
 
-Test counts (all pass, `pnpm check` exit 0): 897 unit and contract tests (schemas 78, runtime 33, youcam-client 172, workflows 178, webhook 14, fixtures 43, ui 184, web 41, agent 1, mcp 1, engines 147) and 222 Playwright tests in light, dark and mobile with axe (single-pass full runs are skipped on the other projects on purpose).
+Test counts (all pass, `pnpm check` exit 0): 942 unit and contract tests (schemas 78, runtime 33, youcam-client 172, workflows 202, webhook 14, fixtures 49, ui 184, web 43, agent 16, mcp 1, engines 150) and 274 Playwright tests in light, dark and mobile with axe (single-pass full runs are skipped on the other projects on purpose; 26 skipped).
 
 ## What exists
 
@@ -59,6 +60,14 @@ Useful pages in mock mode: `/` and `/consent`, `/dev/components` (every componen
 ## Decisions (full text in `docs/DECISIONS.md`, D1 to D34)
 
 D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam feature. D12 chain on the previous result URL. D13 verify webhooks and always poll as fallback. D14 anonymous signed sessions (built). D15 agent text uses placeholders for product and shade names (Phase 7). D16 Build Twin gives a same-session estimate, not a noise floor. D19 a gallery instead of Storybook, plain CSS instead of Tailwind. D20 two contrast fixes. D21 Atkinson keeps tabular figures. D22 and D27 design reviews. D23 images are never cached across runs. D24 the webhook forwards, workflows stays the only writer. D25 mock mode never calls synthetic results a recording. D26 prices only from feature-cost, fail closed. D28 generated Python models and how engines must read JSON (strict). D29 the client-side rate limiter. D30 saved looks are copied to `saved/`. D31 Build Twin: eight HD concerns, one face photo, optional separately quoted repeats. D32 body and hand photos are held at most two hours, visibly. D33 a failed retry never wipes a profile; delete waits for running runs. D34 confidence words say only what is known.
+
+## Phase 6 map
+
+- **Workflows:** `src/graphs/match-shade.ts` (graph, `check` and `assemble` executors), `src/shade/{plan,build,synthetic}.ts`. HTTP: `/internal/shade/{ranges,prerank,quote,build}`, `/internal/runs/:id/images/:node`. The engines' shade endpoints are reached through `EngineClient` (`shadePrerank`, `closedLoop`, `finish`).
+- **Agent:** `src/extract/{shade-range,safe-fetch}.ts` and `POST /internal/extract/shade-range`. `fixture:<name>` reads a saved page in mock mode.
+- **Web:** `app/(shell)/shade/` (`shade-flow.tsx`, `shade-run.tsx`), routes under `app/api/shade/`, previews through `app/api/runs/[runId]/images/[nodeId]`.
+- **Mock mode** renders placeholder pictures and re-measures them as the shade blended toward the synthetic skin (D37); the screens say "sample results".
+- **Experiments:** `experiments/shade-closed-loop/PROTOCOL.md`. Not run.
 
 ## Phase 5 map
 

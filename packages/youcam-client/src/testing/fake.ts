@@ -20,6 +20,15 @@ export interface FakeTaskScript {
   failWith?: string;
   /** The `results` object for a success. Default `{ url: "https://fake.invalid/<taskId>.png" }`. */
   results?: unknown;
+  /**
+   * Builds the `results` from the request body, for a task whose answer depends on what it was
+   * asked (a re-measure of a render). `resultOf` returns the body of the task that produced a
+   * `fake.invalid` result URL, so a chained step can see what the earlier one was asked.
+   */
+  resultsFor?: (
+    body: Record<string, unknown>,
+    resultOf: (url: unknown) => Record<string, unknown> | undefined,
+  ) => unknown;
 }
 
 export interface FakeOptions {
@@ -36,6 +45,7 @@ interface Task {
   createdAt: number;
   script: FakeTaskScript;
   charged: boolean;
+  body: Record<string, unknown>;
 }
 
 export class FakeYouCam implements YouCamApi {
@@ -64,6 +74,13 @@ export class FakeYouCam implements YouCamApi {
     if (stated !== undefined) return stated;
     const amounts = (this.options.skus ?? []).filter((s) => s.slug === slug).map((s) => s.amount);
     return amounts.length > 0 ? Math.max(...amounts) : 1;
+  }
+
+  /** The request body of the task that produced `https://fake.invalid/<taskId>.png`, if any. */
+  resultBodyOf(url: unknown): Record<string, unknown> | undefined {
+    const id =
+      typeof url === "string" ? /^https:\/\/fake\.invalid\/(.+)\.png$/.exec(url)?.[1] : undefined;
+    return id === undefined ? undefined : this.tasks.get(id)?.body;
   }
 
   /** Queue the script for the next task created for a feature. */
@@ -170,6 +187,7 @@ export class FakeYouCam implements YouCamApi {
       createdAt: this.options.clock.now(),
       script: this.scripts[feature.slug]?.shift() ?? this.defaults[feature.slug] ?? {},
       charged: false,
+      body,
     });
     return Promise.resolve(ok({ taskId }));
   }
@@ -205,7 +223,8 @@ export class FakeYouCam implements YouCamApi {
     return Promise.resolve(
       ok({
         status: "success",
-        results: task.script.results ?? { url: `https://fake.invalid/${taskId}.png` },
+        results: task.script.resultsFor?.(task.body, (url) => this.resultBodyOf(url)) ??
+          task.script.results ?? { url: `https://fake.invalid/${taskId}.png` },
       }),
     );
   }

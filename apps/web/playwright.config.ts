@@ -4,6 +4,7 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 const WORKFLOWS_PORT = Number(process.env.E2E_WORKFLOWS_PORT ?? 4120);
 const WEBHOOK_PORT = Number(process.env.E2E_WEBHOOK_PORT ?? 4130);
 const ENGINES_PORT = Number(process.env.E2E_ENGINES_PORT ?? 4140);
+const AGENT_PORT = Number(process.env.E2E_AGENT_PORT ?? 4150);
 /** A throwaway secret for the test servers only. */
 const WEBHOOK_SECRET = `whsec_${Buffer.from("e2e-only-secret-not-a-real-one").toString("base64")}`;
 
@@ -39,6 +40,7 @@ export default defineConfig({
         NEXT_PUBLIC_MIRA_MODE: "mock",
         MIRA_WORKFLOWS_URL: `http://localhost:${WORKFLOWS_PORT}`,
         MIRA_WEBHOOK_URL: `http://localhost:${WEBHOOK_PORT}`,
+        MIRA_AGENT_URL: `http://localhost:${AGENT_PORT}`,
       },
     },
     {
@@ -67,6 +69,14 @@ export default defineConfig({
         MIRA_SESSION_UNIT_CAP: "45",
         MIRA_ENGINES_URL: `http://localhost:${ENGINES_PORT}`,
       },
+    },
+    {
+      // Reads shade ranges from product pages (saved pages in mock mode).
+      command: "pnpm --filter @mira/agent exec tsx src/main.ts",
+      url: `http://localhost:${AGENT_PORT}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+      env: { MIRA_MODE: "mock", PORT: String(AGENT_PORT) },
     },
     {
       // The measurement engines: Build Twin derives colour and the repeat-capture spread here.

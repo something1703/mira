@@ -10,4 +10,5 @@ export const RunView = z.object({
 });
 export type RunView = z.infer<typeof RunView>;
 
+export const agentUrl = (): string => process.env.MIRA_AGENT_URL ?? "http://localhost:4010";
 export const workflowsUrl = (): string => process.env.MIRA_WORKFLOWS_URL ?? "http://localhost:4020";

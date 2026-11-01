@@ -21,6 +21,32 @@ export const CONFIG = {
     renderTopN: setting(3, "docs/ENGINES.md §4.1 default", false),
     /** Upper bound the person can raise it to in the QuoteSheet. */
     renderTopNMax: setting(5, "docs/ENGINES.md §4.1 max", false),
+    /**
+     * Foundation request values for each finish and coverage the engine suggests. They map a style
+     * rule to `makeup-vto`'s 0-100 integers (docs/ENGINES.md §4.3). Starting values: no experiment
+     * has compared them with what a person would pick, so they are not presented as calibrated.
+     */
+    glowByFinish: setting(
+      { matte: 10, satin: 35, dewy: 65 },
+      "docs/ENGINES.md §4.3; Phase 6 F8 to calibrate",
+      false,
+    ),
+    coverageByLevel: setting(
+      { light: 35, medium: 60 },
+      "docs/ENGINES.md §4.3; Phase 6 F8 to calibrate",
+      false,
+    ),
+    /** How strongly the shade's colour is applied. Full strength shows the shade as it is. */
+    colourIntensity: setting(70, "Product choice; Phase 6 F8 to calibrate", false),
+    /**
+     * The concealer pass (an optional second run): how it is asked for. Starting values with no
+     * experiment behind them, so not calibrated. Whether to offer it is the engine's decision.
+     */
+    concealerColourIntensity: setting(60, "Product choice; Phase 6 F8 to calibrate", false),
+    concealerUnderEyeIntensity: setting(50, "Product choice; Phase 6 F8 to calibrate", false),
+    concealerCoverageLevel: setting(50, "Product choice; Phase 6 F8 to calibrate", false),
+    /** Shades a range may list. A page with more is more likely a mistaken read than a range. */
+    maxShadesPerRange: setting(200, "Product choice", false),
   },
   budget: {
     /** "Session budget low" banner shows below this share of the session cap. */

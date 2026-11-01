@@ -5,7 +5,8 @@
   "description": "Recorded real YouCam responses for mock mode, and the consent register for any face in them.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./placeholder": "./src/placeholder.ts"
   },
   "scripts": {
     "lint": "eslint .",

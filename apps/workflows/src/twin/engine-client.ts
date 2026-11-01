@@ -7,9 +7,12 @@ import { err, ok, type Result } from "@mira/schemas";
  * returns a value, never throws: a failed engine call becomes a failed node with a code.
  */
 
+const Lab = z.tuple([z.number(), z.number(), z.number()]);
+export type LabTuple = z.infer<typeof Lab>;
+
 export const ColourReading = z.object({
   hex: z.string(),
-  lab: z.tuple([z.number(), z.number(), z.number()]),
+  lab: Lab,
   lch: z.object({ l: z.number(), c: z.number(), h: z.number() }),
   ita: z.number(),
   ita_band: z.string(),
@@ -27,6 +30,42 @@ export const NoiseFloorReading = z.object({
 });
 export type NoiseFloorReading = z.infer<typeof NoiseFloorReading>;
 
+export const PrerankReading = z.object({
+  id: z.string(),
+  name: z.string(),
+  de: z.number(),
+  d_lightness: z.number(),
+  d_hue: z.number(),
+  label: z.enum([
+    "blends_closely",
+    "close",
+    "lighter",
+    "darker",
+    "warmer",
+    "cooler",
+    "more_muted",
+    "more_vivid",
+  ]),
+});
+export type PrerankReading = z.infer<typeof PrerankReading>;
+
+export const ClosedLoopReading = z.object({
+  blend_de: z.number(),
+  direction_ok: z.boolean(),
+  label: z.enum(["blends_closely", "close", "not_close"]),
+});
+export type ClosedLoopReading = z.infer<typeof ClosedLoopReading>;
+
+export const FinishReading = z.object({
+  finishes: z.array(z.enum(["matte", "satin", "dewy"])).min(1),
+  coverage: z.enum(["light", "medium"]),
+  finish_reason: z.string(),
+  coverage_reason: z.string(),
+  t_zone_note: z.boolean(),
+  concealer_suggested: z.boolean(),
+});
+export type FinishReading = z.infer<typeof FinishReading>;
+
 export interface EngineFailure {
   code: "engine_unreachable" | "engine_rejected" | "engine_bad_reply";
   retryable: boolean;
@@ -36,19 +75,55 @@ export interface EngineFailure {
 export interface Enveloped<T> {
   value: T;
   engineVersion: string;
+  /** The thresholds the engine used, by name, as it echoed them. */
+  config?: Record<string, { value: number; calibrated: boolean }> | undefined;
 }
 
 export interface EngineClient {
   /** sRGB hex → Lab, LCh, ITA° and the ITA band. Order is preserved. */
   colourLab(hex: readonly string[]): Promise<Result<Enveloped<ColourReading[]>, EngineFailure>>;
+  /** Ranks catalogue shades by ΔE00 to the skin, at no unit cost (docs/ENGINES.md §4.1). */
+  shadePrerank(
+    skin: LabTuple,
+    catalogue: readonly { id: string; name: string; lab: LabTuple }[],
+  ): Promise<Result<Enveloped<PrerankReading[]>, EngineFailure>>;
+  /** Blend ΔE00 of a re-measured render against the skin, and whether it moved the right way. */
+  closedLoop(
+    skin: LabTuple,
+    shade: LabTuple,
+    render: LabTuple,
+  ): Promise<Result<Enveloped<ClosedLoopReading>, EngineFailure>>;
+  finish(
+    skinTypeWhole: string | null,
+    concernRawScores: Readonly<Record<string, number>>,
+  ): Promise<Result<Enveloped<FinishReading>, EngineFailure>>;
   /** One session of repeated captures per concern: sessions[i] holds that session's scores. */
   noiseFloor(
     sessions: readonly (readonly number[])[],
   ): Promise<Result<Enveloped<NoiseFloorReading>, EngineFailure>>;
 }
 
+const Threshold = z.object({ value: z.number(), calibrated: z.boolean() }).loose();
+
 const envelope = <T extends z.ZodType>(result: T) =>
-  z.object({ engine_version: z.string(), result }).loose();
+  z
+    .object({
+      engine_version: z.string(),
+      // The echo also carries lists the client does not read; keep only the numeric thresholds.
+      config: z
+        .record(z.string(), z.unknown())
+        .transform((all) =>
+          Object.fromEntries(
+            Object.entries(all).flatMap(([k, v]) => {
+              const one = Threshold.safeParse(v);
+              return one.success ? [[k, one.data]] : [];
+            }),
+          ),
+        )
+        .optional(),
+      result,
+    })
+    .loose();
 
 export interface HttpEngineOptions {
   baseUrl: string;
@@ -67,6 +142,22 @@ export class HttpEngineClient implements EngineClient {
 
   noiseFloor(sessions: readonly (readonly number[])[]) {
     return this.post("/stats/noise-floor", { sessions }, NoiseFloorReading);
+  }
+
+  shadePrerank(skin: LabTuple, catalogue: readonly { id: string; name: string; lab: LabTuple }[]) {
+    return this.post("/shade/prerank", { skin, catalogue }, z.array(PrerankReading));
+  }
+
+  closedLoop(skin: LabTuple, shade: LabTuple, render: LabTuple) {
+    return this.post("/shade/closed-loop", { skin, shade, render }, ClosedLoopReading);
+  }
+
+  finish(skinTypeWhole: string | null, concernRawScores: Readonly<Record<string, number>>) {
+    return this.post(
+      "/shade/finish",
+      { skin_type_whole: skinTypeWhole, concern_raw_scores: concernRawScores },
+      FinishReading,
+    );
   }
 
   private async post<T extends z.ZodType>(
@@ -92,6 +183,7 @@ export class HttpEngineClient implements EngineClient {
     return ok({
       value: parsed.data.result as z.infer<T>,
       engineVersion: parsed.data.engine_version,
+      config: parsed.data.config,
     });
   }
 }

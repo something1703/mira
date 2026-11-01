@@ -1,7 +1,7 @@
 import type { Route } from "next";
 
 /**
- * Routes that later phases build (capture: Phase 5, shade: 6, look: 8, proof: 9, recorded runs: 3).
+ * Routes that later phases build (look: Phase 8, proof: 9; capture, shade and the profile are built and still use this cast).
  * Typed routes reject links to pages that do not exist yet, so these are cast on purpose. Until a
  * phase lands its page, the shell's not-found screen explains it.
  */

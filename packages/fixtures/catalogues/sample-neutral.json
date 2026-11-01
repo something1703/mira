@@ -1,0 +1,93 @@
+{
+  "id": "sample-neutral",
+  "brand": "Sample brand",
+  "product": "Sample foundation, neutral-leaning",
+  "finish": "matte",
+  "sample": true,
+  "source": {
+    "kind": "catalogue",
+    "catalogueId": "sample-neutral"
+  },
+  "shades": [
+    {
+      "id": "N110",
+      "name": "N 110",
+      "hex": "#F0D1C3"
+    },
+    {
+      "id": "N120",
+      "name": "N 120",
+      "hex": "#E6C6B7"
+    },
+    {
+      "id": "N130",
+      "name": "N 130",
+      "hex": "#DCBCAC"
+    },
+    {
+      "id": "N140",
+      "name": "N 140",
+      "hex": "#D2B2A1"
+    },
+    {
+      "id": "N150",
+      "name": "N 150",
+      "hex": "#C8A797"
+    },
+    {
+      "id": "N160",
+      "name": "N 160",
+      "hex": "#BE9D8C"
+    },
+    {
+      "id": "N170",
+      "name": "N 170",
+      "hex": "#B49381"
+    },
+    {
+      "id": "N180",
+      "name": "N 180",
+      "hex": "#AB8A77"
+    },
+    {
+      "id": "N190",
+      "name": "N 190",
+      "hex": "#A1806C"
+    },
+    {
+      "id": "N200",
+      "name": "N 200",
+      "hex": "#977662"
+    },
+    {
+      "id": "N210",
+      "name": "N 210",
+      "hex": "#8E6D58"
+    },
+    {
+      "id": "N220",
+      "name": "N 220",
+      "hex": "#84644E"
+    },
+    {
+      "id": "N230",
+      "name": "N 230",
+      "hex": "#7B5A45"
+    },
+    {
+      "id": "N240",
+      "name": "N 240",
+      "hex": "#71513B"
+    },
+    {
+      "id": "N250",
+      "name": "N 250",
+      "hex": "#684932"
+    },
+    {
+      "id": "N260",
+      "name": "N 260",
+      "hex": "#5F4029"
+    }
+  ]
+}

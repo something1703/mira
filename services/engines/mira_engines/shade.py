@@ -75,6 +75,8 @@ def prerank(skin: Lab, shades: list[Shade]) -> list[RankedShade]:
 class ClosedLoop:
     blend_de: float
     direction_ok: bool
+    # How close the re-measured render is to the skin, on the same lines as the pre-rank labels.
+    label: Literal["blends_closely", "close", "not_close"]
 
 
 def closed_loop(skin: Lab, shade: Lab, render: Lab) -> ClosedLoop:
@@ -91,7 +93,15 @@ def closed_loop(skin: Lab, shade: Lab, render: Lab) -> ClosedLoop:
         observed = render[axis] - skin[axis]
         if abs(intended) >= eps and (observed > 0) != (intended > 0):
             ok = False
-    return ClosedLoop(blend_de=de2000(render, skin), direction_ok=ok)
+    blend = de2000(render, skin)
+    label: Literal["blends_closely", "close", "not_close"]
+    if blend <= MATCH_DE.value:
+        label = "blends_closely"
+    elif blend <= CLOSE_DE.value:
+        label = "close"
+    else:
+        label = "not_close"
+    return ClosedLoop(blend_de=blend, direction_ok=ok, label=label)
 
 
 Finish = Literal["matte", "satin", "dewy"]
@@ -107,6 +117,9 @@ class FinishAndCoverage:
     finish_reason: FinishReason
     coverage_reason: CoverageReason
     t_zone_note: bool  # combination skin: say T-zone and U-zone differ
+    # A dark-circle reading below COVERAGE_RAISE: a concealer pass is worth offering. It does not
+    # raise foundation coverage, which the acne, age-spot and redness readings decide.
+    concealer_suggested: bool
 
 
 _COVERAGE_CONCERNS = frozenset({"acne", "age_spot", "redness"})
@@ -147,4 +160,5 @@ def finish_and_coverage(
         finish_reason=reason,
         coverage_reason="raised_for_concern" if raise_it else "default_light",
         t_zone_note=reason == "combination",
+        concealer_suggested=scores.get("dark_circle", COVERAGE_RAISE.value) < COVERAGE_RAISE.value,
     )
