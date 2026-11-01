@@ -27,5 +27,6 @@ Every number or capability claimed in the UI, README, Devpost description or dem
 | F21 | A crash after submit resumes polling the stored task and never creates a second task; a failed task releases its reserved units | `apps/workflows/tests/lifecycle.test.ts` ("crash and resume", "errors") | 2026-11-01 | Built (against a test double; confirm with a live probe) |
 | F22 | Images and YouCam tasks are deleted at the end of every run, images first | `apps/workflows/src/runner/cleanup.ts`, `tests/lifecycle.test.ts` ("cleanup") | 2026-11-01 | Built (blob store and YouCam double; confirm live) |
 | F23 | The webhook receiver verifies Standard Webhooks signatures, including the specification's reference vector | `apps/webhook/tests/webhook.test.ts` | 2026-11-01 | Built (confirm with a real YouCam callback) |
+| F24 | "Run it in 60 seconds": a fresh clone with no credentials runs in mock mode | Measured 2026-11-01 in a cloud container: `pnpm install` 2 s and `uv sync` 1 s (package caches warm), all six services healthy 9 s after `pnpm dev:mock`, first page 3 s later. A cold machine downloads packages first and is unmeasured | 2026-11-01 | Measured (warm cache); measure a cold install before quoting a number publicly |
 
 Add rows as you build. Status values: Source read, Measured, Built, To build, To measure, Withdrawn.

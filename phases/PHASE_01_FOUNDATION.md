@@ -49,8 +49,8 @@
 
 ## Definition of done
 
-- [ ] `pnpm check` passes locally and in CI.
-- [ ] `pnpm dev:mock` works on a fresh clone with no credentials.
+- [x] `pnpm check` passes locally and in CI. _(Locally exit 0 including 84 Playwright tests; CI green on every push of this branch.)_
+- [x] `pnpm dev:mock` works on a fresh clone with no credentials. _(Fresh clone, no YouCam or Google variables: all six services healthy in 9 s, a demo run succeeds, state survives a restart. F24.)_
 - [ ] All six services deployed and returning 200 on `/health` in the cloud.
 - [ ] Vertex smoke test passes; model IDs recorded.
 
