@@ -25,6 +25,16 @@ export const CONFIG = {
   budget: {
     /** "Session budget low" banner shows below this share of the session cap. */
     lowShare: setting(0.2, "docs/UX_FLOWS.md §0", true),
+    /**
+     * Unit caps (docs/UX_FLOWS.md §0, "Session budget reached"). Starting values chosen so one
+     * look with a 10-second video (about 30 units) fits several times in a session; tune with the
+     * demo allowance.
+     */
+    nodeCap: setting(40, "Product choice; the costliest step is a 10 s video", false),
+    runCap: setting(120, "Product choice", false),
+    sessionCap: setting(300, "Product choice; tune to the demo allowance", false),
+    /** The live balance is re-read at most this often. */
+    balanceCacheSeconds: setting(15, "Product choice; polls share a 250 / 5 min rate budget", false),
   },
   agent: {
     maxToolDepth: setting(6, "docs/AGENT_RUNTIME.md §1", true),
@@ -48,6 +58,11 @@ export const CONFIG = {
     pollInitialMs: setting(2_000, "Product choice; CASTING measured 16.5–28 s per try-on", false),
     pollMaxMs: setting(15_000, "Product choice", false),
     pollGiveUpMs: setting(10 * 60_000, "Product choice; well inside the 24 h retention", false),
+    /** Result URLs work for 2 hours (docs/FACTS.md F4); chained steps stop trusting one 5 minutes early. */
+    resultUrlHours: setting(2, "docs/FACTS.md F4", true),
+    resultUrlSafetyMinutes: setting(5, "Product choice", false),
+    /** A create or poll that fails in a retryable way is retried this many times before the node fails. */
+    maxRetries: setting(4, "Product choice", false),
     featureCostCacheHours: setting(24, "phases/PHASE_03 'cost cache refreshed daily'", true),
   },
   retention: {

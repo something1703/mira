@@ -90,13 +90,25 @@ export const RunNode = z.object({
   feature: z.string().optional(),
   version: z.string().optional(),
   params: z.record(z.string(), z.unknown()).default({}),
+  /**
+   * What the node reads, by role (`src`, `ref`, `src0`…). Each is a blob key in this run's
+   * storage (`blob:runs/…`), a previous node's output (`node:<id>`), or a public URL (`url:…`).
+   */
+  inputs: z.record(z.string(), z.string()).default({}),
   cacheKey: z.string().optional(),
-  fileId: z.string().optional(),
+  /** YouCam file IDs by input role, stored before the task is created ("upload once"). */
+  files: z.record(z.string(), z.string()).default({}),
   taskId: z.string().optional(),
   status: NodeStatus,
   unitsReserved: z.number().int().nonnegative().default(0),
   unitsCommitted: z.number().int().nonnegative().default(0),
+  /** Blob key of the copied result image. Result URLs expire after 2 hours (F4). */
   resultRef: z.string().optional(),
+  /** The YouCam result URL and when it stops working, for chaining without a re-upload (D12). */
+  resultUrl: z.string().optional(),
+  resultUrlExpiresAt: z.iso.datetime().optional(),
+  /** Parsed non-image output (analyser JSON, engine results). Numbers only, never images. */
+  output: z.unknown().optional(),
   audit: Audit.optional(),
   error: NodeError.optional(),
   attempts: z.number().int().nonnegative().default(0),
@@ -121,6 +133,8 @@ export const Run = z.object({
   recorded: z.boolean(),
   startedAt: z.iso.datetime(),
   endedAt: z.iso.datetime().optional(),
+  /** Set once the run's images and YouCam tasks have been deleted (AGENTS.md §2.9). */
+  cleanedAt: z.iso.datetime().optional(),
   outputs: z.record(z.string(), z.unknown()).default({}),
 });
 export type Run = z.infer<typeof Run>;

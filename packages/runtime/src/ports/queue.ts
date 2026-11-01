@@ -50,6 +50,7 @@ export class InProcessQueue implements TaskQueue {
   private pending: Pending[] = [];
   private seen = new Set<string>();
   private handler: DeliveryHandler | undefined;
+  private deadHandler: ((delivery: Delivery, error: unknown) => void | Promise<void>) | undefined;
   private timer: NodeJS.Timeout | undefined;
   private readonly maxAttempts: number;
   private readonly backoffMs: number;
@@ -61,6 +62,11 @@ export class InProcessQueue implements TaskQueue {
 
   setHandler(handler: DeliveryHandler): void {
     this.handler = handler;
+  }
+
+  /** Called when a delivery has failed every attempt (Cloud Tasks: the dead-letter step). */
+  setDeadHandler(handler: (delivery: Delivery, error: unknown) => void | Promise<void>): void {
+    this.deadHandler = handler;
   }
 
   enqueue(queue: QueueName, task: QueueTask): Promise<{ accepted: boolean }> {
@@ -101,6 +107,7 @@ export class InProcessQueue implements TaskQueue {
       } catch (error) {
         if (due.attempt >= this.maxAttempts) {
           this.options.onDead?.(delivery, error);
+          await this.deadHandler?.(delivery, error);
         } else {
           this.pending.push({
             ...due,
