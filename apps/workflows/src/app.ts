@@ -8,13 +8,14 @@ import {
 } from "@mira/runtime";
 import { Run, RunNode, SessionId, UserId, WorkItem } from "@mira/schemas";
 import { getDoc, listDocs } from "@mira/runtime";
-import { HttpYouCamApi, ReplayYouCam, type YouCamApi } from "@mira/youcam-client";
+import { ReplayYouCam, type YouCamApi } from "@mira/youcam-client";
 import { fixtureDownloader, hasRecordings, loadFixtures } from "@mira/fixtures";
 import { FakeYouCam } from "@mira/youcam-client/testing";
 import { z } from "zod";
 import { DEMO_PRICES, demoExecutors, newDemoSession, seedDemoFake, startDemoRun } from "./demo";
 import { createEngine, type Engine } from "./engine";
 import { fetchDownloader } from "./lifecycle/download";
+import { liveYouCam } from "./lifecycle/live-api";
 import { RUN_EVENTS_TOPIC, type Downloader } from "./lifecycle/types";
 
 export const ENGINE_VERSION = "0.1.0";
@@ -68,10 +69,10 @@ export function buildApp(
       ? new ReplayYouCam({ clock: ports.clock, fixtures: loaded.fixtures, skus: loaded.skus })
       : mock
         ? fake
-        : new HttpYouCamApi({
-            apiKey: env.YOUCAM_API_KEY ?? "",
-            ...(env.YOUCAM_API_BASE_URL ? { baseUrl: env.YOUCAM_API_BASE_URL } : {}),
-          }));
+        : liveYouCam(
+            { apiKey: env.YOUCAM_API_KEY ?? "", baseUrl: env.YOUCAM_API_BASE_URL },
+            ports.clock,
+          ).api);
   const engine = createEngine({
     ports,
     api,
@@ -145,6 +146,22 @@ export function buildApp(
       res.write(`data: ${JSON.stringify(event)}\n\n`);
     });
     req.raw.on("close", off);
+  });
+
+  // ---- keep a look: copies its images out of the run before cleanup deletes them ----
+  app.post("/internal/runs/:runId/save", async (req, reply) => {
+    const { runId } = req.params as { runId: string };
+    const body = z
+      .object({ nodeIds: z.array(z.string().min(1)).min(1).max(20) })
+      .safeParse(req.body);
+    if (!body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    const saved = await engine.runner.save(runId, body.data.nodeIds);
+    if (!saved.ok) {
+      const status = saved.error.code === "run_not_found" ? 404 : 409;
+      return await reply.status(status).send({ error: saved.error.code, traceId: req.traceId });
+    }
+    return await reply.status(201).send(saved.value);
   });
 
   app.post("/internal/runs/:runId/cancel", async (req) => {

@@ -37,6 +37,7 @@ interface FailInfo {
   code: string;
   retryable: boolean;
   upstream?: string | undefined;
+  guidance?: NodeError["guidance"] | undefined;
 }
 
 function nodeError(e: FailInfo): NodeError {
@@ -44,6 +45,7 @@ function nodeError(e: FailInfo): NodeError {
     code: e.code,
     ...(e.upstream === undefined ? {} : { upstream: e.upstream }),
     retryable: e.retryable,
+    ...(e.guidance === undefined ? {} : { guidance: e.guidance }),
     unitsCharged: 0,
   };
 }

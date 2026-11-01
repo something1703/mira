@@ -30,7 +30,7 @@ This file records what MIRA relies on from Perfect Corp's YouCam API and what ea
 - **Feature cost:** `GET /s2s/v2.0/credit/feature-cost?page_size≤20&starting_token=` (free, paged) returns `result.skus[] = {description, amount, unit: result_image|second, proc_unit, run_task_url}`. Map an SKU to a feature by the path after `/task/` in `run_task_url`. **This endpoint is the only price source** (AGENTS.md §2.4); the unit numbers below are for planning only.
 - **Rate limit:**
   - 250 requests per 300 s per IP **and** per API key (about 0.83 rps sustained, 5 QPS bursts); over that returns `429 {"error":"Too many requests"}`.
-  - **Every poll counts**, so the Cloud Tasks queues share one budget below this.
+  - **Every poll counts**, so the Cloud Tasks queues share one budget below this. Queue rates alone cannot promise it (one submit is up to four calls, and cleanup deletes and balance reads count), so the client also enforces a sliding window of 200 requests per 300 s on every request it sends (`packages/youcam-client/src/rate-limit.ts`, D29). The per-IP half of the limit is shared with anything else behind the same address.
   - No concurrency limit on running tasks is documented _(confirm)_.
 
 ### 1.1 Webhooks

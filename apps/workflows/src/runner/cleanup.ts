@@ -8,14 +8,13 @@ const RETRY_DELAY_MS = 30_000;
 /**
  * End-of-run cleanup (AGENTS.md §2.9, SECURITY_PRIVACY §1): every uploaded and generated image is
  * deleted, then every YouCam task is deleted with its resources. Images go first, so a YouCam
- * failure can never leave a person's photo behind in our storage. Nodes in `keep` are the looks
- * the person saved.
+ * failure can never leave a person's photo behind in our storage. A look the person saved was
+ * copied to `saved/{userId}/{lookId}/` first (see save.ts), outside this prefix, so it survives.
  */
 export async function cleanupRun(
   d: LifecycleDeps,
   runId: string,
   attempt: number,
-  keep: ReadonlySet<string> = new Set(),
 ): Promise<{ done: boolean; blobsDeleted: number; tasksDeleted: number; tasksPending: number }> {
   const run = await getDoc(d.state, `runs/${runId}`, Run);
   if (!run) return { done: true, blobsDeleted: 0, tasksDeleted: 0, tasksPending: 0 };
@@ -23,8 +22,6 @@ export async function cleanupRun(
   const nodes = (await listDocs(d.state, `runs/${runId}/nodes`, RunNode)).map((n) => n.value);
   let blobsDeleted = 0;
   for (const key of await d.blobs.list(`runs/${runId}/`)) {
-    const nodeId = key.split("/")[2];
-    if (nodeId !== undefined && keep.has(nodeId)) continue;
     await d.blobs.delete(key);
     blobsDeleted += 1;
   }

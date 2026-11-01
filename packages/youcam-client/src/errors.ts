@@ -64,6 +64,16 @@ const TASK_RULES: readonly Rule[] = [
   r(/apply_region_mismatch/i, "garment_region", "other_garment"),
   r(/error_pose/i, "pose_unsupported", "retake"),
   r(/object_detection_fail/i, "object_not_found", "other_garment"),
+  // Codes from the "File Specs & Errors" tables of the features MIRA calls (see the bundle audit
+  // in tests/error-codes.test.ts).
+  r(/face_pose|insufficient_landmarks/i, "face_obscured", "retake"),
+  r(/no_shoulder/i, "shoulders_missing", "retake"),
+  r(/bald_image|hair_too_short/i, "hair_not_found", "retake"),
+  r(/unsupport_ratio/i, "image_ratio", "retake"),
+  r(/invalid_src/i, "image_unreadable", "retake"),
+  r(/invalid_params/i, "invalid_request", "contact_support"),
+  r(/size_mismatch_on_input_image_and_mask/i, "invalid_request", "contact_support"),
+  r(/(decode|download|unsupported|unexpected)_video/i, "media_unsupported", "retake"),
   r(/download_image|decode_image|download_mask|decode_mask/i, "image_unreadable", "retake"),
   r(/invalid_parameter/i, "invalid_request", "contact_support"),
   r(/inference|unknown_internal_error|upload/i, "youcam_internal", "retry", true),

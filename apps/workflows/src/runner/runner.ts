@@ -15,6 +15,7 @@ import { getDoc, listDocs, updateDoc, type Delivery } from "@mira/runtime";
 import { isTerminal, NodeLifecycle } from "../lifecycle/node-lifecycle";
 import { RUN_EVENTS_TOPIC, type LifecycleDeps } from "../lifecycle/types";
 import { cleanupRun } from "./cleanup";
+import { saveOutputs } from "./save";
 import { validateGraph, type GraphError, type GraphSpec } from "./graph";
 
 /** What a local (`engine` or `system`) node produces. Errors are values, not exceptions. */
@@ -137,6 +138,11 @@ export class Runner {
 
   private async nodes(runId: string): Promise<RunNode[]> {
     return (await listDocs(this.d.state, `runs/${runId}/nodes`, RunNode)).map((n) => n.value);
+  }
+
+  /** Keeps the images of these steps by copying them out of the run before cleanup deletes it. */
+  async save(runId: string, nodeIds: readonly string[]) {
+    return await saveOutputs(this.d, runId, nodeIds);
   }
 
   /** Marks nodes that have not started as cancelled; running nodes finish, then the run closes. */

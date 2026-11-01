@@ -15,6 +15,11 @@ export interface HttpOptions {
   apiKey: string;
   baseUrl?: string;
   fetch?: FetchLike;
+  /**
+   * Called before every request to YouCam's API. Returning an error stops the request (it is not
+   * sent) and surfaces as that error: this is where the rate limiter plugs in.
+   */
+  gate?: () => Promise<YouCamError | undefined>;
 }
 
 /**
@@ -43,6 +48,8 @@ export class YouCamHttp {
     path: string,
     body?: unknown,
   ): Promise<Result<unknown, YouCamError>> {
+    const blocked = await this.options.gate?.();
+    if (blocked) return err(blocked);
     let res: Response;
     try {
       res = await this.fetchImpl(`${this.baseUrl}${path}`, {

@@ -216,3 +216,56 @@ describe("mira-workflows (mock mode)", () => {
     ).toThrow(/not built yet|required|Missing/i);
   });
 });
+
+describe("live client construction", () => {
+  it("every real YouCam client carries the limiter and is capped under YouCam's 250 per 300 s", async () => {
+    const { liveYouCam } = await import("../src/lifecycle/live-api");
+    const { CONFIG } = await import("@mira/schemas");
+    expect(CONFIG.youcam.requestsPerWindow.value).toBeLessThan(250);
+    expect(CONFIG.youcam.rateWindowSeconds.value).toBe(300);
+    const clock = new FakeClock();
+    const { limiter } = liveYouCam({ apiKey: "k" }, clock);
+    for (let i = 0; i < CONFIG.youcam.requestsPerWindow.value; i++)
+      expect(await limiter.acquire()).toBeUndefined();
+    expect(await limiter.acquire()).toMatchObject({ kind: "rate_limited", retryable: true });
+  });
+});
+
+describe("POST /internal/runs/:runId/save", () => {
+  it("copies a look out of a finished run and reports where; refuses once cleaned up", async () => {
+    const { ctx, settle, ports } = make();
+    const { runId } = await startDemo(ctx.app);
+    // The demo's steps produce numbers, not images: saving is refused with a clear reason.
+    await settle();
+    const none = await ctx.app.inject({
+      method: "POST",
+      url: `/internal/runs/${runId}/save`,
+      payload: { nodeIds: ["tone"] },
+    });
+    expect(none.statusCode).toBe(409);
+    expect(none.json()).toMatchObject({ error: "images_deleted" });
+    expect(await ports.blobs.list("saved/")).toEqual([]);
+  });
+
+  it("validates the body and 404s an unknown run", async () => {
+    const { ctx } = make();
+    expect(
+      (
+        await ctx.app.inject({
+          method: "POST",
+          url: "/internal/runs/run_aaaaaaaa/save",
+          payload: {},
+        })
+      ).statusCode,
+    ).toBe(400);
+    expect(
+      (
+        await ctx.app.inject({
+          method: "POST",
+          url: "/internal/runs/run_aaaaaaaa/save",
+          payload: { nodeIds: ["a"] },
+        })
+      ).statusCode,
+    ).toBe(404);
+  });
+});

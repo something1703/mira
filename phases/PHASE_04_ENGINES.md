@@ -36,7 +36,7 @@
   *Accept:* on simulated data with known variances, MDC within 10% of the analytic value over 1,000 seeds.
 - [x] Phantom: Spearman, usability rule, isotonic fit, inversion; tests on monotone, flat and noisy curves.
 - [x] FastAPI endpoints; each response includes `engine_version` and config used.
-- [ ] Python models generated from `packages/schemas` JSON Schema; contract test against TS types.
+- [x] Python models generated from `packages/schemas` JSON Schema; contract test against TS types. _(`tools/generate_models.py`; 47 samples whose verdicts Zod produced are checked against the models and the JSON Schema; CI fails if either is stale. The models are not yet used by the API, which still has its own request models. D28.)_
 
 ## Definition of done
 

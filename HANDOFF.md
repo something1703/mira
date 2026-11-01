@@ -1,135 +1,97 @@
 # Handoff: where MIRA stands
 
-Written 2026-11-01 for whoever (or whichever Claude session) picks this up next. Read `AGENTS.md` first (the rules), then this file, then the phase you are working on in `phases/`.
+Last updated 2026-11-01, after an audit of Phases 1 to 4 against their own definitions of done. Read `AGENTS.md` first (the rules), then this file, then the phase you are working on in `phases/`.
 
 ## In one paragraph
 
-Phase 1 (foundation) is built, tested and green in CI. Nothing is deployed to Google Cloud and no YouCam units have been spent. The repo has a working monorepo, six service skeletons that answer `/health`, the shared schemas, a claim linter, Terraform that validates but has not been applied, CI, and a corrected, source-cited YouCam API reference. No product feature exists yet: the web app is a placeholder with the lockup and the line "Look, measured." Everything runs in mock mode with no credentials.
+Phases 1 to 4 are built and verified as far as they can be without a YouCam key or a deploy. Nothing is deployed to Google Cloud and no YouCam units have been spent. The repo runs end to end in mock mode with no credentials: the design system, the Welcome and Consent screens, the YouCam client and node lifecycle (cache, ledger, crash-safe polling, cleanup), the signed webhook door, the measurement engines and a run viewer that shows a demo graph finishing, then finishing again from cache at zero units. Every YouCam result in mock mode is synthetic and says so; no real YouCam response has been recorded yet. No product screen beyond Welcome and Consent exists (capture, profile, shade, look, proof are Phases 5 to 10).
 
 ## Standing preferences from the user
 
 - **The deadline is not a constraint.** Build the full spec properly; do not cut scope for the hackathon date. ("Write the best code as humanly possible.")
+- **Do not hop between phases.** The user asked for each phase to be checked against its own definition of done before moving on. Tick a box only when its acceptance criterion is met.
 - **Cost approval before any deploy.** Before `terraform apply`, a Cloud Run deploy, or enabling a billable service, give an itemised running-cost estimate and wait for a go-ahead. Local and mock work needs no approval. YouCam units follow the same spirit (`AGENTS.md` already requires quote and confirm).
-- **Cost-optimised but not lower quality.** Flash-tier models are fine (decision D17). Do not merge the services into one instance; that raises the bill (D18).
+- **Cost-optimised but not lower quality.** Flash-tier models are fine (D17). Do not merge the services into one instance (D18).
 - Secrets go in `.env.local` or Secret Manager, never in chat or in git.
+
+## Phase status
+
+| Phase | State | What is open |
+| --- | --- | --- |
+| 1 Foundation | Local work done and verified: `pnpm check` exits 0; a fresh clone with no credentials runs `pnpm dev:mock` (six services healthy in 9 s, demo run succeeds, state survives a restart, F24) | Needs you: GCP project and APIs, `terraform apply` (cost approval), Vertex smoke test and model IDs, Cloud Build trigger, YouCam key into Secret Manager |
+| 2 Design system | Done. 18 components, tokens in CSS and TypeScript (a test keeps them equal), contrast test, gallery, Welcome, Consent, sessions, budget banner, error screen, icons and manifest | Nothing blocking. The budget banner's "See what uses units" link waits for a units page |
+| 3 YouCam client and lifecycle | Done for everything testable without a key. Request builders are validated against the saved OpenAPI bundles, every documented error code is mapped, a client-side limiter keeps under YouCam's rate limit, saved looks are copied out before cleanup | Needs a key or a deploy: recorded fixtures, the `_confirm_` items, live adapters (Firestore, Cloud Tasks, Pub/Sub, Cloud Storage), OIDC verification of Cloud Tasks calls. Not built: image resizing and the face-crop helper, accessory and jewellery builders (Phase 8) |
+| 4 Engines | Done: colour, ΔE2000 (all 34 Sharma pairs), shade, look, garment, audit, identity, noise floor, phantom, every endpoint, generated Python models with a contract test | Needs a deploy: Cloud Run with service-account auth. `faces.py` needs a BlazeFace `.tflite` model via `MIRA_FACE_MODEL_PATH` (not bundled; untested until supplied) |
+
+Test counts (all pass): 656 unit and contract tests (schemas 62, runtime 28, youcam-client 172, workflows 97, webhook 13, fixtures 6, ui 146, web 8, agent 1, mcp 1, engines 122) and 108 Playwright tests in light, dark and mobile with axe.
 
 ## What exists
 
 | Area | State |
 | --- | --- |
-| Spec and design | `docs/`, `phases/`, `assets/`, `AGENTS.md`. `docs/YOUCAM_API.md`, `docs/FACTS.md`, `docs/DECISIONS.md` and `docs/ARCHITECTURE.md` were corrected from the research below |
-| `packages/schemas` | Result type, IDs, Metric (number, colour, category), Run, RunNode, Plan, Quote, LedgerEntry, config with source and `calibrated` per value, env loader (fails fast in live mode, nothing needed in mock), trace helpers, claim linter and its CLI (`pnpm lint:claims`), JSON Schema export to `services/engines/mira_engines/schemas/` |
-| `packages/runtime` | `createService()`: validated env, scrubbed JSON logs, `x-mira-trace` propagation, `/health`, error handler that hides internals |
-| Services | `apps/agent`, `apps/workflows`, `apps/webhook`, `packages/mira-mcp`: skeletons on ports 4010, 4020, 4030, 4050. `services/engines`: FastAPI on 4040 with every threshold in `config.py` (source plus calibrated flag) |
-| `apps/web` | Next.js 16 placeholder, `/health`, security headers, Gloock and Atkinson fonts through `next/font`, Playwright with axe in light, dark and mobile |
-| `packages/ui` | Only `tokens/colors.css` (all colour tokens, both themes). Components are Phase 2 |
-| `packages/youcam-client` | Only `openapi/`: 67 official bundles, saved unmodified, with `SOURCES.md` (docs v1.17, downloaded 2026-11-01). No client code yet |
-| `infra/` | Terraform (Cloud Run x6, Firestore, two buckets, three Cloud Tasks queues, Pub/Sub, BigQuery dataset, Secret Manager, IAM, optional budget alert), Dockerfiles, `cloudbuild.yaml`. `terraform validate` passes; never applied |
-| CI | `.github/workflows/ci.yml` runs `pnpm check` plus Terraform fmt/validate and a JSON Schema freshness check. Green on the latest commit |
+| `packages/schemas` | IDs, Metric, Run, RunNode (inputs, files, result URL, output, audit, error with guidance), Plan, Quote, LedgerEntry, Budget, CacheEntry, WorkItem, config with source and `calibrated` per value, env loader, claim linter (`pnpm lint:claims`), JSON Schema export and contract-sample export |
+| `packages/runtime` | `createService()` plus the ports: state, queue, events, blobs, clock, with in-memory and file-backed adapters (D10) |
+| `packages/youcam-client` | Typed client, feature registry (15 features), error mapping, pricing selectors, rate limiter, `FakeYouCam`, `ReplayYouCam`, fixture format and URL scrubbing; 67 saved OpenAPI bundles in `openapi/` |
+| `packages/fixtures` | Loader, `fixture://` downloader, consent register. Empty of recordings |
+| `packages/ui` | Tokens (CSS and TypeScript), 18 components, styles |
+| `apps/workflows` | Lifecycle, ledger, cache, quote, graph runner, cleanup, save, restart recovery, recorder and smoke CLIs, the HTTP surface, the demo graph |
+| `apps/webhook` | Standard Webhooks verification, forwards to workflows |
+| `apps/web` | Shell, Welcome, Consent, sessions, budget banner, error boundary, run viewer, component gallery, webhook and MCP proxies, manifest and icons |
+| `apps/agent`, `packages/mira-mcp` | Health-only skeletons (Phase 7 and 10) |
+| `services/engines` | All of Phase 4; `models/generated/` is generated, do not edit |
+| `infra/` | Terraform (valid, never applied), Dockerfiles, `cloudbuild.yaml` |
+| CI | `pnpm check`, Terraform fmt and validate, JSON Schema, contract-sample and generated-model freshness |
 
 ## Verify it yourself
 
 ```bash
 pnpm install
 (cd services/engines && uv sync)          # uv fetches Python 3.12
-pnpm check                                # lint + typecheck + test + Playwright; about 90 seconds
+pnpm check                                # lint + typecheck + test + Playwright; about 2 minutes
 pnpm dev:mock                             # six services plus the web app, no credentials
 ```
 
-Needs Node 24+, pnpm 11, uv. Playwright browsers: `pnpm --filter @mira/web exec playwright install chromium`.
+Needs Node 24+, pnpm 11, uv. Playwright browsers: `pnpm --filter @mira/web exec playwright install chromium`. This container has Node 22, so everything runs with an engine warning.
 
-Test counts at handoff: schemas 62, runtime 5, one health test per service, engines 7, web e2e 9 (three projects).
+Useful pages in mock mode: `/` and `/consent`, `/dev/components` (every component state), `/dev/runs` (start the demo graph, then run it again to see it finish from cache).
 
-## Phase 1 definition of done: what is and is not ticked
+## Decisions (full text in `docs/DECISIONS.md`, D1 to D30)
 
-Done: repo and tooling, scripts, config loader, trace middleware, claim linter, Terraform written and validated, CI, mock mode.
+D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam feature. D12 chain on the previous result URL. D13 verify webhooks and always poll as fallback. D14 anonymous signed sessions (built). D15 agent text uses placeholders for product and shade names (Phase 7). D16 Build Twin gives a same-session estimate, not a noise floor. D19 a gallery instead of Storybook, plain CSS instead of Tailwind. D20 two contrast fixes. D21 Atkinson keeps tabular figures. D22 and D27 design reviews. D23 images are never cached across runs. D24 the webhook forwards, workflows stays the only writer. D25 mock mode never calls synthetic results a recording. D26 prices only from feature-cost, fail closed. D28 generated Python models and how engines must read JSON (strict). D29 the client-side rate limiter. D30 saved looks are copied to `saved/`.
 
-Not done, all of them blocked on the user's go-ahead or credentials (see `phases/PHASE_01_FOUNDATION.md`):
+## Things to know before building on this
 
-- `terraform apply` and "all six services return 200 in the cloud" (needs the cost approval)
-- Vertex smoke test and recording the exact model IDs in `docs/FACTS.md`
-- Cloud Build trigger for deploys on `main`
-- Devpost registration, YouCam sign-up, API key into Secret Manager (the user says the account side is done)
-
-## Decisions made (full text in `docs/DECISIONS.md`)
-
-D8 TypeScript pinned to 6.0.3 (typescript-eslint does not support 7 yet). D9 ESLint pinned to 9.39.5 (Next's plugins). D10 ports and adapters for state, queue, events and blobs, with file-backed and in-process versions in mock mode; **decided but not built**. D11 hand-written Zod per YouCam feature, because the bundles mis-nest `results`. D12 chain steps by passing the previous `results.url` (valid 2 hours) until `dst_id` is confirmed live. D13 verify webhooks per Standard Webhooks and always schedule a fallback poll. D14 anonymous signed-cookie sessions; **not built**. D15 agent text uses placeholders for product and shade names as well as metrics; **not built**. D16 Build Twin produces a same-session variation estimate, not a "noise floor". D17 Gemini 3 Flash for the agent, gated by the 95% eval. D18 keep six scale-to-zero services.
-
-## YouCam research: the corrections that matter
-
-Full report with a source per line: `docs/research/youcam-api-2026-11-01.md`. The ones that change code:
-
-1. **Only one API server** is documented (`yce-api-01.makeupar.com`). The hackathon page's "India link" could not be inspected; ask the organisers.
-2. **Result URLs last 2 hours.** Copy results out immediately. The retention pages disagree on task lifetime (24 hours vs 30 days); treat tasks as dead after 24 hours.
-3. **Delete** is `POST /s2s/v2.0/task/delete {task_id}` and fails while the task is running.
-4. **`dst_id` is not in any schema.** Chain through `results.url` or confirm with a live response.
-5. **Webhooks are configured once in the YouCam console** (no per-request field), signed with Standard Webhooks HMAC-SHA256. Payload has no result, so GET the task.
-6. **Credit calls:** balance `GET /s2s/v1.0/client/credit` (use `amount_dec`), cost `GET /s2s/v2.0/credit/feature-cost` (free, paged).
-7. **Facial Color Tones costs 20 units and returns hex only** (no Lab, hair colour is one of 7 fixed values). Re-measuring every shade preview with it costs about 21 units per shade. **Open question for Phase 6:** measure previews locally (sample pixels, convert to Lab) instead, or accept the cost. Decide before building the Shade graph.
-8. **Fitzpatrick needs `version: "1.0"`.** Hair type and frizz need three photos (front, right, left, same size).
-9. **Clothes:** all paths are `/s2s/v2.0/task/cloth*`; v4 adds `outer`; v4's unit cost is unlisted (read feature-cost).
-10. **Camera Kit:** `faceQualityChanged` keys are `{hasFace, position, frontal, lighting}`; `videoQuality` is ignored in `comprehensive` mode, so HD skin capture is a separate `hdskincare` capture.
-11. **Rate limit:** 250 requests per 300 seconds per key and per IP. Every poll counts; the Cloud Tasks queues are throttled below it.
+- **The lifecycle has only run against a test double.** Everything marked "Built" in `docs/FACTS.md` for F21 to F23 and F25 to F27 should be confirmed with one live run after the key arrives (`pnpm smoke:live`, then `pnpm fixtures:record`).
+- **Duplicate-charge risk.** If `createTask` succeeds at YouCam but the reply is lost to a network error, a retry creates a second task and charges twice. YouCam documents no idempotency key. The retry limit is 4. Worth asking the organisers.
+- **Eight of the fifteen features MIRA calls never mention webhooks in their bundles** (F28), so polling is the dependable path for skin tone, face attributes, the hair detectors, skin simulation, makeup and hair colour.
+- **Price selection by description** for skin analysis and video is a guess until the first live feature-cost read (F20). It fails closed, so a wrong guess blocks a quote instead of misquoting.
+- **Engines must read TypeScript payloads strictly:** `Model.model_validate_json(raw, strict=True)`. The default coerces `"0"` into a number, which Zod never does. The generated models are not yet used by the engine API, which has its own request models.
+- **The recorded-run banner is off** until `MIRA_FIXTURES=recorded` and real recordings exist; until then it says "sample results" (D25).
+- Welcome and Consent link to screens later phases build (`/capture`, `/shade`, `/look`, `/proof`, `/runs/recorded`); they land on an honest "not available yet" screen. The Consent copy promises a Delete my profile control under Privacy; Phase 5 must deliver it, including `deleteSaved()` for saved looks.
+- The Playwright screenshots are attached to results for review, not diffed (fonts load from Google at dev time).
+- Five exact-duplicate files sit in the user's local project root (`README 2.md` and others). They were never committed and do not exist in a clone.
 
 ## Open items that need the user
 
 - YouCam API key into `.env.local` (not in chat), and the webhook URL added in the YouCam console after deploy.
+- Written consent for any real face in a fixture (rows in `packages/fixtures/CONSENT.md`) before recording.
 - Go-ahead to deploy, and the budget-alert amount (default in Terraform: $20 a month).
-- Consented faces for fixtures (Phases 3, 6, 8, 9 need real recordings).
+- Ask the organisers: the "India link", whether YouCam has an idempotency key, and which features send webhooks.
 - Re-check that `gemini-3-flash-preview` is still available before the final demo; it is a preview ID.
-- Five exact-duplicate files sit in the user's local project root (`README 2.md` and others). They were never committed and do not exist in a clone.
 
 ## Next steps, in order
 
-1. **Phase 2 (design system) and Phase 4 (engines) in parallel.** Neither needs credentials. Phase 2: build components from `packages/ui/tokens/colors.css` and `assets/design/mira-ui-reference.html`, starting with the Ring. Phase 4: start with `colour.py` and CIEDE2000 against the 34 Sharma reference pairs.
-2. **Phase 3 (YouCam client and lifecycle).** Build the ports and adapters from D10 first. Write Zod per feature from the saved bundles. Two requirements that are not yet in the phase file: the web app must proxy the public webhook and MCP paths to the internal services, and `mira-workflows` must verify Google OIDC tokens on Cloud Tasks calls itself, because `mira-web` is the public front door.
-3. Then Phases 5 to 10 as written. Decide the Phase 6 preview-measurement question (item 7 above) first.
-
-## Update 2026-11-01 (later): Phases 4 and 2 built
-
-- **Phase 4 (engines): done except two items.** `services/engines` now has colour (sRGB to Lab, LCh, ITA), CIEDE2000 (scalar and vectorised, all 34 Sharma pairs), shade pre-rank, closed loop, finish and coverage, look suggestions, garment colour, the render auditor, identity drift, noise floor and change words, the phantom, and every endpoint in `docs/ENGINES.md` §10 (plus `/shade/finish` and `/audit/lip`). 101 tests. **Not done:** Python models generated from the JSON Schema with a contract test, and the Cloud Run deploy. Open item: `faces.py` detects a face box with MediaPipe only when `MIRA_FACE_MODEL_PATH` points at a BlazeFace `.tflite` file (not bundled, so that path is untested); otherwise callers pass `face_box`. The image endpoints take base64 in the body until the blob port from D10 exists.
-- **Phase 2 (design system): done.** `packages/ui` has all tokens, 18 components, the contrast test (it found two AA failures, fixed in D20) and a no-raw-colour test. `apps/web` has the shell (lockup, theme switch, recorded-run and offline banners, Ask MIRA panel shell), Welcome (three states), Consent (three states) and a gallery at `/dev/components`. 74 Playwright tests (light, dark, mobile) with axe. Decisions D19 to D22.
-- **Things to know:**
-  - Welcome and Consent link to screens that later phases build (`/capture`, `/shade`, `/look`, `/proof`, `/runs/recorded`). They land on the shell's "not available yet" screen. Consent copy promises a Delete my profile control under Privacy; Phase 5 must deliver it.
-  - The Welcome state comes from the `mira_profile` cookie; `?profile=` previews a state outside live mode.
-  - The budget banner exists in `packages/ui` but has no source until the ledger (Phase 3).
-  - Playwright screenshots are attached to test results for review, not diffed (fonts load from Google at dev time).
-  - `pnpm check` runs e2e under turbo, which hides `PLAYWRIGHT_BROWSERS_PATH`. In this container run `pnpm --filter @mira/web exec playwright test` directly.
-  - This container has Node 22; the repo wants 24.
-- **Next:** see the Phase 3 update below.
-
-## Update 2026-11-01 (latest): Phase 3 built, except what needs a key or a deploy
-
-- **Built and tested:**
-  - `packages/runtime` ports (state, queue, events, blobs, clock) with file-backed and in-process mock adapters (D10).
-  - `packages/youcam-client`: the typed client, a feature registry with request builders (the `skin_smooth` rule is enforced and tested), the error-code mapping, the pricing selectors, a `FakeYouCam` test double and a `ReplayYouCam` that replays recorded fixtures.
-  - `apps/workflows`: the node lifecycle (all eight steps), the ledger, the result cache, the quote builder, the graph runner and end-of-run cleanup.
-  - `apps/webhook`: Standard Webhooks verification (it passes the specification's reference vector). It forwards the task ID to workflows.
-  - `mira-web` proxies the public webhook and MCP paths.
-  - The run viewer at `/dev/runs`, with the demo graph and a second run that finishes from cache at zero units.
-  - `pnpm fixtures:record` and `pnpm smoke:live` (both quote, ask, and refuse without a terminal).
-  - `packages/fixtures` with the consent register.
-- **Not built, and why:**
-  - **Live adapters** (Firestore, Cloud Tasks, Pub/Sub, Cloud Storage) wait for the deploy. `mira-workflows` refuses to start in live mode and says so.
-  - **OIDC verification** of Cloud Tasks calls is not built. The queue endpoint is deny-by-default in live mode.
-  - **Recorded fixtures** need your YouCam key and consented faces.
-  - **Image resizing** and the face-crop helper before upload.
-  - **Accessories, jewellery and hair transfer** request builders arrive with Phase 8.
-  - The `_confirm_` items in `docs/YOUCAM_API.md` §2 each need one live response.
-- **Things to know:**
-  - The lifecycle was tested only against `FakeYouCam`. Everything marked "Built (test double)" in `docs/FACTS.md` (F21 to F23) should be re-checked with one live run.
-  - **Duplicate-charge risk:** if `createTask` succeeds on YouCam's side but the response is lost to a network error, a retry creates a second task and charges twice. YouCam documents no idempotency key. The retry limit is 4. Worth asking the organisers.
-  - Mock mode says "sample results" until fixtures exist (D25). Setting `MIRA_FIXTURES=recorded` switches to replay.
-  - Price selection for skin analysis and video uses SKU descriptions and fails closed (D26, F20). The first live feature-cost read will show whether the descriptions match.
-- **Next, in order:**
-  1. Add the YouCam key to `.env.local`, then run `pnpm fixtures:record` for the Phase 5 and 6 features. Add the consent rows first.
-  2. Phase 5 (capture and the Twin). The graph, metrics and ports it needs now exist.
-  3. Decide the Phase 6 preview-measurement question (local pixel sampling vs 21 units per shade).
+1. Add the key, then run `pnpm smoke:live --input <photo>` and `pnpm fixtures:record` for the Phase 5 and 6 features (add consent rows first). That settles F20 and the `_confirm_` items.
+2. Phase 5 (capture and the Twin). Everything it needs from Phases 2 to 4 exists.
+3. Decide the Phase 6 preview-measurement question first: re-measure shade previews with YouCam (about 21 units per shade, hex only) or sample the pixels locally (Phase 4's colour code makes that cheap to try).
+4. Then Phases 6 to 10 as written.
 
 ## Working rules that are easy to miss
 
 - One YouCam client; every call through the node lifecycle; never resubmit a running task; `skin_smooth` always sent at 0 (`AGENTS.md` §2).
 - The model never types a number; the claim linter runs in CI and at runtime. Prompts and refusal templates are exempt (`docs/COPY.md` §3).
+- **Run the whole `pnpm check` before every push**, not only the package you touched. Two regressions this session were found only that way.
+- **Check that a text edit landed.** Prettier reflows code, so a scripted find-and-replace can silently match nothing. Assert it, or grep afterwards.
 - Tick a task's checkbox in its phase file only when its acceptance criteria are met and `pnpm check` passes.
 - Update `docs/FACTS.md` for any claim, `docs/DECISIONS.md` for any choice someone could question.
 - Branches `phase-NN/short-name`, Conventional Commits.

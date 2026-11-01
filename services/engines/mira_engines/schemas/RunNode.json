@@ -171,6 +171,16 @@
         "retryable": {
           "type": "boolean"
         },
+        "guidance": {
+          "type": "string",
+          "enum": [
+            "retake",
+            "retry",
+            "other_garment",
+            "contact_support",
+            "none"
+          ]
+        },
         "unitsCharged": {
           "type": "number",
           "const": 0

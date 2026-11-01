@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "export:json-schema": "tsx scripts/export-json-schema.ts"
+    "export:json-schema": "tsx scripts/export-json-schema.ts",
+    "export:contract-samples": "tsx scripts/export-contract-samples.ts"
   },
   "dependencies": {
     "zod": "4.6.7"

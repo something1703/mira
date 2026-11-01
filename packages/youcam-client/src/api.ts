@@ -72,6 +72,8 @@ export interface HttpYouCamOptions {
   apiKey: string;
   baseUrl?: string;
   fetch?: FetchLike;
+  /** Rate limiting and similar checks that run before every request (see `YouCamHttp`). */
+  gate?: () => Promise<YouCamError | undefined>;
 }
 
 export class HttpYouCamApi implements YouCamApi {

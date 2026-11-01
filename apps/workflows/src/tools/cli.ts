@@ -3,10 +3,11 @@ import { createInterface } from "node:readline/promises";
 import { basename, extname, join } from "node:path";
 import { createMockPorts, type Ports } from "@mira/runtime";
 import { Run, RunNode, newId, type Quote, type RunEvent } from "@mira/schemas";
-import { COST_SNAPSHOT_FILE, FEATURES, HttpYouCamApi, type YouCamApi } from "@mira/youcam-client";
+import { COST_SNAPSHOT_FILE, FEATURES, type YouCamApi } from "@mira/youcam-client";
 import { RECORDED_DIR } from "@mira/fixtures";
 import { createEngine, type Engine } from "../engine";
 import { fetchDownloader } from "../lifecycle/download";
+import { liveYouCam } from "../lifecycle/live-api";
 import type { Downloader } from "../lifecycle/types";
 import { buildQuote } from "../quote";
 import type { GraphSpec } from "../runner/graph";
@@ -47,24 +48,26 @@ export async function askOnTerminal(question: string): Promise<boolean> {
 
 function setup(deps: CliDeps) {
   const out = deps.out ?? ((line: string) => void process.stdout.write(`${line}\n`));
-  let api = deps.api;
-  if (!api) {
+  let key: string | undefined;
+  if (!deps.api) {
     try {
       process.loadEnvFile(".env.local");
     } catch {
       // No .env.local: the key may already be in the environment.
     }
-    const key = process.env.YOUCAM_API_KEY;
-    if (!key)
+    key = process.env.YOUCAM_API_KEY;
+    if (!key) {
       return {
         error: "YOUCAM_API_KEY is not set. Put it in .env.local (never in chat or git).",
       } as const;
-    api = new HttpYouCamApi({
-      apiKey: key,
-      ...(process.env.YOUCAM_API_BASE_URL ? { baseUrl: process.env.YOUCAM_API_BASE_URL } : {}),
-    });
+    }
   }
   const ports = deps.ports ?? createMockPorts({ dir: ".mira/live" });
+  // The CLIs run on the in-process queue, which has no rate limit of its own, so the client's
+  // limiter is what keeps them under YouCam's 250 requests per 300 s.
+  const api: YouCamApi =
+    deps.api ??
+    liveYouCam({ apiKey: key ?? "", baseUrl: process.env.YOUCAM_API_BASE_URL }, ports.clock).api;
   return {
     out,
     api,

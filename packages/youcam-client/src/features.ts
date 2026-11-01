@@ -1,3 +1,8 @@
+/**
+ * Request builders and result parsers per feature, written by hand from the OpenAPI bundles
+ * downloaded 2026-11-01 (docs v1.17; see openapi/SOURCES.md). tests/request-schemas.test.ts checks
+ * every builder against those bundles.
+ */
 import { z } from "zod";
 import {
   FaceAttrResult,
@@ -48,6 +53,13 @@ export interface Feature<P = unknown> {
   readonly version: "v2.0" | "v2.1";
   readonly params: z.ZodType<P>;
   readonly result: z.ZodType;
+  /**
+   * Whether the feature's bundle mentions webhooks at all. YouCam publishes no list of features
+   * that send them (docs/YOUCAM_API.md §1.1), so "undocumented" means the poll is the only
+   * completion path MIRA can rely on. MIRA polls every task regardless (D13);
+   * tests/features.test.ts keeps this flag equal to the saved bundles.
+   */
+  readonly webhooks: "documented" | "undocumented";
   /** What the node needs uploaded: one photo, three photos, or a photo and a reference. */
   readonly inputs: "single" | "triple" | "single+ref";
   buildBody(params: P, inputs: FeatureInputs): Record<string, unknown>;
@@ -207,6 +219,7 @@ export const FEATURES = {
   "skin-analysis": feature({
     slug: "skin-analysis",
     version: "v2.1",
+    webhooks: "documented",
     params: SkinAnalysisParams,
     result: SkinAnalysisResult,
     inputs: "single",
@@ -220,6 +233,7 @@ export const FEATURES = {
   "skin-tone-analysis": feature({
     slug: "skin-tone-analysis",
     version: "v2.0",
+    webhooks: "undocumented",
     params: z.object({ strictness: Strictness.optional() }),
     result: SkinToneResult,
     inputs: "single",
@@ -232,6 +246,7 @@ export const FEATURES = {
   "fitzpatrick-scale-analyzer": feature({
     slug: "fitzpatrick-scale-analyzer",
     version: "v2.0",
+    webhooks: "documented",
     params: NoParams,
     result: FitzpatrickResult,
     inputs: "single",
@@ -242,6 +257,7 @@ export const FEATURES = {
   "face-attr-analysis": feature({
     slug: "face-attr-analysis",
     version: "v2.0",
+    webhooks: "undocumented",
     params: z.object({
       features: z.array(FaceFeature).min(1).max(28),
       strictness: Strictness.optional(),
@@ -258,6 +274,7 @@ export const FEATURES = {
   "hair-type-detection": feature({
     slug: "hair-type-detection",
     version: "v2.0",
+    webhooks: "undocumented",
     params: NoParams,
     result: HairTypeResult,
     inputs: "triple",
@@ -267,6 +284,7 @@ export const FEATURES = {
   "hair-frizziness-detection": feature({
     slug: "hair-frizziness-detection",
     version: "v2.0",
+    webhooks: "documented",
     params: NoParams,
     result: HairFrizzResult,
     inputs: "triple",
@@ -276,6 +294,7 @@ export const FEATURES = {
   "hair-density-detection": feature({
     slug: "hair-density-detection",
     version: "v2.0",
+    webhooks: "undocumented",
     params: NoParams,
     result: HairDensityResult,
     inputs: "single",
@@ -285,6 +304,7 @@ export const FEATURES = {
   "hair-length-detection": feature({
     slug: "hair-length-detection",
     version: "v2.0",
+    webhooks: "undocumented",
     params: NoParams,
     result: HairLengthResult,
     inputs: "single",
@@ -294,6 +314,7 @@ export const FEATURES = {
   "skin-simulation": feature({
     slug: "skin-simulation",
     version: "v2.0",
+    webhooks: "undocumented",
     params: SkinSimulationParams,
     result: UrlResult,
     inputs: "single",
@@ -303,6 +324,7 @@ export const FEATURES = {
   "makeup-vto": feature({
     slug: "makeup-vto",
     version: "v2.0",
+    webhooks: "undocumented",
     params: MakeupParams,
     result: UrlResult,
     inputs: "single",
@@ -312,6 +334,7 @@ export const FEATURES = {
   "cloth-v4": feature({
     slug: "cloth-v4",
     version: "v2.0",
+    webhooks: "documented",
     params: ClothesParams,
     result: UrlResult,
     inputs: "single+ref",
@@ -328,6 +351,7 @@ export const FEATURES = {
   "hair-color": feature({
     slug: "hair-color",
     version: "v2.0",
+    webhooks: "undocumented",
     params: HairColorParams,
     result: UrlResult,
     inputs: "single",
@@ -337,6 +361,7 @@ export const FEATURES = {
   "bg-replace": feature({
     slug: "bg-replace",
     version: "v2.0",
+    webhooks: "documented",
     params: BackgroundParams,
     result: UrlResult,
     inputs: "single",
@@ -350,6 +375,7 @@ export const FEATURES = {
   "image-to-video/youcam": feature({
     slug: "image-to-video/youcam",
     version: "v2.0",
+    webhooks: "documented",
     params: VideoParams,
     result: UrlResult,
     inputs: "single",
@@ -364,6 +390,7 @@ export const FEATURES = {
   sod: feature({
     slug: "sod",
     version: "v2.0",
+    webhooks: "documented",
     params: NoParams,
     result: UrlResult,
     inputs: "single",

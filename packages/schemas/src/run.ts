@@ -75,6 +75,8 @@ export const NodeError = z.object({
   /** YouCam's own code or message, kept for the run viewer; never shown raw to a person. */
   upstream: z.string().optional(),
   retryable: z.boolean(),
+  /** What the person can do about it; the UI picks the button and copy from this and `code`. */
+  guidance: z.enum(["retake", "retry", "other_garment", "contact_support", "none"]).optional(),
   /** Failed tasks cost nothing (docs/YOUCAM_API.md §1); recorded so the UI can say so. */
   unitsCharged: z.literal(0),
 });

@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const WORKFLOWS_PORT = Number(process.env.E2E_WORKFLOWS_PORT ?? 4120);
+const WEBHOOK_PORT = Number(process.env.E2E_WEBHOOK_PORT ?? 4130);
+/** A throwaway secret for the test servers only. */
+const WEBHOOK_SECRET = `whsec_${Buffer.from("e2e-only-secret-not-a-real-one").toString("base64")}`;
 
 /** Playwright always runs against mock mode (docs/TESTING.md). */
 export default defineConfig({
@@ -29,6 +32,20 @@ export default defineConfig({
         MIRA_MODE: "mock",
         NEXT_PUBLIC_MIRA_MODE: "mock",
         MIRA_WORKFLOWS_URL: `http://localhost:${WORKFLOWS_PORT}`,
+        MIRA_WEBHOOK_URL: `http://localhost:${WEBHOOK_PORT}`,
+      },
+    },
+    {
+      // The public webhook path: web proxies to this service, which forwards to workflows.
+      command: "pnpm --filter @mira/webhook exec tsx src/main.ts",
+      url: `http://localhost:${WEBHOOK_PORT}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+      env: {
+        MIRA_MODE: "mock",
+        PORT: String(WEBHOOK_PORT),
+        MIRA_WORKFLOWS_URL: `http://localhost:${WORKFLOWS_PORT}`,
+        YOUCAM_WEBHOOK_SECRET: WEBHOOK_SECRET,
       },
     },
     {

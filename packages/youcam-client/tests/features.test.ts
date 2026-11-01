@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   FEATURES,
@@ -214,5 +216,42 @@ describe("request builders", () => {
     expect(build("hair-color", { preset: "Rose Gold" }, { src })).toMatchObject({
       preset: "Rose Gold",
     });
+  });
+});
+
+describe("webhook flag matches the saved bundles", () => {
+  const BUNDLE_OF: Record<string, string> = {
+    "skin-analysis": "ai_skin_analysis",
+    "skin-tone-analysis": "ai_skin_tone_analysis",
+    "fitzpatrick-scale-analyzer": "ai_fitzpatrick_skin_type",
+    "face-attr-analysis": "ai_face_analyzer",
+    "hair-type-detection": "ai_hair_type_detection",
+    "hair-frizziness-detection": "ai_hair_frizziness_detection",
+    "hair-density-detection": "ai_hair_density_detection",
+    "hair-length-detection": "ai_hair_length_detection",
+    "skin-simulation": "ai_skin_simulation",
+    "makeup-vto": "makeup_vto",
+    "cloth-v4": "ai_clothes",
+    "hair-color": "ai_hair_color",
+    "bg-replace": "ai_photo_background_change",
+    "image-to-video/youcam": "ai_video_generator",
+    sod: "ai_background_removal",
+  };
+
+  it("every registered feature has a bundle in this table", () => {
+    expect(Object.keys(BUNDLE_OF).sort()).toEqual(Object.keys(FEATURES).sort());
+  });
+
+  it.each(Object.entries(BUNDLE_OF))("%s", (slug, bundle) => {
+    const text = readFileSync(join(import.meta.dirname, "../openapi", `${bundle}.yaml`), "utf8");
+    const mentions = /webhook/i.test(text);
+    expect(featureOf(slug as FeatureSlug).webhooks).toBe(mentions ? "documented" : "undocumented");
+  });
+
+  it("the features MIRA depends on for capture are the ones with no documented webhook", () => {
+    // So the poll fallback is not optional polish: it is the only dependable path for these.
+    for (const slug of ["skin-tone-analysis", "face-attr-analysis", "makeup-vto"] as const) {
+      expect(featureOf(slug).webhooks).toBe("undocumented");
+    }
   });
 });

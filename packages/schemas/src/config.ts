@@ -61,6 +61,14 @@ export const CONFIG = {
     pollInitialMs: setting(2_000, "Product choice; CASTING measured 16.5–28 s per try-on", false),
     pollMaxMs: setting(15_000, "Product choice", false),
     pollGiveUpMs: setting(10 * 60_000, "Product choice; well inside the 24 h retention", false),
+    /**
+     * YouCam allows 250 requests per 300 s per key and per IP (docs/FACTS.md F11). The client
+     * stays under it with headroom for other callers sharing the key or the IP.
+     */
+    requestsPerWindow: setting(200, "docs/FACTS.md F11 (250 per 300 s), minus 20% headroom", false),
+    rateWindowSeconds: setting(300, "docs/FACTS.md F11", true),
+    /** A call that would have to wait longer than this fails as retryable instead of blocking. */
+    rateMaxWaitSeconds: setting(5, "Product choice", false),
     /** Result URLs work for 2 hours (docs/FACTS.md F4); chained steps stop trusting one 5 minutes early. */
     resultUrlHours: setting(2, "docs/FACTS.md F4", true),
     resultUrlSafetyMinutes: setting(5, "Product choice", false),

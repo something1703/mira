@@ -9,3 +9,4 @@ export { BlushEffect, ConcealerEffect, FoundationEffect, LipColorEffect } from "
 export * from "./canonical";
 export * from "./fixtures";
 export * from "./mock/replay";
+export * from "./rate-limit";

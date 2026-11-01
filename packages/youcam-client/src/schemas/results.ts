@@ -1,3 +1,4 @@
+// Written from the OpenAPI bundles downloaded 2026-11-01 (docs v1.17; see openapi/SOURCES.md).
 import { z } from "zod";
 
 /**

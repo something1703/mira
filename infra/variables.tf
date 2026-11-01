@@ -24,8 +24,10 @@ variable "max_instances" {
 variable "youcam_queue_rps" {
   description = <<-EOT
     Combined Cloud Tasks dispatch rate for YouCam calls. YouCam allows 250 requests per 300 s per
-    key (about 0.83 rps, docs/FACTS.md F11). A submit node makes 2 API calls (register + create),
-    a poll makes 1; the split below keeps the total under the limit with headroom.
+    key (about 0.83 rps, docs/FACTS.md F11). A submit makes 2 API calls (register + create), or 4
+    for the three-photo hair features, a poll makes 1, and cleanup and balance reads add more. These
+    queue rates are a coarse first guard; the exact guard is the client's own sliding window
+    (packages/youcam-client/src/rate-limit.ts, D29), which counts every request.
   EOT
   type        = object({ submit = number, poll = number })
   default     = { submit = 0.2, poll = 0.35 }

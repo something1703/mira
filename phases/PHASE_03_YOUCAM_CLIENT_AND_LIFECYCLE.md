@@ -26,8 +26,10 @@
 - [x] Feature registry with request builders; `makeup-vto` builder injects `skin_smooth: 0` unless `allowSmoothing` is explicitly true.
   *Accept:* unit test fails if any makeup request lacks `skin_smooth`.
 - [ ] File registration + presigned PUT with the exact returned headers; image pre-processing (resize to limits, face-crop helper for skin analysis). _(registration and PUT are done; resizing and the face-crop helper are not)_
-- [x] Task create, poll (exponential backoff, cap), result parse; error mapping table for every documented error code.
-- [x] Credit balance and feature-cost calls; cost cache refreshed daily.
+- [x] Task create, poll (exponential backoff, cap), result parse; error mapping table for every documented error code. _(Backoff 2 s ×1.5 to 15 s, tested. Every code in the 15 bundles of features MIRA calls maps to a specific code; `tests/error-codes.test.ts` fails on a new one.)_
+- [x] Request builders checked against the saved bundles: every body satisfies its OpenAPI request schema and sends only declared fields (`tests/request-schemas.test.ts`).
+- [x] A client-side sliding-window rate limiter (200 requests per 300 s) in the HTTP transport, so every path, including the CLIs and multi-photo submits, stays under YouCam's 250 (F11, F25).
+- [x] Credit balance and feature-cost calls; cost cache refreshed daily. _(24 h TTL, stale prices kept if a refresh fails, balance re-read at most every 15 s; `tests/costs.test.ts`.)_
 - [x] Task delete with resources.
 
 ### Lifecycle and runner
@@ -39,7 +41,8 @@
 - [x] Webhook receiver verifies secret and task existence, then enqueues `advance(runId, nodeId)`; poll fallback for features without webhooks.
 - [x] Graph runner: typed graph definition, dependency resolution, parallel ready nodes up to queue rate, partial-failure semantics, cancellation of unstarted nodes.
 - [ ] Pub/Sub `run-events` (node started, done, cached, failed, audited); web subscribes through a server-sent events endpoint. _(events and the SSE endpoint exist in-process; Pub/Sub is not built and the run viewer polls instead)_
-- [x] End-of-run cleanup: delete Cloud Storage objects and YouCam tasks unless the user saved the output.
+- [x] End-of-run cleanup: delete Cloud Storage objects and YouCam tasks unless the user saved the output. _(Saving copies the images to `saved/{userId}/{lookId}/` first, `runner/save.ts`; the run's own copies are always deleted.)_
+- [x] A failed node stores what the person can do about it (`guidance`: retake, retry, other garment, contact support).
 
 ### Ports, adapters and edges
 - [x] Ports and adapters in `packages/runtime` for state, queue, events and blobs (D10): file-backed / in-process for mock.

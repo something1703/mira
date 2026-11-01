@@ -1,0 +1,807 @@
+{
+  "Lab": {
+    "valid": [
+      [
+        50,
+        0,
+        0
+      ],
+      [
+        65.2,
+        14.1,
+        20.9
+      ],
+      [
+        0,
+        -128,
+        127
+      ]
+    ],
+    "invalid": [
+      {
+        "why": "two components",
+        "value": [
+          50,
+          0
+        ]
+      },
+      {
+        "why": "four components",
+        "value": [
+          50,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "why": "a string among the numbers",
+        "value": [
+          50,
+          "0",
+          0
+        ]
+      },
+      {
+        "why": "not an array",
+        "value": {
+          "l": 50,
+          "a": 0,
+          "b": 0
+        }
+      }
+    ]
+  },
+  "Audit": {
+    "valid": [
+      {
+        "kind": "garment",
+        "outcome": "drift",
+        "deltaE": 7.4,
+        "directions": [
+          "lighter"
+        ],
+        "reason": "garment_drift",
+        "engineVersion": "0.1.0"
+      },
+      {
+        "kind": "garment",
+        "outcome": "verified",
+        "directions": [],
+        "reason": "garment_drift",
+        "engineVersion": "0.1.0"
+      }
+    ],
+    "invalid": [
+      {
+        "why": "unknown outcome",
+        "value": {
+          "kind": "garment",
+          "outcome": "great",
+          "deltaE": 7.4,
+          "directions": [
+            "lighter"
+          ],
+          "reason": "garment_drift",
+          "engineVersion": "0.1.0"
+        }
+      },
+      {
+        "why": "negative ΔE",
+        "value": {
+          "kind": "garment",
+          "outcome": "drift",
+          "deltaE": -1,
+          "directions": [
+            "lighter"
+          ],
+          "reason": "garment_drift",
+          "engineVersion": "0.1.0"
+        }
+      },
+      {
+        "why": "missing reason",
+        "value": {
+          "kind": "garment",
+          "outcome": "drift",
+          "deltaE": 7.4,
+          "directions": [
+            "lighter"
+          ],
+          "engineVersion": "0.1.0"
+        }
+      }
+    ]
+  },
+  "LedgerEntry": {
+    "valid": [
+      {
+        "id": "led_aaaaaaaa",
+        "kind": "reserve",
+        "feature": "sod",
+        "units": 1,
+        "runId": "run_aaaaaaaa",
+        "nodeId": "a",
+        "sessionId": "ses_aaaaaaaa",
+        "at": "2026-11-01T10:00:00.000Z"
+      }
+    ],
+    "invalid": [
+      {
+        "why": "fractional units",
+        "value": {
+          "id": "led_aaaaaaaa",
+          "kind": "reserve",
+          "feature": "sod",
+          "units": 1.5,
+          "runId": "run_aaaaaaaa",
+          "nodeId": "a",
+          "sessionId": "ses_aaaaaaaa",
+          "at": "2026-11-01T10:00:00.000Z"
+        }
+      },
+      {
+        "why": "wrong id prefix",
+        "value": {
+          "id": "run_aaaaaaaa",
+          "kind": "commit",
+          "feature": "sod",
+          "units": 1,
+          "runId": "run_aaaaaaaa",
+          "nodeId": "a",
+          "sessionId": "ses_aaaaaaaa",
+          "at": "2026-11-01T10:00:00.000Z"
+        }
+      },
+      {
+        "why": "unknown kind",
+        "value": {
+          "id": "led_aaaaaaaa",
+          "kind": "refund",
+          "feature": "sod",
+          "units": 1,
+          "runId": "run_aaaaaaaa",
+          "nodeId": "a",
+          "sessionId": "ses_aaaaaaaa",
+          "at": "2026-11-01T10:00:00.000Z"
+        }
+      }
+    ]
+  },
+  "Metric": {
+    "valid": [
+      {
+        "id": "skin.hd_pore.whole",
+        "source": {
+          "feature": "skin-analysis",
+          "version": "v2.1",
+          "taskRunId": "task_1"
+        },
+        "confidence": "within",
+        "measuredAt": "2026-11-01T10:00:00.000Z",
+        "kind": "number",
+        "value": 71.2,
+        "unit": "raw score"
+      },
+      {
+        "id": "colour.skin",
+        "source": {
+          "feature": "skin-analysis",
+          "version": "v2.1",
+          "taskRunId": "task_1"
+        },
+        "confidence": "n/a",
+        "measuredAt": "2026-11-01T10:00:00.000Z",
+        "kind": "colour",
+        "lab": [
+          65,
+          14,
+          20
+        ],
+        "hex": "#C79A78"
+      },
+      {
+        "id": "fitzpatrick.band",
+        "source": {
+          "feature": "skin-analysis",
+          "version": "v2.1",
+          "taskRunId": "task_1"
+        },
+        "confidence": "clear",
+        "measuredAt": "2026-11-01T10:00:00.000Z",
+        "kind": "category",
+        "value": "III"
+      }
+    ],
+    "invalid": [
+      {
+        "why": "a colour in a number field",
+        "value": {
+          "id": "skin.hd_pore.whole",
+          "source": {
+            "feature": "skin-analysis",
+            "version": "v2.1",
+            "taskRunId": "task_1"
+          },
+          "confidence": "within",
+          "measuredAt": "2026-11-01T10:00:00.000Z",
+          "kind": "number",
+          "value": "#C79A78",
+          "unit": "x"
+        }
+      },
+      {
+        "why": "lower-case hex",
+        "value": {
+          "id": "skin.hd_pore.whole",
+          "source": {
+            "feature": "skin-analysis",
+            "version": "v2.1",
+            "taskRunId": "task_1"
+          },
+          "confidence": "within",
+          "measuredAt": "2026-11-01T10:00:00.000Z",
+          "kind": "colour",
+          "lab": [
+            65,
+            14,
+            20
+          ],
+          "hex": "#c79a78"
+        }
+      },
+      {
+        "why": "two-component Lab",
+        "value": {
+          "id": "skin.hd_pore.whole",
+          "source": {
+            "feature": "skin-analysis",
+            "version": "v2.1",
+            "taskRunId": "task_1"
+          },
+          "confidence": "within",
+          "measuredAt": "2026-11-01T10:00:00.000Z",
+          "kind": "colour",
+          "lab": [
+            65,
+            14
+          ],
+          "hex": "#C79A78"
+        }
+      },
+      {
+        "why": "upper-case metric id",
+        "value": {
+          "id": "Skin.Pore",
+          "source": {
+            "feature": "skin-analysis",
+            "version": "v2.1",
+            "taskRunId": "task_1"
+          },
+          "confidence": "within",
+          "measuredAt": "2026-11-01T10:00:00.000Z",
+          "kind": "category",
+          "value": "x"
+        }
+      },
+      {
+        "why": "unknown kind",
+        "value": {
+          "id": "skin.hd_pore.whole",
+          "source": {
+            "feature": "skin-analysis",
+            "version": "v2.1",
+            "taskRunId": "task_1"
+          },
+          "confidence": "within",
+          "measuredAt": "2026-11-01T10:00:00.000Z",
+          "kind": "image",
+          "value": "x"
+        }
+      }
+    ]
+  },
+  "Plan": {
+    "valid": [
+      {
+        "id": "plan_aaaaaaaa",
+        "userId": "usr_aaaaaaaa",
+        "sessionId": "ses_aaaaaaaa",
+        "workflow": "match_shade",
+        "inputs": {},
+        "quote": {
+          "lines": [
+            {
+              "nodeId": "tone",
+              "label": "quote.measure",
+              "feature": "skin-tone-analysis",
+              "units": 20,
+              "cached": false,
+              "optional": false
+            }
+          ],
+          "total": 20,
+          "sessionUnitsLeft": 180,
+          "overCap": false,
+          "pricing": {
+            "source": "feature-cost",
+            "pricedAt": "2026-11-01T10:00:00.000Z"
+          }
+        },
+        "createdAt": "2026-11-01T10:00:00.000Z",
+        "expiresAt": "2026-11-01T10:00:00.000Z"
+      }
+    ],
+    "invalid": [
+      {
+        "why": "unknown workflow",
+        "value": {
+          "id": "plan_aaaaaaaa",
+          "userId": "usr_aaaaaaaa",
+          "sessionId": "ses_aaaaaaaa",
+          "workflow": "demo",
+          "inputs": {},
+          "quote": {
+            "lines": [
+              {
+                "nodeId": "tone",
+                "label": "quote.measure",
+                "feature": "skin-tone-analysis",
+                "units": 20,
+                "cached": false,
+                "optional": false
+              }
+            ],
+            "total": 20,
+            "sessionUnitsLeft": 180,
+            "overCap": false,
+            "pricing": {
+              "source": "feature-cost",
+              "pricedAt": "2026-11-01T10:00:00.000Z"
+            }
+          },
+          "createdAt": "2026-11-01T10:00:00.000Z",
+          "expiresAt": "2026-11-01T10:00:00.000Z"
+        }
+      },
+      {
+        "why": "missing quote",
+        "value": {
+          "id": "plan_aaaaaaaa",
+          "userId": "usr_aaaaaaaa",
+          "sessionId": "ses_aaaaaaaa",
+          "workflow": "match_shade",
+          "inputs": {},
+          "createdAt": "2026-11-01T10:00:00.000Z",
+          "expiresAt": "2026-11-01T10:00:00.000Z"
+        }
+      }
+    ]
+  },
+  "Quote": {
+    "valid": [
+      {
+        "lines": [
+          {
+            "nodeId": "tone",
+            "label": "quote.measure",
+            "feature": "skin-tone-analysis",
+            "units": 20,
+            "cached": false,
+            "optional": false
+          }
+        ],
+        "total": 20,
+        "sessionUnitsLeft": 180,
+        "overCap": false,
+        "pricing": {
+          "source": "feature-cost",
+          "pricedAt": "2026-11-01T10:00:00.000Z"
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "why": "negative total",
+        "value": {
+          "lines": [
+            {
+              "nodeId": "tone",
+              "label": "quote.measure",
+              "feature": "skin-tone-analysis",
+              "units": 20,
+              "cached": false,
+              "optional": false
+            }
+          ],
+          "total": -1,
+          "sessionUnitsLeft": 180,
+          "overCap": false,
+          "pricing": {
+            "source": "feature-cost",
+            "pricedAt": "2026-11-01T10:00:00.000Z"
+          }
+        }
+      },
+      {
+        "why": "pricing from a guess",
+        "value": {
+          "lines": [
+            {
+              "nodeId": "tone",
+              "label": "quote.measure",
+              "feature": "skin-tone-analysis",
+              "units": 20,
+              "cached": false,
+              "optional": false
+            }
+          ],
+          "total": 20,
+          "sessionUnitsLeft": 180,
+          "overCap": false,
+          "pricing": {
+            "source": "estimate",
+            "pricedAt": "2026-11-01T10:00:00.000Z"
+          }
+        }
+      },
+      {
+        "why": "fractional units on a line",
+        "value": {
+          "lines": [
+            {
+              "nodeId": "tone",
+              "label": "quote.measure",
+              "feature": "skin-tone-analysis",
+              "units": 2.5,
+              "cached": false,
+              "optional": false
+            }
+          ],
+          "total": 20,
+          "sessionUnitsLeft": 180,
+          "overCap": false,
+          "pricing": {
+            "source": "feature-cost",
+            "pricedAt": "2026-11-01T10:00:00.000Z"
+          }
+        }
+      }
+    ]
+  },
+  "Run": {
+    "valid": [
+      {
+        "id": "run_aaaaaaaa",
+        "type": "demo",
+        "userId": "usr_aaaaaaaa",
+        "sessionId": "ses_aaaaaaaa",
+        "status": "succeeded",
+        "planId": "plan_aaaaaaaa",
+        "quote": {
+          "lines": [
+            {
+              "nodeId": "tone",
+              "label": "quote.measure",
+              "feature": "skin-tone-analysis",
+              "units": 20,
+              "cached": false,
+              "optional": false
+            }
+          ],
+          "total": 20,
+          "sessionUnitsLeft": 180,
+          "overCap": false,
+          "pricing": {
+            "source": "feature-cost",
+            "pricedAt": "2026-11-01T10:00:00.000Z"
+          }
+        },
+        "unitsSpent": 20,
+        "traceId": "trc_aaaaaaaa",
+        "recorded": false,
+        "startedAt": "2026-11-01T10:00:00.000Z"
+      },
+      {
+        "id": "run_aaaaaaaa",
+        "type": "demo",
+        "userId": "usr_aaaaaaaa",
+        "sessionId": "ses_aaaaaaaa",
+        "status": "partial",
+        "planId": "plan_aaaaaaaa",
+        "quote": {
+          "lines": [
+            {
+              "nodeId": "tone",
+              "label": "quote.measure",
+              "feature": "skin-tone-analysis",
+              "units": 20,
+              "cached": false,
+              "optional": false
+            }
+          ],
+          "total": 20,
+          "sessionUnitsLeft": 180,
+          "overCap": false,
+          "pricing": {
+            "source": "feature-cost",
+            "pricedAt": "2026-11-01T10:00:00.000Z"
+          }
+        },
+        "unitsSpent": 20,
+        "traceId": "trc_aaaaaaaa",
+        "recorded": false,
+        "startedAt": "2026-11-01T10:00:00.000Z",
+        "cleanedAt": "2026-11-01T10:00:00.000Z",
+        "outputs": {
+          "steps": {
+            "succeeded": 2,
+            "total": 3
+          }
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "why": "unknown status",
+        "value": {
+          "id": "run_aaaaaaaa",
+          "type": "demo",
+          "userId": "usr_aaaaaaaa",
+          "sessionId": "ses_aaaaaaaa",
+          "status": "done",
+          "planId": "plan_aaaaaaaa",
+          "quote": {
+            "lines": [
+              {
+                "nodeId": "tone",
+                "label": "quote.measure",
+                "feature": "skin-tone-analysis",
+                "units": 20,
+                "cached": false,
+                "optional": false
+              }
+            ],
+            "total": 20,
+            "sessionUnitsLeft": 180,
+            "overCap": false,
+            "pricing": {
+              "source": "feature-cost",
+              "pricedAt": "2026-11-01T10:00:00.000Z"
+            }
+          },
+          "unitsSpent": 20,
+          "traceId": "trc_aaaaaaaa",
+          "recorded": false,
+          "startedAt": "2026-11-01T10:00:00.000Z"
+        }
+      },
+      {
+        "why": "session id used as run id",
+        "value": {
+          "id": "ses_aaaaaaaa",
+          "type": "demo",
+          "userId": "usr_aaaaaaaa",
+          "sessionId": "ses_aaaaaaaa",
+          "status": "succeeded",
+          "planId": "plan_aaaaaaaa",
+          "quote": {
+            "lines": [
+              {
+                "nodeId": "tone",
+                "label": "quote.measure",
+                "feature": "skin-tone-analysis",
+                "units": 20,
+                "cached": false,
+                "optional": false
+              }
+            ],
+            "total": 20,
+            "sessionUnitsLeft": 180,
+            "overCap": false,
+            "pricing": {
+              "source": "feature-cost",
+              "pricedAt": "2026-11-01T10:00:00.000Z"
+            }
+          },
+          "unitsSpent": 20,
+          "traceId": "trc_aaaaaaaa",
+          "recorded": false,
+          "startedAt": "2026-11-01T10:00:00.000Z"
+        }
+      },
+      {
+        "why": "missing recorded flag",
+        "value": {
+          "id": "run_aaaaaaaa",
+          "type": "demo",
+          "userId": "usr_aaaaaaaa",
+          "sessionId": "ses_aaaaaaaa",
+          "status": "succeeded",
+          "planId": "plan_aaaaaaaa",
+          "quote": {
+            "lines": [
+              {
+                "nodeId": "tone",
+                "label": "quote.measure",
+                "feature": "skin-tone-analysis",
+                "units": 20,
+                "cached": false,
+                "optional": false
+              }
+            ],
+            "total": 20,
+            "sessionUnitsLeft": 180,
+            "overCap": false,
+            "pricing": {
+              "source": "feature-cost",
+              "pricedAt": "2026-11-01T10:00:00.000Z"
+            }
+          },
+          "unitsSpent": 20,
+          "traceId": "trc_aaaaaaaa",
+          "startedAt": "2026-11-01T10:00:00.000Z"
+        }
+      }
+    ]
+  },
+  "RunEvent": {
+    "valid": [
+      {
+        "runId": "run_aaaaaaaa",
+        "nodeId": "tone",
+        "type": "node_done",
+        "at": "2026-11-01T10:00:00.000Z",
+        "traceId": "trc_aaaaaaaa"
+      },
+      {
+        "runId": "run_aaaaaaaa",
+        "type": "run_finished",
+        "at": "2026-11-01T10:00:00.000Z",
+        "traceId": "trc_aaaaaaaa"
+      }
+    ],
+    "invalid": [
+      {
+        "why": "unknown event type",
+        "value": {
+          "runId": "run_aaaaaaaa",
+          "type": "node_exploded",
+          "at": "2026-11-01T10:00:00.000Z",
+          "traceId": "trc_aaaaaaaa"
+        }
+      },
+      {
+        "why": "bad trace id",
+        "value": {
+          "runId": "run_aaaaaaaa",
+          "type": "run_started",
+          "at": "2026-11-01T10:00:00.000Z",
+          "traceId": "trace-1"
+        }
+      }
+    ]
+  },
+  "RunNode": {
+    "valid": [
+      {
+        "id": "tone",
+        "runId": "run_aaaaaaaa",
+        "kind": "youcam",
+        "label": "step.measure_colour",
+        "dependsOn": [],
+        "feature": "skin-tone-analysis",
+        "status": "done",
+        "unitsReserved": 20,
+        "unitsCommitted": 20
+      },
+      {
+        "id": "tone",
+        "runId": "run_aaaaaaaa",
+        "kind": "youcam",
+        "label": "step.measure_colour",
+        "dependsOn": [],
+        "feature": "skin-tone-analysis",
+        "status": "failed",
+        "unitsReserved": 20,
+        "unitsCommitted": 20,
+        "error": {
+          "code": "face_too_small",
+          "upstream": "error_src_face_too_small",
+          "retryable": false,
+          "guidance": "retake",
+          "unitsCharged": 0
+        }
+      },
+      {
+        "id": "tone",
+        "runId": "run_aaaaaaaa",
+        "kind": "youcam",
+        "label": "step.measure_colour",
+        "dependsOn": [],
+        "feature": "skin-tone-analysis",
+        "status": "done",
+        "unitsReserved": 20,
+        "unitsCommitted": 20,
+        "inputs": {
+          "src": "blob:runs/run_aaaaaaaa/a/input.jpg"
+        },
+        "files": {
+          "src": "file_1"
+        },
+        "taskId": "t1",
+        "resultUrl": "https://x",
+        "resultUrlExpiresAt": "2026-11-01T10:00:00.000Z"
+      }
+    ],
+    "invalid": [
+      {
+        "why": "a charged failure: failed tasks cost nothing",
+        "value": {
+          "id": "tone",
+          "runId": "run_aaaaaaaa",
+          "kind": "youcam",
+          "label": "step.measure_colour",
+          "dependsOn": [],
+          "feature": "skin-tone-analysis",
+          "status": "failed",
+          "unitsReserved": 20,
+          "unitsCommitted": 20,
+          "error": {
+            "code": "x",
+            "retryable": false,
+            "unitsCharged": 3
+          }
+        }
+      },
+      {
+        "why": "unknown guidance",
+        "value": {
+          "id": "tone",
+          "runId": "run_aaaaaaaa",
+          "kind": "youcam",
+          "label": "step.measure_colour",
+          "dependsOn": [],
+          "feature": "skin-tone-analysis",
+          "status": "done",
+          "unitsReserved": 20,
+          "unitsCommitted": 20,
+          "error": {
+            "code": "x",
+            "retryable": false,
+            "guidance": "panic",
+            "unitsCharged": 0
+          }
+        }
+      },
+      {
+        "why": "node id with a capital",
+        "value": {
+          "id": "Tone",
+          "runId": "run_aaaaaaaa",
+          "kind": "youcam",
+          "label": "step.measure_colour",
+          "dependsOn": [],
+          "feature": "skin-tone-analysis",
+          "status": "done",
+          "unitsReserved": 20,
+          "unitsCommitted": 20
+        }
+      },
+      {
+        "why": "negative units",
+        "value": {
+          "id": "tone",
+          "runId": "run_aaaaaaaa",
+          "kind": "youcam",
+          "label": "step.measure_colour",
+          "dependsOn": [],
+          "feature": "skin-tone-analysis",
+          "status": "done",
+          "unitsReserved": 20,
+          "unitsCommitted": -1
+        }
+      }
+    ]
+  }
+}

@@ -2,6 +2,7 @@ import { InProcessQueue, FakeClock, createMockPorts, updateDoc } from "@mira/run
 import { Run, RunNode, type Audit } from "@mira/schemas";
 import { describe, expect, it } from "vitest";
 import { cleanupRun } from "../src/runner/cleanup";
+import { deleteSaved } from "../src/runner/save";
 import { PNG, makeHarness, youcam } from "./harness";
 
 const SKIN_TONE = { color: { skin_color: "#C79A78", lip_color: "#A5504F" } };
@@ -309,7 +310,12 @@ describe("errors", () => {
     expect(node).toMatchObject({
       status: "failed",
       unitsCommitted: 0,
-      error: { code: "face_too_small", upstream: "error_src_face_too_small", unitsCharged: 0 },
+      error: {
+        code: "face_too_small",
+        upstream: "error_src_face_too_small",
+        guidance: "retake",
+        unitsCharged: 0,
+      },
     });
     expect(h.fake.units).toBe(1_000);
     expect((await h.engine.ledger.entries(runId)).map((e) => e.kind).sort()).toEqual([
@@ -648,13 +654,67 @@ describe("cleanup", () => {
     expect(out).toMatchObject({ done: true, tasksDeleted: 1, tasksPending: 0 });
   });
 
-  it("keeps the blobs of a saved look and deletes the rest", async () => {
+  it("a saved look survives cleanup in saved/, everything else in the run is deleted", async () => {
+    const h = makeHarness();
+    const src = await h.photo("face");
+    const runId = await h.start({
+      type: "demo",
+      nodes: [youcam("a", "sod", { inputs: { src } }), youcam("b", "sod", { inputs: { src } })],
+    });
+    // Save at the moment both results exist, before cleanup runs.
+    let saved: Awaited<ReturnType<typeof h.engine.runner.save>> | undefined;
+    h.ports.events.subscribe("run-events", async (e) => {
+      if ((e as { type: string }).type === "run_finished")
+        saved = await h.engine.runner.save(runId, ["a"]);
+    });
+    await h.settle();
+
+    expect(saved).toMatchObject({
+      ok: true,
+      value: {
+        keys: [
+          expect.stringMatching(new RegExp(`^saved/${h.userId}/lk_[a-z0-9]+/a\\.png$`)) as string,
+        ],
+      },
+    });
+    if (!saved?.ok) throw new Error("save failed");
+    expect(await h.ports.blobs.list(`runs/${runId}/`)).toEqual([]); // the run's own copies are gone
+    expect(await h.ports.blobs.list(`saved/${h.userId}/`)).toEqual(saved.value.keys);
+    expect(((await h.run(runId)).outputs.saved as { lookId: string }[])[0]?.lookId).toBe(
+      saved.value.lookId,
+    );
+
+    // Delete my profile: one look, then everything the person saved.
+    expect(await deleteSaved(h.engine.deps, h.userId, saved.value.lookId)).toBe(1);
+    expect(await h.ports.blobs.list("saved/")).toEqual([]);
+  });
+
+  it("refuses to save from a run that has already been cleaned up, or an unknown run", async () => {
     const h = makeHarness();
     const runId = await single(h, "sod");
-    await h.ports.blobs.put(`runs/${runId}/a/output.png`, PNG, "image/png");
-    await h.ports.blobs.put(`runs/${runId}/b/output.png`, PNG, "image/png");
-    await cleanupRun(h.engine.deps, runId, 0, new Set(["a"]));
-    expect(await h.ports.blobs.list(`runs/${runId}/`)).toEqual([`runs/${runId}/a/output.png`]);
+    await h.settle();
+    expect(await h.engine.runner.save(runId, ["a"])).toEqual({
+      ok: false,
+      error: { code: "images_deleted" },
+    });
+    expect(await h.engine.runner.save("run_nonexistent1", ["a"])).toEqual({
+      ok: false,
+      error: { code: "run_not_found" },
+    });
+  });
+
+  it("refuses to save a step that produced no image", async () => {
+    const h = makeHarness();
+    h.fake.script("skin-tone-analysis", { results: SKIN_TONE, latencyMs: 1_000 });
+    const runId = await single(h, "skin-tone-analysis");
+    let result: Awaited<ReturnType<typeof h.engine.runner.save>> | undefined;
+    h.ports.events.subscribe("run-events", async (e) => {
+      if ((e as { type: string }).type === "run_finished")
+        result = await h.engine.runner.save(runId, ["a"]);
+    });
+    await h.settle();
+    expect(result).toEqual({ ok: false, error: { code: "nothing_to_save" } });
+    expect(await h.ports.blobs.list("saved/")).toEqual([]);
   });
 });
 
