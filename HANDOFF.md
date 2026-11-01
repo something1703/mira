@@ -85,6 +85,19 @@ Full report with a source per line: `docs/research/youcam-api-2026-11-01.md`. Th
 2. **Phase 3 (YouCam client and lifecycle).** Build the ports and adapters from D10 first. Write Zod per feature from the saved bundles. Two requirements that are not yet in the phase file: the web app must proxy the public webhook and MCP paths to the internal services, and `mira-workflows` must verify Google OIDC tokens on Cloud Tasks calls itself, because `mira-web` is the public front door.
 3. Then Phases 5 to 10 as written. Decide the Phase 6 preview-measurement question (item 7 above) first.
 
+## Update 2026-11-01 (later): Phases 4 and 2 built
+
+- **Phase 4 (engines): done except two items.** `services/engines` now has colour (sRGB to Lab, LCh, ITA), CIEDE2000 (scalar and vectorised, all 34 Sharma pairs), shade pre-rank, closed loop, finish and coverage, look suggestions, garment colour, the render auditor, identity drift, noise floor and change words, the phantom, and every endpoint in `docs/ENGINES.md` §10 (plus `/shade/finish` and `/audit/lip`). 101 tests. **Not done:** Python models generated from the JSON Schema with a contract test, and the Cloud Run deploy. Open item: `faces.py` detects a face box with MediaPipe only when `MIRA_FACE_MODEL_PATH` points at a BlazeFace `.tflite` file (not bundled, so that path is untested); otherwise callers pass `face_box`. The image endpoints take base64 in the body until the blob port from D10 exists.
+- **Phase 2 (design system): done.** `packages/ui` has all tokens, 18 components, the contrast test (it found two AA failures, fixed in D20) and a no-raw-colour test. `apps/web` has the shell (lockup, theme switch, recorded-run and offline banners, Ask MIRA panel shell), Welcome (three states), Consent (three states) and a gallery at `/dev/components`. 74 Playwright tests (light, dark, mobile) with axe. Decisions D19 to D22.
+- **Things to know:**
+  - Welcome and Consent link to screens that later phases build (`/capture`, `/shade`, `/look`, `/proof`, `/runs/recorded`). They land on the shell's "not available yet" screen. Consent copy promises a Delete my profile control under Privacy; Phase 5 must deliver it.
+  - The Welcome state comes from the `mira_profile` cookie; `?profile=` previews a state outside live mode.
+  - The budget banner exists in `packages/ui` but has no source until the ledger (Phase 3).
+  - Playwright screenshots are attached to test results for review, not diffed (fonts load from Google at dev time).
+  - `pnpm check` runs e2e under turbo, which hides `PLAYWRIGHT_BROWSERS_PATH`. In this container run `pnpm --filter @mira/web exec playwright test` directly.
+  - This container has Node 22; the repo wants 24.
+- **Next:** Phase 3 (ports and adapters from D10, then the YouCam client and lifecycle), then Phase 5. Decide the Phase 6 preview-measurement question first. Phase 4's colour code now makes the local option (sample pixels, convert to Lab) cheap to try.
+
 ## Working rules that are easy to miss
 
 - One YouCam client; every call through the node lifecycle; never resubmit a running task; `skin_smooth` always sent at 0 (`AGENTS.md` §2).

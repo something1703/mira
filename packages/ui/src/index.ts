@@ -1,5 +1,5 @@
-export { Banner, type BannerKind, type BannerProps } from "./Banner";
-export { Button, type ButtonProps, type ButtonVariant } from "./Button";
+export { Banner, CloseIconButton, type BannerKind, type BannerProps } from "./Banner";
+export { Button, buttonClass, type ButtonProps, type ButtonVariant } from "./Button";
 export { Dialog, type DialogProps } from "./Dialog";
 export { EmptyState, type EmptyStateProps } from "./EmptyState";
 export { ErrorPanel, type ErrorPanelProps } from "./ErrorPanel";

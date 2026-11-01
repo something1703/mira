@@ -21,6 +21,19 @@
 .mira-figures {
   font-variant-numeric: tabular-nums lining-nums;
 }
+/* The font shorthand resets variants, so re-apply figures after any type class. */
+:is(
+  .mira-display-xl,
+  .mira-display-l,
+  .mira-display-m,
+  .mira-title,
+  .mira-body-l,
+  .mira-body,
+  .mira-small,
+  .mira-caption
+).mira-figures {
+  font-variant-numeric: tabular-nums lining-nums;
+}
 
 .mira-display-xl {
   font: 400 var(--mira-display-xl) var(--mira-font-display);

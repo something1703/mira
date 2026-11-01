@@ -31,9 +31,19 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/**
+ * Applies a saved theme before first paint, so a returning person never sees a flash of the other
+ * theme. With nothing saved, the CSS follows prefers-color-scheme on its own.
+ */
+const THEME_SCRIPT =
+  "try{var t=localStorage.getItem('mira-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}";
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${ui.variable}`}>
+    <html lang="en" className={`${display.variable} ${ui.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );

@@ -2,6 +2,16 @@ import type { ReactNode } from "react";
 import { cx } from "./cx";
 import { CloseIcon, InfoIcon, OfflineIcon, RecordedIcon } from "./icons";
 
+/** A 44 px icon-only close control with a screen-reader name. */
+export function CloseIconButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" className="mira-banner__dismiss" onClick={onClick}>
+      <CloseIcon />
+      <span className="mira-sr-only">{label}</span>
+    </button>
+  );
+}
+
 export type BannerKind = "recorded" | "offline" | "budget" | "info";
 
 const ICONS = {
@@ -28,12 +38,7 @@ export function Banner({ kind, children, action, onDismiss, className }: BannerP
       <Icon />
       <p className="mira-banner__text">{children}</p>
       {action}
-      {onDismiss ? (
-        <button type="button" className="mira-banner__dismiss" onClick={onDismiss}>
-          <CloseIcon />
-          <span className="mira-sr-only">Dismiss for this session</span>
-        </button>
-      ) : null}
+      {onDismiss ? <CloseIconButton label="Dismiss for this session" onClick={onDismiss} /> : null}
     </div>
   );
 }

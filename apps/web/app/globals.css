@@ -1,4 +1,4 @@
-@import "../../../packages/ui/tokens/colors.css";
+@import "../../../packages/ui/src/styles.css";
 
 *,
 *::before,
@@ -11,36 +11,189 @@ body {
   margin: 0;
   background: var(--mira-surface);
   color: var(--mira-ink);
-  font-family: var(--font-ui), system-ui, sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
+  font: 400 var(--mira-body) var(--mira-font-ui);
 }
 
-.placeholder {
-  max-width: 1200px;
+h1,
+h2,
+h3,
+p {
+  overflow-wrap: anywhere;
+}
+
+a {
+  color: var(--mira-accent);
+}
+
+/* ---------- Shell ---------- */
+.skip-link {
+  position: absolute;
+  left: var(--mira-space-4);
+  top: -100px;
+  z-index: 10;
+  padding: var(--mira-space-3) var(--mira-space-4);
+  background: var(--mira-raised);
+  border-radius: var(--mira-radius-control);
+}
+.skip-link:focus {
+  top: var(--mira-space-4);
+}
+
+.shell {
+  min-height: 100dvh;
+  padding-inline: var(--mira-gutter);
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.shell__inner {
+  max-width: var(--mira-content-max);
   margin: 0 auto;
-  padding: 96px 24px;
 }
-
-.placeholder svg {
-  width: 320px;
-  max-width: 100%;
-  height: auto;
+.shell__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--mira-space-3) var(--mira-space-4);
+  padding: var(--mira-space-4) 0;
+  border-bottom: 1px solid var(--mira-rule);
+}
+.shell__home {
+  display: inline-flex;
+  border-radius: var(--mira-radius-control);
+}
+.shell__lockup {
+  height: 36px;
+  width: auto;
   display: block;
 }
-
-.placeholder h1 {
-  font-family: var(--font-display), Georgia, serif;
-  font-weight: 400;
-  font-size: 61px;
-  line-height: 64px;
-  margin: 48px 0 16px;
+.shell__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--mira-space-2);
+}
+.shell__banners {
+  display: grid;
+  gap: var(--mira-space-2);
+  margin-top: var(--mira-space-4);
+}
+.shell__banners:empty {
+  display: none;
+}
+.shell__main {
+  padding-block: var(--mira-space-7) var(--mira-space-8);
+}
+.shell__main:focus {
+  outline: none;
 }
 
-.placeholder p {
-  font-size: 20px;
-  line-height: 30px;
-  color: var(--mira-ink-2);
-  max-width: 34em;
+/* ---------- Ask MIRA panel ---------- */
+.ask {
+  position: fixed;
+  z-index: 5;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(400px, 100vw);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--mira-raised);
+  border-left: 1px solid var(--mira-rule);
+  padding: var(--mira-space-5);
+  gap: var(--mira-space-4);
+}
+.ask__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ask__head h2 {
   margin: 0;
+}
+.ask__body {
+  color: var(--mira-ink-2);
+}
+.ask__body p {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .ask {
+    top: auto;
+    width: 100vw;
+    max-height: 70dvh;
+    border-left: 0;
+    border-top: 1px solid var(--mira-rule);
+    border-radius: var(--mira-radius-panel) var(--mira-radius-panel) 0 0;
+  }
+}
+
+/* ---------- Welcome ---------- */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--mira-space-7);
+  align-items: center;
+}
+.hero h1 {
+  margin: 0 0 20px;
+}
+.lead {
+  margin: 0 0 var(--mira-space-6);
+  max-width: 34em;
+  color: var(--mira-ink-2);
+  font: 400 var(--mira-body-l) var(--mira-font-ui);
+}
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: var(--mira-space-6);
+  }
+}
+
+/* ---------- Consent ---------- */
+.consent {
+  max-width: 44rem;
+}
+.consent h1 {
+  margin: 0 0 var(--mira-space-5);
+}
+.consent__list {
+  display: grid;
+  gap: var(--mira-space-5);
+  margin: 0 0 var(--mira-space-6);
+}
+.consent__list h2 {
+  margin: 0 0 var(--mira-space-1);
+}
+.consent__list p {
+  margin: 0;
+  color: var(--mira-ink-2);
+}
+.consent__confirm {
+  display: grid;
+  gap: var(--mira-space-3);
+  justify-items: start;
+}
+
+/* ---------- Component gallery ---------- */
+.gallery {
+  display: grid;
+  gap: var(--mira-space-8);
+}
+.gallery section {
+  padding-top: var(--mira-space-5);
+  border-top: 1px solid var(--mira-rule);
+}
+.gallery h2 {
+  margin: 0 0 var(--mira-space-4);
+}
+.gallery h3 {
+  margin: var(--mira-space-5) 0 var(--mira-space-2);
+  font: 600 var(--mira-body) var(--mira-font-ui);
+  color: var(--mira-ink-2);
+}
+.gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--mira-space-5);
 }
