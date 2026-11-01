@@ -20,5 +20,7 @@ Every number or capability claimed in the UI, README, Devpost description or dem
 | F14 | Delete-with-resources removes a task's inputs and outputs; it fails while the task runs | B:task_management; R §3 | 2026-11-01 | Source read |
 | F15 | Image-to-video costs 1/2/3 units per second at 480/720/1080p | B:ai_video_generator Unit Consumption | 2026-11-01 | Source read |
 | F16 | YouCam documents a single API server, `yce-api-01.makeupar.com`; no regional or India host | docs.perfectcorp.com/develop/api_server and every bundle's `servers`; R §1 | 2026-11-01 | Source read |
+| F17 | CIEDE2000 matches all 34 Sharma, Wu and Dalal (2005) reference pairs to 4 decimals, and an independent `colour-science` implementation | `services/engines/tests/data/sharma_2005.csv`, `tests/test_colour.py` | 2026-11-01 | Built |
+| F18 | Noise-floor MDC averages within 10% of the analytic value over 1,000 simulated seeds (12 sessions × 3 captures) | `services/engines/tests/test_stats.py` | 2026-11-01 | Built |
 
 Add rows as you build. Status values: Source read, Measured, Built, To build, To measure, Withdrawn.

@@ -13,7 +13,8 @@ from typing import Literal
 from mira_engines.colour import Lab, de2000, hue_difference, lab_to_lch
 from mira_engines.config import CLOSE_DE, COVERAGE_RAISE, DIRECTION_EPS, MATCH_DE
 
-MatchLabel = Literal["blends_closely", "close", "lighter", "darker", "warmer", "cooler"]
+Direction = Literal["lighter", "darker", "warmer", "cooler"]
+MatchLabel = Literal["blends_closely", "close"] | Direction
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,7 +33,7 @@ class RankedShade:
     label: MatchLabel
 
 
-def _off_axis_label(skin: Lab, shade: Lab, d_lightness: float, d_hue: float) -> MatchLabel:
+def off_axis_label(skin: Lab, shade: Lab, d_lightness: float, d_hue: float) -> Direction:
     """Lighter/darker/warmer/cooler: whichever difference is larger in Lab units.
 
     The hue gap is converted to arc length in the a*b* plane (mean chroma × angle in radians), so
@@ -58,7 +59,7 @@ def prerank(skin: Lab, shades: list[Shade]) -> list[RankedShade]:
         elif de <= CLOSE_DE.value:
             label = "close"
         else:
-            label = _off_axis_label(skin, shade.lab, d_l, d_h)
+            label = off_axis_label(skin, shade.lab, d_l, d_h)
         ranked.append(RankedShade(shade, de, d_l, d_h, label))
     ranked.sort(key=lambda r: (round(r.de, 6), abs(r.d_hue), abs(r.d_lightness), r.shade.id))
     return ranked
