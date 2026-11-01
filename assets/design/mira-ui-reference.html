@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MIRA — UI reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Gloock&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mira-surface:#F2F2F2;--mira-raised:#FFFFFF;--mira-sunken:#E6E6E6;
+  --mira-ink:#202020;--mira-ink-2:#555555;--mira-ink-3:#6B6B6B;--mira-rule:#D4D4D4;
+  --mira-mat:#777777;--mira-accent:#3341D1;--mira-accent-wash:rgb(51 65 209 / .10);
+  --mira-drift:#8A5A00;--mira-critical:#A1271B;
+  --f-display:"Gloock",Georgia,serif;--f-ui:"Atkinson Hyperlegible Next",system-ui,sans-serif;
+  --ease:cubic-bezier(.2,0,0,1);color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --mira-surface:#1E1E1E;--mira-raised:#282828;--mira-sunken:#161616;
+  --mira-ink:#EDEDED;--mira-ink-2:#B5B5B5;--mira-ink-3:#8F8F8F;--mira-rule:#3A3A3A;
+  --mira-accent:#8C95FF;--mira-accent-wash:rgb(140 149 255 / .14);--mira-drift:#E0A64A;--mira-critical:#F2877B;color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --mira-surface:#1E1E1E;--mira-raised:#282828;--mira-sunken:#161616;
+  --mira-ink:#EDEDED;--mira-ink-2:#B5B5B5;--mira-ink-3:#8F8F8F;--mira-rule:#3A3A3A;
+  --mira-accent:#8C95FF;--mira-accent-wash:rgb(140 149 255 / .14);--mira-drift:#E0A64A;--mira-critical:#F2877B;color-scheme:dark;}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--mira-surface);color:var(--mira-ink);font-family:var(--f-ui);font-size:16px;line-height:1.5}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+header{display:flex;align-items:center;justify-content:space-between;padding:20px 0;border-bottom:1px solid var(--mira-rule)}
+header svg{height:36px;width:auto;display:block}
+.ink{stroke:var(--mira-ink)} .acc{stroke:var(--mira-accent)} .accf{fill:var(--mira-accent)}
+button{font:inherit;cursor:pointer}
+.btn{border-radius:6px;padding:12px 20px;font-weight:600;font-size:16px;min-height:44px;border:1px solid transparent;transition:background-color 120ms var(--ease)}
+.btn-primary{background:var(--mira-accent);color:#fff}
+:root[data-theme="dark"] .btn-primary{color:#14163A}
+.btn-secondary{background:transparent;color:var(--mira-ink);border-color:var(--mira-rule)}
+.btn-quiet{background:none;border:none;color:var(--mira-accent);padding:12px 4px}
+.btn:focus-visible,.btn-quiet:focus-visible,.theme:focus-visible{outline:2px solid var(--mira-accent);outline-offset:2px}
+.theme{background:none;border:1px solid var(--mira-rule);color:var(--mira-ink-2);border-radius:6px;padding:8px 12px;font-size:14px}
+.hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:center;padding:64px 0 72px}
+.ring{width:100%;max-width:420px;aspect-ratio:1;justify-self:center}
+.ring .reading{transform-origin:200px 200px;animation:sweep 600ms var(--ease) 400ms both}
+@keyframes sweep{from{transform:rotate(-40deg)}to{transform:rotate(0)}}
+@media (prefers-reduced-motion: reduce){.ring .reading{animation:none}}
+h1{font-family:var(--f-display);font-weight:400;font-size:61px;line-height:64px;margin:0 0 20px;letter-spacing:-.01em}
+.lead{font-size:20px;line-height:30px;color:var(--mira-ink-2);max-width:34em;margin:0 0 32px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+h2{font-family:var(--f-display);font-weight:400;font-size:39px;line-height:44px;margin:0 0 8px}
+.sub{color:var(--mira-ink-2);margin:0 0 32px;max-width:40em}
+section{padding:56px 0;border-top:1px solid var(--mira-rule)}
+/* Plate layout */
+.result{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;align-items:start}
+.plate{background:var(--mira-mat);border-radius:12px;aspect-ratio:4/5;max-height:560px;width:100%;justify-self:start;display:grid;place-items:center;position:relative;overflow:hidden}
+.plate .ph{width:28%;opacity:.35}
+.strip{display:flex;justify-content:space-between;gap:16px;padding:12px 4px 0;font-size:14px;color:var(--mira-ink-2)}
+.label{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:6px 10px;border-radius:6px}
+.label svg{width:16px;height:16px}
+.l-ok{color:var(--mira-accent);background:var(--mira-accent-wash)}
+.l-drift{color:var(--mira-drift);background:color-mix(in srgb,var(--mira-drift) 12%,transparent)}
+.l-none{color:var(--mira-ink-2);background:var(--mira-sunken)}
+.panel{background:var(--mira-raised);border-radius:12px;padding:24px;border:1px solid var(--mira-rule)}
+.title{font-size:25px;line-height:30px;font-weight:600;margin:0 0 4px}
+.readingv{font-size:31px;line-height:32px;font-weight:700;font-variant-numeric:tabular-nums lining-nums}
+.unit{font-size:13px;color:var(--mira-ink-3);margin-left:4px;font-weight:400}
+.band{position:relative;height:8px;border-radius:4px;background:var(--mira-sunken);margin:12px 0 8px}
+.band .floor{position:absolute;left:38%;width:18%;top:0;bottom:0;background:var(--mira-rule);border-radius:4px}
+.band .mark{position:absolute;left:71%;top:-4px;width:3px;height:16px;border-radius:2px;background:var(--mira-accent)}
+.small{font-size:14px;line-height:20px;color:var(--mira-ink-2)}
+.swatches{display:flex;gap:12px;margin:20px 0}
+.sw{width:64px}
+.sw .chip{height:64px;border-radius:2px;border:1px solid var(--mira-rule)}
+.sw.sel .chip{outline:2px solid var(--mira-accent);outline-offset:2px}
+.sw p{margin:6px 0 0;font-size:13px;line-height:18px;color:var(--mira-ink-2)}
+.why{margin:16px 0 24px;padding-left:16px;border-left:2px solid var(--mira-rule)}
+/* Steps + quote */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+ol.steps{list-style:none;margin:0;padding:0}
+ol.steps li{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--mira-rule);font-size:16px}
+ol.steps li:last-child{border-bottom:none}
+.dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--mira-rule);justify-self:center}
+.done .dot{background:var(--mira-ink);border-color:var(--mira-ink)}
+.cached .dot{background:var(--mira-ink-3);border-color:var(--mira-ink-3)}
+.run .dot{border-color:var(--mira-accent);background:var(--mira-accent-wash)}
+.state{font-size:14px;color:var(--mira-ink-3)}
+.run .state{color:var(--mira-accent);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:16px}
+td{padding:10px 0;border-bottom:1px solid var(--mira-rule)}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{font-weight:700;border-bottom:none}
+/* Verdict */
+.verdict{font-family:var(--f-display);font-size:39px;line-height:46px;max-width:22em;margin:0 0 24px}
+.chart{width:100%;height:auto}
+/* Tokens */
+.tokens{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
+.tok .c{height:72px;border-radius:2px;border:1px solid var(--mira-rule)}
+.tok p{margin:8px 0 0;font-size:13px;line-height:18px;color:var(--mira-ink-2)}
+.tok b{color:var(--mira-ink);font-weight:600;display:block}
+.type .d{font-family:var(--f-display);font-size:49px;line-height:52px}
+.type .u{font-size:20px;line-height:28px}
+footer{padding:40px 0 64px;border-top:1px solid var(--mira-rule);color:var(--mira-ink-3);font-size:14px}
+@media (max-width:900px){.hero,.result,.two{grid-template-columns:1fr}.tokens{grid-template-columns:repeat(3,1fr)}h1{font-size:44px;line-height:48px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <svg viewBox="0 0 344 96" role="img" aria-label="MIRA">
+    <circle class="ink" cx="48" cy="48" r="28" fill="none" stroke-width="6"/>
+    <g stroke-width="3.5" stroke-linecap="round">
+      <line class="ink" x1="57.50" y1="31.55" x2="59.50" y2="28.08"/><line class="ink" x1="62.55" y1="35.79" x2="65.62" y2="33.21"/>
+      <line class="acc" x1="58.34" y1="44.24" x2="69.61" y2="40.13"/><line class="ink" x1="67.00" y1="48.00" x2="71.00" y2="48.00"/>
+      <line class="ink" x1="65.85" y1="54.50" x2="69.61" y2="55.87"/><line class="ink" x1="62.55" y1="60.21" x2="65.62" y2="62.79"/>
+      <line class="ink" x1="57.50" y1="64.45" x2="59.50" y2="67.92"/>
+    </g>
+    <g transform="translate(120,2)"><g class="ink" fill="none" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 80V32M10 47a15 15 0 0 1 30 0V80M40 47a15 15 0 0 1 30 0V80"/><path d="M90 32V80"/>
+      <path d="M112 80V32M112 54Q112 32 136 32"/><circle cx="176" cy="56" r="24"/><path d="M200 32V80"/></g>
+      <circle class="accf" cx="90" cy="13" r="6.5"/></g>
+  </svg>
+  <button class="theme" id="theme" aria-label="Switch theme">Switch to dark</button>
+</header>
+
+<div class="hero">
+  <svg class="ring" viewBox="0 0 400 400" role="img" aria-label="The Ring: all four capture checks passed">
+    <circle cx="200" cy="200" r="140" fill="var(--mira-mat)"/>
+    <circle class="ink" cx="200" cy="200" r="168" fill="none" stroke-width="10"/>
+    <g><line class="ink" x1="273.0" y1="73.6" x2="278.5" y2="64.0" stroke-width="6" stroke-linecap="round"/><line class="ink" x1="311.8" y1="106.2" x2="320.3" y2="99.1" stroke-width="6" stroke-linecap="round"/><line class="ink" x1="346.0" y1="200.0" x2="357.0" y2="200.0" stroke-width="6" stroke-linecap="round"/><line class="ink" x1="337.2" y1="249.9" x2="347.5" y2="253.7" stroke-width="6" stroke-linecap="round"/><line class="ink" x1="311.8" y1="293.8" x2="320.3" y2="300.9" stroke-width="6" stroke-linecap="round"/><line class="ink" x1="273.0" y1="326.4" x2="278.5" y2="336.0" stroke-width="6" stroke-linecap="round"/></g>
+    <g class="reading"><line class="acc" x1="305.2" y1="161.7" x2="347.5" y2="146.3" stroke-width="8" stroke-linecap="round"/></g>
+    <text x="200" y="208" text-anchor="middle" font-size="17" fill="#FFFFFF" font-family="Atkinson Hyperlegible Next, system-ui">Ready to capture</text>
+  </svg>
+  <div>
+    <h1>Look, measured.</h1>
+    <p class="lead">MIRA measures you once, then shows makeup and clothes on you without smoothing your skin, and checks every preview before you see it.</p>
+    <div class="row"><button class="btn btn-primary">Start measuring</button><button class="btn btn-secondary">See a recorded run</button></div>
+  </div>
+</div>
+
+<section aria-labelledby="s-shade">
+  <h2 id="s-shade">Your shade</h2>
+  <p class="sub">Every shade in the range was compared with your measured skin for free. The closest three were rendered and each preview was measured again.</p>
+  <div class="result">
+    <div>
+      <div class="plate" role="img" aria-label="Unretouched foundation preview placeholder">
+        <svg class="ph" viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="28" fill="none" stroke="#fff" stroke-width="6"/><line x1="58.34" y1="44.24" x2="69.61" y2="40.13" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="strip"><span>Unretouched preview, smoothing off</span><span>Live run</span></div>
+    </div>
+    <div class="panel">
+      <p class="title">Shade 320 Warm Sand</p>
+      <span class="label l-ok"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8.5l3 3 7-7"/></svg>Verified: blends closely</span>
+      <p style="margin:20px 0 0"><span class="readingv">1.8</span><span class="unit">ΔE2000 from your skin</span></p>
+      <div class="band" aria-hidden="true"><div class="floor"></div></div>
+      <div class="swatches" role="list" aria-label="Rendered shades">
+        <div class="sw sel" role="listitem"><div class="chip" style="background:#C79A78"></div><p>320 best</p></div>
+        <div class="sw" role="listitem"><div class="chip" style="background:#C28F6B"></div><p>330</p></div>
+        <div class="sw" role="listitem"><div class="chip" style="background:#CDA585"></div><p>310</p></div>
+      </div>
+      <p class="why small">Satin finish because your skin reads as combination. Light coverage because no measured area called for more.</p>
+      <div class="row"><button class="btn btn-primary">Use this shade</button><button class="btn-quiet">Build a look with it</button></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="s-run">
+  <h2 id="s-run">Building your sangeet look</h2>
+  <p class="sub">Each step is measured before the next one starts.</p>
+  <div class="two">
+    <div class="panel">
+      <ol class="steps" aria-live="polite">
+        <li class="done"><span class="dot"></span><span>Lehenga tried on</span><span class="state">Done</span></li>
+        <li class="cached"><span class="dot"></span><span>Garment colour checked</span><span class="state">Saved result</span></li>
+        <li class="done"><span class="dot"></span><span>Jhumkas and necklace</span><span class="state">Done</span></li>
+        <li class="run"><span class="dot"></span><span>Makeup chosen for the outfit</span><span class="state">Running</span></li>
+        <li><span class="dot"></span><span>Hair colour</span><span class="state">Queued</span></li>
+        <li><span class="dot"></span><span>Face unchanged check</span><span class="state">Queued</span></li>
+        <li><span class="dot"></span><span>Venue and motion</span><span class="state">Queued</span></li>
+      </ol>
+      <div class="row" style="margin-top:20px;gap:8px">
+        <span class="label l-ok"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8.5l3 3 7-7"/></svg>Verified</span>
+        <span class="label l-drift"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v6M8 12.5v.5"/></svg>Colour drifted</span>
+        <span class="label l-none"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="5"/></svg>Not checked</span>
+      </div>
+    </div>
+    <div class="panel">
+      <p class="title">Build this look?</p>
+      <p class="small" style="margin:0 0 16px">Units come from your session allowance. Nothing is charged for steps that fail.</p>
+      <table>
+        <tr><td>Clothes and accessories</td><td class="n">10</td></tr>
+        <tr><td>Makeup and hair</td><td class="n">8</td></tr>
+        <tr><td>Venue</td><td class="n">4</td></tr>
+        <tr><td>Motion video</td><td class="n">24</td></tr>
+        <tr class="total"><td>Total</td><td class="n">46</td></tr>
+      </table>
+      <div class="row" style="margin-top:20px"><button class="btn btn-primary">Build this look</button><button class="btn btn-secondary">Remove video</button></div>
+      <p class="small" style="margin:12px 0 0">Unit figures on this page are illustrative.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="s-proof">
+  <h2 id="s-proof" style="font-family:var(--f-ui);font-size:25px;line-height:30px;font-weight:600">Progress check, day 12 of 28</h2>
+  <p class="verdict">No change we can tell apart from your day-to-day variation yet.</p>
+  <svg class="chart" viewBox="0 0 1100 260" role="img" aria-label="Visible pores score over 12 days; all check-ins inside the noise band">
+    <rect x="60" y="80" width="1000" height="80" fill="var(--mira-sunken)"/>
+    <line x1="60" y1="120" x2="1060" y2="120" stroke="var(--mira-rule)" stroke-dasharray="4 4"/>
+    <line x1="1060" y1="24" x2="1060" y2="220" stroke="var(--mira-ink-3)"/>
+    <polyline fill="none" stroke="var(--mira-accent)" stroke-width="2.5" points="60,122 200,116 340,126 480,112 620,108"/>
+    <g fill="var(--mira-accent)"><circle cx="60" cy="122" r="5"/><circle cx="200" cy="116" r="5"/><circle cx="340" cy="126" r="5"/><circle cx="480" cy="112" r="5"/><circle cx="620" cy="108" r="5"/></g>
+    <text x="60" y="244" font-size="15" fill="var(--mira-ink-2)" font-family="Atkinson Hyperlegible Next, system-ui">Day 0</text>
+    <text x="620" y="244" font-size="15" fill="var(--mira-ink-2)" text-anchor="middle" font-family="Atkinson Hyperlegible Next, system-ui">Day 12</text>
+    <text x="1052" y="40" font-size="15" fill="var(--mira-ink-2)" text-anchor="end" font-family="Atkinson Hyperlegible Next, system-ui">Claim window ends</text>
+    <text x="72" y="100" font-size="15" fill="var(--mira-ink-2)" font-family="Atkinson Hyperlegible Next, system-ui">Your day-to-day variation</text>
+  </svg>
+</section>
+
+<section aria-labelledby="s-tokens">
+  <h2 id="s-tokens">Tokens</h2>
+  <p class="sub">Zero-chroma surfaces so skin and clothing are judged against a neutral surround. One accent that no skin tone resembles.</p>
+  <div class="tokens">
+    <div class="tok"><div class="c" style="background:var(--mira-surface)"></div><p><b>Surface</b>Page</p></div>
+    <div class="tok"><div class="c" style="background:var(--mira-raised)"></div><p><b>Raised</b>Panels</p></div>
+    <div class="tok"><div class="c" style="background:var(--mira-ink)"></div><p><b>Ink</b>Text, logo</p></div>
+    <div class="tok"><div class="c" style="background:var(--mira-mat)"></div><p><b>Mat</b>Behind every image</p></div>
+    <div class="tok"><div class="c" style="background:var(--mira-accent)"></div><p><b>Ultramarine</b>Actions, readings</p></div>
+    <div class="tok"><div class="c" style="background:var(--mira-drift)"></div><p><b>Drift</b>Caution labels</p></div>
+  </div>
+  <div class="type" style="margin-top:40px">
+    <p class="d" style="margin:0">Gloock for titles and verdicts</p>
+    <p class="u" style="margin:8px 0 0">Atkinson Hyperlegible Next for everything you read and every number: 0O 1lI 5S 8B</p>
+  </div>
+</section>
+
+<footer>MIRA UI reference. Rendered values are illustrative; product numbers always come from measurements.</footer>
+</div>
+<script>
+const b=document.getElementById('theme'),r=document.documentElement;
+function set(t){r.dataset.theme=t;b.textContent=t==='dark'?'Switch to light':'Switch to dark';}
+b.addEventListener('click',()=>set(r.dataset.theme==='dark'?'light':'dark'));
+</script>
+</body>
+</html>
