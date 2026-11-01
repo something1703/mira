@@ -50,6 +50,7 @@ Full setup, including Google Cloud, is in [`phases/PHASE_01_FOUNDATION.md`](phas
 | Path | Contents |
 | --- | --- |
 | `AGENTS.md` | Rules for every coding agent and human contributor. Read first. |
+| `HANDOFF.md` | Current status, decisions, open items and next steps for whoever continues |
 | `docs/ARCHITECTURE.md` | Planes, services, workflows, node lifecycle |
 | `docs/DESIGN_SYSTEM.md` | Tokens, type, colour, components, motion |
 | `docs/BRAND.md` | Logo, usage, voice |
