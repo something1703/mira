@@ -23,6 +23,13 @@ MATCH_DE: Final = Threshold(2.0, "docs/ENGINES.md §4.1 starting value; Phase 6 
 CLOSE_DE: Final = Threshold(3.5, "docs/ENGINES.md §4.1 starting value; Phase 6 F8", False, "ΔE00")
 SHADE_RENDER_TOP_N: Final = Threshold(3, "docs/ENGINES.md §4.1 default", False, "shades")
 SHADE_RENDER_TOP_N_MAX: Final = Threshold(5, "docs/ENGINES.md §4.1 max", False, "shades")
+DIRECTION_EPS: Final = Threshold(
+    0.5,
+    "Starting value: below this a Lab difference is treated as no difference when checking "
+    "that a render moved in the intended direction (docs/ENGINES.md §4.2); Phase 6 F8",
+    False,
+    "L*/b*",
+)
 COVERAGE_RAISE: Final = Threshold(
     50, "docs/ENGINES.md §4.3; raw_score below which coverage is raised", False, "raw score"
 )
