@@ -16,20 +16,25 @@ jobs:
     env:
       MIRA_MODE: mock
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v10
         with:
           version: "0.12.2"
           enable-cache: true
           cache-dependency-glob: services/engines/uv.lock
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.15.6"
+          terraform_wrapper: false
 
       - name: Install
         run: |
@@ -49,7 +54,7 @@ jobs:
       - name: Check
         run: pnpm check
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
