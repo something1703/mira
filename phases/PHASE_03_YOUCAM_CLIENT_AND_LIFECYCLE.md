@@ -61,7 +61,7 @@ Everything listed for client, lifecycle and workflows in `docs/TESTING.md`, usin
 
 ## Definition of done
 
-- [ ] Fixtures recorded for every feature used by Phases 5–9. _(blocked on the YouCam key and consented faces; `packages/fixtures` is ready and empty)_
+- [ ] Fixtures recorded for every feature used by Phases 5–9. _(1 of 15 recorded: background removal on a synthetic image, F30, plus the real price list. The face features need a photo of a person who has consented.)_
 - [x] Lifecycle tests cover cache hit, over budget, crash after submit, webhook vs poll, error release, cleanup.
 - [ ] A demo graph of three fake nodes runs live and in mock, visible in the run viewer. _(runs in mock mode and shows in the run viewer; the live half waits for the deploy)_
 

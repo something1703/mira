@@ -20,7 +20,7 @@ Phases 1 to 4 are built and verified as far as they can be without a YouCam key 
 | --- | --- | --- |
 | 1 Foundation | Local work done and verified: `pnpm check` exits 0; a fresh clone with no credentials runs `pnpm dev:mock` (six services healthy in 9 s, demo run succeeds, state survives a restart, F24) | Needs you: GCP project and APIs, `terraform apply` (cost approval), Vertex smoke test and model IDs, Cloud Build trigger, YouCam key into Secret Manager |
 | 2 Design system | Done. 18 components, tokens in CSS and TypeScript (a test keeps them equal), contrast test, gallery, Welcome, Consent, sessions, budget banner, error screen, icons and manifest | Nothing blocking. The budget banner's "See what uses units" link waits for a units page |
-| 3 YouCam client and lifecycle | Done for everything testable without a key. Request builders are validated against the saved OpenAPI bundles, every documented error code is mapped, a client-side limiter keeps under YouCam's rate limit, saved looks are copied out before cleanup | Needs a key or a deploy: recorded fixtures, the `_confirm_` items, live adapters (Firestore, Cloud Tasks, Pub/Sub, Cloud Storage), OIDC verification of Cloud Tasks calls. Not built: image resizing and the face-crop helper, accessory and jewellery builders (Phase 8) |
+| 3 YouCam client and lifecycle | Done for everything testable without a key. Request builders are validated against the saved OpenAPI bundles, every documented error code is mapped, a client-side limiter keeps under YouCam's rate limit, saved looks are copied out before cleanup | Needs a consented photo or a deploy: recorded fixtures (1 of 15 recorded, live price list and one real task done), the `_confirm_` items, live adapters (Firestore, Cloud Tasks, Pub/Sub, Cloud Storage), OIDC verification of Cloud Tasks calls. Not built: image resizing and the face-crop helper, accessory and jewellery builders (Phase 8) |
 | 4 Engines | Done: colour, ΔE2000 (all 34 Sharma pairs), shade, look, garment, audit, identity, noise floor, phantom, every endpoint, generated Python models with a contract test | Needs a deploy: Cloud Run with service-account auth. `faces.py` needs a BlazeFace `.tflite` model via `MIRA_FACE_MODEL_PATH` (not bundled; untested until supplied) |
 
 Test counts (all pass): 656 unit and contract tests (schemas 62, runtime 28, youcam-client 172, workflows 97, webhook 13, fixtures 6, ui 146, web 8, agent 1, mcp 1, engines 122) and 108 Playwright tests in light, dark and mobile with axe.
@@ -61,7 +61,7 @@ D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam featu
 
 ## Things to know before building on this
 
-- **The lifecycle has only run against a test double.** Everything marked "Built" in `docs/FACTS.md` for F21 to F23 and F25 to F27 should be confirmed with one live run after the key arrives (`pnpm smoke:live`, then `pnpm fixtures:record`).
+- **The lifecycle has now run live once.** On 2026-11-01 one background-removal task went through the whole lifecycle against the real YouCam API: about 2 s, 1 unit, quote equal to charge, task deleted at cleanup (F30), and the engines were run on its real result (F31). Everything else (failure paths, crash and resume, webhooks, a 429, the other 14 features) is still proven only against the test double.
 - **Duplicate-charge risk.** If `createTask` succeeds at YouCam but the reply is lost to a network error, a retry creates a second task and charges twice. YouCam documents no idempotency key. The retry limit is 4. Worth asking the organisers.
 - **Eight of the fifteen features MIRA calls never mention webhooks in their bundles** (F28), so polling is the dependable path for skin tone, face attributes, the hair detectors, skin simulation, makeup and hair colour.
 - **Price selection by description** for skin analysis and video is a guess until the first live feature-cost read (F20). It fails closed, so a wrong guess blocks a quote instead of misquoting.
@@ -73,15 +73,15 @@ D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam featu
 
 ## Open items that need the user
 
-- YouCam API key into `.env.local` (not in chat), and the webhook URL added in the YouCam console after deploy.
-- Written consent for any real face in a fixture (rows in `packages/fixtures/CONSENT.md`) before recording.
+- The YouCam key is in `.env.local` of the cloud session that built this (gitignored, in no commit). That file does not travel: on another machine put `YOUCAM_API_KEY=` in your own `.env.local`. The key was pasted into chat, so rotate it in the YouCam console when convenient. The RSA "secret key" you shared is stored as `YOUCAM_SECRET_KEY` but nothing reads it: the API authenticates with the Bearer key alone. The webhook URL still has to be added in the YouCam console after deploy.
+- A clear photo of a person who has consented to it going to YouCam, plus a row in `packages/fixtures/CONSENT.md`, to record the 14 face and hair features (about 57 units for a smoke pass). Balance after the probe: 1,039 units.
 - Go-ahead to deploy, and the budget-alert amount (default in Terraform: $20 a month).
 - Ask the organisers: the "India link", whether YouCam has an idempotency key, and which features send webhooks.
 - Re-check that `gemini-3-flash-preview` is still available before the final demo; it is a preview ID.
 
 ## Next steps, in order
 
-1. Add the key, then run `pnpm smoke:live --input <photo>` and `pnpm fixtures:record` for the Phase 5 and 6 features (add consent rows first). That settles F20 and the `_confirm_` items.
+1. With a consented photo, run `pnpm smoke:live --input <photo>` (about 57 units, it quotes and asks first), then `pnpm fixtures:record` for the Phase 5 and 6 features. That records the face features and settles the remaining `_confirm_` items. Note the CLI declines without a terminal; run it in one.
 2. Phase 5 (capture and the Twin). Everything it needs from Phases 2 to 4 exists.
 3. Decide the Phase 6 preview-measurement question first: re-measure shade previews with YouCam (about 21 units per shade, hex only) or sample the pixels locally (Phase 4's colour code makes that cheap to try).
 4. Then Phases 6 to 10 as written.

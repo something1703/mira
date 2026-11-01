@@ -4,6 +4,8 @@ This file records what MIRA relies on from Perfect Corp's YouCam API and what ea
 
 ## 1. Basics
 
+> **Confirmed live, 2026-11-01** (one background-removal task, 1 unit, and the free read calls; recorded as `packages/fixtures/recorded/sod/`). The flow below works as documented: `POST /s2s/v2.0/file` returns `file_id` and a PUT request; the PUT succeeds with exactly the returned headers (including `Content-Length`) and no `Authorization`; `POST /s2s/v2.0/task/sod` with `src_file_id` returns a task id; polling returns `success` with `results.url` after about 2 s; the URL downloads at once (a transparent-background PNG); `POST /s2s/v2.0/task/delete` succeeds on the finished task and a later `GET` answers `InvalidTaskId`; units were charged once, on success, equal to the quote (1040 to 1039). `GET /s2s/v1.0/client/credit` accepts the API key as the Bearer token and returns `amount_dec` and `expiry`. `feature-cost` pages with `page_size=20` (103 rows, 7 requests). **Not yet exercised live:** failures, webhooks, a 429, the other features, and every `_confirm_` item below.
+
 - **Auth:** `Authorization: Bearer <YOUCAM_API_KEY>`, server-side only (MIRA policy; the docs also allow client use). 401 bodies vary by feature: `{"error":"Invalid API key"}` or `error_code` ∈ `InvalidApiKey`, `InactiveApiKey`, `ExpiredApiKey`.
 - **Base URL:** `https://yce-api-01.makeupar.com`. The docs list exactly one API server, with no regional hosts. Sample upload and result URLs point at US S3 buckets. The hackathon page's "India link" could not be inspected (Devpost returned 403) and is probably a sign-up link, not an API host _(confirm with the organisers)_.
 - **Everything is asynchronous:**

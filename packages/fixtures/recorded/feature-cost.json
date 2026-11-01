@@ -1,224 +1,14 @@
 [
   {
-    "slug": "2d-vto/bracelet",
-    "amount": 1,
-    "description": "AI Bracelet Virtual Try-On V1.0 (Single)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "2d-vto/bracelet",
-    "amount": 2,
-    "description": "AI Bracelet Virtual Try-On V1.0 (Stacked)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "2d-vto/earring",
-    "amount": 1,
-    "description": "AI Earrings Virtual Try-On V1.0 (Single)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "2d-vto/earring",
-    "amount": 2,
-    "description": "AI Earrings Virtual Try-On V1.0 (Stacked)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "2d-vto/necklace",
-    "amount": 1,
-    "description": "AI Necklace Virtual Try-On V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "2d-vto/ring",
-    "amount": 1,
-    "description": "AI Ring Virtual Try-On V1.0 (Single)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "2d-vto/ring",
-    "amount": 2,
-    "description": "AI Ring Virtual Try-On V1.0 (Stacked)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "2d-vto/watch",
-    "amount": 1,
-    "description": "AI Watch Virtual Try-On V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "abs-shape",
-    "amount": 1,
-    "description": "AI Abs Filter V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "aging",
-    "amount": 2,
-    "description": "AI Aging Simulation V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "ai-avatar",
-    "amount": 1,
-    "description": "AI Avatar Generator V3.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "ai-nail",
-    "amount": 1,
-    "description": "AI Nail Transfer V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "ai-smile",
-    "amount": 1,
-    "description": "AI Smile V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "ai-studio",
-    "amount": 1,
-    "description": "AI Studio Generator V3.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "bag",
-    "amount": 2,
-    "description": "AI Bag Virtual Try-On V2.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "beard-style",
-    "amount": 2,
-    "description": "AI Beard Style Generator V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "bg-blur",
-    "amount": 1,
-    "description": "AI Photo Background Blur V2.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "bg-replace",
-    "amount": 4,
-    "description": "AI Photo Background Change V2.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "bg-replace-vid",
-    "amount": 2,
-    "description": "AI Video Background Change V2.0",
-    "unit": "second"
-  },
-  {
-    "slug": "body-reshape",
-    "amount": 1,
-    "description": "AI Body Reshape V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "breast-shape",
-    "amount": 1,
-    "description": "AI Breast Augmentation Simulator V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "cloth",
-    "amount": 2,
-    "description": "AI Clothes Virtual Try-On V2.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "cloth-v3",
-    "amount": 2,
-    "description": "AI Clothes Virtual Try-On V3.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "cloth-v4",
-    "amount": 2,
-    "description": "AI Clothes Virtual Try-On V4.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "colorize",
-    "amount": 2,
-    "description": "AI Photo Colorize V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "colorize/color-correct",
-    "amount": 2,
-    "description": "AI Color Correction V1.0",
-    "unit": "result_image"
-  },
-  {
     "slug": "enhance",
     "amount": 2,
     "description": "AI Photo Enhance V1.0",
     "unit": "result_image"
   },
   {
-    "slug": "eye-color-vto",
+    "slug": "obj-removal",
     "amount": 1,
-    "description": "AI Eye Color Lens Virtual Try-On V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "fabric",
-    "amount": 2,
-    "description": "AI Fabric Virtual Try-On V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "face-attr-analysis",
-    "amount": 10,
-    "description": "Face Attribute & Ratio Analysis (1-5 features)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "face-attr-analysis",
-    "amount": 30,
-    "description": "Face Attribute & Ratio Analysis (15-28 features)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "face-attr-analysis",
-    "amount": 20,
-    "description": "Face Attribute & Ratio Analysis (6-14 features)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "face-lift",
-    "amount": 1,
-    "description": "AI Face Lift V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "face-reshape",
-    "amount": 1,
-    "description": "AI Face Reshape V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "face-swap",
-    "amount": 1,
-    "description": "AI Face Swap V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "face-swap-vid",
-    "amount": 1,
-    "description": "AI Video Face Swap V1.0",
-    "unit": "second"
-  },
-  {
-    "slug": "fitzpatrick-scale-analyzer",
-    "amount": 10,
-    "description": "AI Fitzpatrick Skin Type Analysis V1.0",
+    "description": "AI Object Removal (Standard)",
     "unit": "result_image"
   },
   {
@@ -228,51 +18,33 @@
     "unit": "result_image"
   },
   {
-    "slug": "hair-bang",
+    "slug": "sod",
     "amount": 1,
-    "description": "AI Bangs Filter Virtual Try-On V1.0",
+    "description": "AI Photo Background Removal V1.0",
     "unit": "result_image"
   },
   {
-    "slug": "hair-color",
-    "amount": 1,
-    "description": "AI Hair Color Virtual Try-On V1.0 (Full)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "hair-color",
-    "amount": 1,
-    "description": "AI Hair Color Virtual Try-On V1.0 (Ombre)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "hair-curl",
-    "amount": 1,
-    "description": "AI Wavy Hair Virtual Try-On V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "hair-density-detection",
-    "amount": 1,
-    "description": "AI Hair Density Detection V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "hair-ext",
-    "amount": 1,
-    "description": "AI Hair Extension Virtual Try-On V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "hair-frizziness-detection",
+    "slug": "colorize",
     "amount": 2,
-    "description": "AI Hair Frizziness Detection V1.0",
+    "description": "AI Photo Colorize V1.0",
     "unit": "result_image"
   },
   {
-    "slug": "hair-length-detection",
+    "slug": "text-to-image",
     "amount": 2,
-    "description": "AI Hair Length Detection V1.0",
+    "description": "AI Image Generator V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "text-to-image/youcam",
+    "amount": 1,
+    "description": "AI Image Generator V2.0 (Text to Image)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "image-to-image/youcam",
+    "amount": 1,
+    "description": "AI Image Generator V2.0 (Image to Image)",
     "unit": "result_image"
   },
   {
@@ -300,9 +72,15 @@
     "unit": "result_image"
   },
   {
-    "slug": "hair-type-detection",
-    "amount": 2,
-    "description": "AI Hair Type Detection V1.0",
+    "slug": "hair-ext",
+    "amount": 1,
+    "description": "AI Hair Extension Virtual Try-On V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "hair-bang",
+    "amount": 1,
+    "description": "AI Bangs Filter Virtual Try-On V1.0",
     "unit": "result_image"
   },
   {
@@ -312,99 +90,9 @@
     "unit": "result_image"
   },
   {
-    "slug": "hat",
-    "amount": 2,
-    "description": "AI Hat Virtual Try-On V2.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "headshot",
+    "slug": "hair-curl",
     "amount": 1,
-    "description": "AI Headshot Generator V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "image-to-image/youcam",
-    "amount": 1,
-    "description": "AI Image Generator V2.0 (Image to Image)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "image-to-video",
-    "amount": 6,
-    "description": "AI Video Generator (Professional) V1.0",
-    "unit": "second"
-  },
-  {
-    "slug": "image-to-video",
-    "amount": 3,
-    "description": "AI Video Generator (Standard) V1.0",
-    "unit": "second"
-  },
-  {
-    "slug": "image-to-video/youcam",
-    "amount": 3,
-    "description": "AI Video Generator (Image to Video) V2.0 (1080p)",
-    "unit": "second"
-  },
-  {
-    "slug": "image-to-video/youcam",
-    "amount": 1,
-    "description": "AI Video Generator (Image to Video) V2.0 (480p)",
-    "unit": "second"
-  },
-  {
-    "slug": "image-to-video/youcam",
-    "amount": 2,
-    "description": "AI Video Generator (Image to Video) V2.0 (720p)",
-    "unit": "second"
-  },
-  {
-    "slug": "lighting",
-    "amount": 2,
-    "description": "AI Photo Lighting V2.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "look-vto",
-    "amount": 2,
-    "description": "AI Look Virtual Try-On V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "makeup-vto",
-    "amount": 1,
-    "description": "AI Makeup Virtual Try-On V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "mu-transfer",
-    "amount": 2,
-    "description": "AI Makeup Transfer V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "nail-vto",
-    "amount": 1,
-    "description": "AI Nail Virtual Try-On V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "obj-rem-vid",
-    "amount": 2,
-    "description": "AI Video Object Removal V2.0",
-    "unit": "second"
-  },
-  {
-    "slug": "obj-removal",
-    "amount": 1,
-    "description": "AI Object Removal (Standard)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "obj-replace",
-    "amount": 1,
-    "description": "AI Replace V1.0",
+    "description": "AI Wavy Hair Virtual Try-On V1.0",
     "unit": "result_image"
   },
   {
@@ -414,39 +102,93 @@
     "unit": "result_image"
   },
   {
-    "slug": "retake",
+    "slug": "lighting",
     "amount": 2,
-    "description": "AI Retake",
+    "description": "AI Photo Lighting V2.0",
     "unit": "result_image"
   },
   {
-    "slug": "scarf",
-    "amount": 2,
-    "description": "AI Scarf Virtual Try-On V2.0",
+    "slug": "obj-replace",
+    "amount": 1,
+    "description": "AI Replace V1.0",
     "unit": "result_image"
   },
   {
-    "slug": "shoes",
-    "amount": 2,
-    "description": "AI Shoes Virtual Try-On V2.0",
+    "slug": "sod/change-background",
+    "amount": 1,
+    "description": "AI Photo Background Change V1.0",
     "unit": "result_image"
   },
   {
-    "slug": "shoes-transfer",
-    "amount": 2,
-    "description": "AI Shoes Virtual Try-On V3.0",
+    "slug": "sod/blur-background",
+    "amount": 1,
+    "description": "AI Photo Background Blur V1.0",
     "unit": "result_image"
+  },
+  {
+    "slug": "bg-blur",
+    "amount": 1,
+    "description": "AI Photo Background Blur V2.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "colorize/color-correct",
+    "amount": 2,
+    "description": "AI Color Correction V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "face-swap",
+    "amount": 1,
+    "description": "AI Face Swap V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "video-sr",
+    "amount": 1,
+    "description": "AI Video Enhancer V1.0",
+    "unit": "second"
+  },
+  {
+    "slug": "mu-transfer",
+    "amount": 2,
+    "description": "AI Makeup Transfer V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "headshot",
+    "amount": 1,
+    "description": "AI Headshot Generator V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "ai-studio",
+    "amount": 1,
+    "description": "AI Studio Generator V3.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "ai-avatar",
+    "amount": 1,
+    "description": "AI Avatar Generator V3.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "video-trans",
+    "amount": 4,
+    "description": "AI Video Style Transfer V1.0",
+    "unit": "second"
+  },
+  {
+    "slug": "face-swap-vid",
+    "amount": 1,
+    "description": "AI Video Face Swap V1.0",
+    "unit": "second"
   },
   {
     "slug": "skin-analysis",
     "amount": 12,
     "description": "AI Skin Analysis V2.0 HD (1-4 concerns)",
-    "unit": "result_image"
-  },
-  {
-    "slug": "skin-analysis",
-    "amount": 22,
-    "description": "AI Skin Analysis V2.0 HD (13-16 concerns)",
     "unit": "result_image"
   },
   {
@@ -463,14 +205,14 @@
   },
   {
     "slug": "skin-analysis",
-    "amount": 9,
-    "description": "AI Skin Analysis V2.0 SD (1-4 concerns)",
+    "amount": 22,
+    "description": "AI Skin Analysis V2.0 HD (13-16 concerns)",
     "unit": "result_image"
   },
   {
     "slug": "skin-analysis",
-    "amount": 16,
-    "description": "AI Skin Analysis V2.0 SD (13-16 concerns)",
+    "amount": 9,
+    "description": "AI Skin Analysis V2.0 SD (1-4 concerns)",
     "unit": "result_image"
   },
   {
@@ -487,14 +229,14 @@
   },
   {
     "slug": "skin-analysis",
-    "amount": 12,
-    "description": "AI Skin Analysis V2.1 HD (1-4 concerns)",
+    "amount": 16,
+    "description": "AI Skin Analysis V2.0 SD (13-16 concerns)",
     "unit": "result_image"
   },
   {
     "slug": "skin-analysis",
-    "amount": 22,
-    "description": "AI Skin Analysis V2.1 HD (13-16 concerns)",
+    "amount": 12,
+    "description": "AI Skin Analysis V2.1 HD (1-4 concerns)",
     "unit": "result_image"
   },
   {
@@ -511,14 +253,14 @@
   },
   {
     "slug": "skin-analysis",
-    "amount": 9,
-    "description": "AI Skin Analysis V2.1 SD (1-4 concerns)",
+    "amount": 22,
+    "description": "AI Skin Analysis V2.1 HD (13-16 concerns)",
     "unit": "result_image"
   },
   {
     "slug": "skin-analysis",
-    "amount": 16,
-    "description": "AI Skin Analysis V2.1 SD (13-16 concerns)",
+    "amount": 9,
+    "description": "AI Skin Analysis V2.1 SD (1-4 concerns)",
     "unit": "result_image"
   },
   {
@@ -534,6 +276,258 @@
     "unit": "result_image"
   },
   {
+    "slug": "skin-analysis",
+    "amount": 16,
+    "description": "AI Skin Analysis V2.1 SD (13-16 concerns)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "image-to-video",
+    "amount": 6,
+    "description": "AI Video Generator (Professional) V1.0",
+    "unit": "second"
+  },
+  {
+    "slug": "image-to-video",
+    "amount": 3,
+    "description": "AI Video Generator (Standard) V1.0",
+    "unit": "second"
+  },
+  {
+    "slug": "image-to-video/youcam",
+    "amount": 1,
+    "description": "AI Video Generator (Image to Video) V2.0 (480p)",
+    "unit": "second"
+  },
+  {
+    "slug": "image-to-video/youcam",
+    "amount": 2,
+    "description": "AI Video Generator (Image to Video) V2.0 (720p)",
+    "unit": "second"
+  },
+  {
+    "slug": "image-to-video/youcam",
+    "amount": 3,
+    "description": "AI Video Generator (Image to Video) V2.0 (1080p)",
+    "unit": "second"
+  },
+  {
+    "slug": "text-to-video/youcam",
+    "amount": 2,
+    "description": "AI Video Generator (Text to Video) V2.0 (720p)",
+    "unit": "second"
+  },
+  {
+    "slug": "text-to-video/youcam",
+    "amount": 3,
+    "description": "AI Video Generator (Text to Video) V2.0 (1080p)",
+    "unit": "second"
+  },
+  {
+    "slug": "cloth",
+    "amount": 2,
+    "description": "AI Clothes Virtual Try-On V2.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "cloth-v3",
+    "amount": 2,
+    "description": "AI Clothes Virtual Try-On V3.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "cloth-v4",
+    "amount": 2,
+    "description": "AI Clothes Virtual Try-On V4.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "fabric",
+    "amount": 2,
+    "description": "AI Fabric Virtual Try-On V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "hair-color",
+    "amount": 1,
+    "description": "AI Hair Color Virtual Try-On V1.0 (Full)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "hair-color",
+    "amount": 1,
+    "description": "AI Hair Color Virtual Try-On V1.0 (Ombre)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "face-attr-analysis",
+    "amount": 10,
+    "description": "Face Attribute & Ratio Analysis (1-5 features)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "face-attr-analysis",
+    "amount": 20,
+    "description": "Face Attribute & Ratio Analysis (6-14 features)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "face-attr-analysis",
+    "amount": 30,
+    "description": "Face Attribute & Ratio Analysis (15-28 features)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "skin-tone-analysis",
+    "amount": 20,
+    "description": "AI Facial Color Tones Analyzer V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "hair-length-detection",
+    "amount": 2,
+    "description": "AI Hair Length Detection V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "hair-type-detection",
+    "amount": 2,
+    "description": "AI Hair Type Detection V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "hair-frizziness-detection",
+    "amount": 2,
+    "description": "AI Hair Frizziness Detection V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "beard-style",
+    "amount": 2,
+    "description": "AI Beard Style Generator V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "aging",
+    "amount": 2,
+    "description": "AI Aging Simulation V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "look-vto",
+    "amount": 2,
+    "description": "AI Look Virtual Try-On V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "makeup-vto",
+    "amount": 1,
+    "description": "AI Makeup Virtual Try-On V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "2d-vto/earring",
+    "amount": 2,
+    "description": "AI Earrings Virtual Try-On V1.0 (Stacked)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "2d-vto/earring",
+    "amount": 1,
+    "description": "AI Earrings Virtual Try-On V1.0 (Single)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "2d-vto/necklace",
+    "amount": 1,
+    "description": "AI Necklace Virtual Try-On V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "2d-vto/ring",
+    "amount": 2,
+    "description": "AI Ring Virtual Try-On V1.0 (Stacked)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "2d-vto/ring",
+    "amount": 1,
+    "description": "AI Ring Virtual Try-On V1.0 (Single)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "2d-vto/bracelet",
+    "amount": 2,
+    "description": "AI Bracelet Virtual Try-On V1.0 (Stacked)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "2d-vto/bracelet",
+    "amount": 1,
+    "description": "AI Bracelet Virtual Try-On V1.0 (Single)",
+    "unit": "result_image"
+  },
+  {
+    "slug": "2d-vto/watch",
+    "amount": 1,
+    "description": "AI Watch Virtual Try-On V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "bag",
+    "amount": 2,
+    "description": "AI Bag Virtual Try-On V2.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "scarf",
+    "amount": 2,
+    "description": "AI Scarf Virtual Try-On V2.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "shoes",
+    "amount": 2,
+    "description": "AI Shoes Virtual Try-On V2.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "hat",
+    "amount": 2,
+    "description": "AI Hat Virtual Try-On V2.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "face-reshape",
+    "amount": 1,
+    "description": "AI Face Reshape V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "body-reshape",
+    "amount": 1,
+    "description": "AI Body Reshape V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "nail-vto",
+    "amount": 1,
+    "description": "AI Nail Virtual Try-On V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "abs-shape",
+    "amount": 1,
+    "description": "AI Abs Filter V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "breast-shape",
+    "amount": 1,
+    "description": "AI Breast Augmentation Simulator V1.0",
+    "unit": "result_image"
+  },
+  {
     "slug": "skin-simulation",
     "amount": 4,
     "description": "Skin Simulation (1-4 concerns)",
@@ -546,75 +540,81 @@
     "unit": "result_image"
   },
   {
-    "slug": "skin-tone-analysis",
-    "amount": 20,
-    "description": "AI Facial Color Tones Analyzer V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "sod",
-    "amount": 1,
-    "description": "AI Photo Background Removal V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "sod/blur-background",
-    "amount": 1,
-    "description": "AI Photo Background Blur V1.0",
-    "unit": "result_image"
-  },
-  {
-    "slug": "sod/change-background",
-    "amount": 1,
-    "description": "AI Photo Background Change V1.0",
-    "unit": "result_image"
-  },
-  {
     "slug": "teeth-whiten",
     "amount": 1,
     "description": "AI Teeth Whitening V1.0",
     "unit": "result_image"
   },
   {
-    "slug": "text-to-image",
-    "amount": 2,
-    "description": "AI Image Generator V1.0",
+    "slug": "eye-color-vto",
+    "amount": 1,
+    "description": "AI Eye Color Lens Virtual Try-On V1.0",
     "unit": "result_image"
   },
   {
-    "slug": "text-to-image/youcam",
+    "slug": "hair-density-detection",
     "amount": 1,
-    "description": "AI Image Generator V2.0 (Text to Image)",
+    "description": "AI Hair Density Detection V1.0",
     "unit": "result_image"
   },
   {
-    "slug": "text-to-video/youcam",
-    "amount": 3,
-    "description": "AI Video Generator (Text to Video) V2.0 (1080p)",
-    "unit": "second"
-  },
-  {
-    "slug": "text-to-video/youcam",
-    "amount": 2,
-    "description": "AI Video Generator (Text to Video) V2.0 (720p)",
-    "unit": "second"
-  },
-  {
-    "slug": "video-sr",
+    "slug": "face-lift",
     "amount": 1,
-    "description": "AI Video Enhancer V1.0",
-    "unit": "second"
+    "description": "AI Face Lift V1.0",
+    "unit": "result_image"
   },
   {
-    "slug": "video-trans",
+    "slug": "ai-smile",
+    "amount": 1,
+    "description": "AI Smile V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "fitzpatrick-scale-analyzer",
+    "amount": 10,
+    "description": "AI Fitzpatrick Skin Type Analysis V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "bg-replace",
     "amount": 4,
-    "description": "AI Video Style Transfer V1.0",
+    "description": "AI Photo Background Change V2.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "bg-replace-vid",
+    "amount": 2,
+    "description": "AI Video Background Change V2.0",
     "unit": "second"
+  },
+  {
+    "slug": "obj-rem-vid",
+    "amount": 2,
+    "description": "AI Video Object Removal V2.0",
+    "unit": "second"
+  },
+  {
+    "slug": "ai-nail",
+    "amount": 1,
+    "description": "AI Nail Transfer V1.0",
+    "unit": "result_image"
   },
   {
     "slug": "wmk-removal",
     "amount": 1,
     "description": "AI Watermark Removal V1.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "shoes-transfer",
+    "amount": 2,
+    "description": "AI Shoes Virtual Try-On V3.0",
+    "unit": "result_image"
+  },
+  {
+    "slug": "retake",
+    "amount": 2,
+    "description": "AI Retake",
     "unit": "result_image"
   }
 ]

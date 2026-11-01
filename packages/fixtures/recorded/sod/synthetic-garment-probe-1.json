@@ -1,0 +1,15 @@
+{
+  "feature": "sod",
+  "version": "v2.0",
+  "name": "synthetic-garment-probe-1",
+  "recordedAt": "2026-11-01T15:53:18.457Z",
+  "key": "94efa2f8e6bc4686d6726b0e176c252c63bce88b73a079e10fa22a23f149822d",
+  "latencyMs": 2083,
+  "outcome": {
+    "status": "success",
+    "results": {
+      "url": "fixture://3b8e90a7d3a541b8.png"
+    }
+  },
+  "unitsCharged": 1
+}

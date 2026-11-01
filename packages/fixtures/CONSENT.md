@@ -7,6 +7,8 @@ before it is committed (docs/SECURITY_PRIVACY.md §5, AGENTS.md §11). One row p
 | ----------------- | -------------------------- | -------------------- | ------------------------- | ----- | --------- |
 | _none yet_        |                            |                      |                           |       |           |
 
+Recordings that need no row because no real person is in them: `sod/synthetic-garment-probe-1` (a hand-drawn garment shape).
+
 Rules:
 
 - No recording of a face is committed without a row here.
