@@ -32,3 +32,4 @@ export const RenderId = idOf("rnd");
 export const UserId = idOf("usr");
 export const SessionId = idOf("ses");
 export const TraceId = idOf("trc");
+export const ProofId = idOf("prf");

@@ -108,6 +108,24 @@ export type LipAuditReading = z.infer<typeof LipAuditReading>;
 export const IdentityReading = z.object({ drift: z.number(), passed: z.boolean() });
 export type IdentityReading = z.infer<typeof IdentityReading>;
 
+export const ChangeReading = z.object({
+  delta: z.number(),
+  words: z.enum(["n/a", "within", "small", "clear", "opposite"]),
+  phrase: z.string(),
+});
+export type ChangeReading = z.infer<typeof ChangeReading>;
+
+export const PhantomReading = z.object({
+  usable: z.boolean(),
+  rho: z.number(),
+  score_range: z.number(),
+  reason: z.enum(["ok", "too_few_points", "not_monotone", "range_below_mdc"]),
+  intensities: z.array(z.number()),
+  fitted_delta: z.array(z.number()),
+  inverted_intensity: z.number().nullable().optional(),
+});
+export type PhantomReading = z.infer<typeof PhantomReading>;
+
 export interface FaceBox {
   x: number;
   y: number;
@@ -173,6 +191,20 @@ export interface EngineClient {
     source: readonly number[],
     final: readonly number[],
   ): Promise<Result<Enveloped<IdentityReading>, EngineFailure>>;
+  /** Change from the baseline against the minimal detectable change (docs/ENGINES.md §8). */
+  change(input: {
+    baseline: number;
+    now: number;
+    mdc: number | null;
+    claimDirection: "up" | "down";
+  }): Promise<Result<Enveloped<ChangeReading>, EngineFailure>>;
+  /** Does Skin Simulation move Skin Analysis for this concern, and by how much? */
+  phantomFit(input: {
+    intensities: readonly number[];
+    scores: readonly number[];
+    mdc: number;
+    invertAt?: number | undefined;
+  }): Promise<Result<Enveloped<PhantomReading>, EngineFailure>>;
   /** One session of repeated captures per concern: sessions[i] holds that session's scores. */
   noiseFloor(
     sessions: readonly (readonly number[])[],
@@ -233,6 +265,27 @@ export class HttpEngineClient implements EngineClient {
       "/shade/finish",
       { skin_type_whole: skinTypeWhole, concern_raw_scores: concernRawScores },
       FinishReading,
+    );
+  }
+
+  change(i: Parameters<EngineClient["change"]>[0]) {
+    return this.post(
+      "/stats/change",
+      { baseline: i.baseline, now: i.now, mdc: i.mdc, claim_direction: i.claimDirection },
+      ChangeReading,
+    );
+  }
+
+  phantomFit(i: Parameters<EngineClient["phantomFit"]>[0]) {
+    return this.post(
+      "/phantom/fit",
+      {
+        intensities: i.intensities,
+        scores: i.scores,
+        mdc: i.mdc,
+        ...(i.invertAt === undefined ? {} : { invert_at: i.invertAt }),
+      },
+      PhantomReading,
     );
   }
 

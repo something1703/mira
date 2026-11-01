@@ -1,4 +1,5 @@
 import type { FakeYouCam } from "@mira/youcam-client/testing";
+import { proofAnalysis } from "../proof/synthetic";
 import { concernsFor } from "./extract";
 
 /**
@@ -24,6 +25,8 @@ export function seedTwinFake(fake: FakeYouCam): void {
   fake
     .respondWith("skin-analysis", {
       latencyMs: 6_000,
+      // A single-concern request is a Proof capture: it gets its own synthetic score.
+      resultsFor: proofAnalysis,
       results: {
         output: concernsFor("hd").map((type, i) => ({
           type,

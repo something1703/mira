@@ -9,7 +9,11 @@ import {
 } from "@mira/runtime";
 import {
   Run,
+  Claim,
+  EfficacyOutcome,
   LookResult,
+  ProofId,
+  ProofRecord,
   RunNode,
   ShadeRange,
   SessionId,
@@ -35,6 +39,11 @@ import { createEngine, type Engine } from "./engine";
 import { createLookExecutors } from "./graphs/compose-look";
 import { createShadeExecutors } from "./graphs/match-shade";
 import { createGarmentExecutors, loadGarment, makeSampleGarment } from "./look/garments";
+import { createProofExecutors } from "./graphs/proof-check-in";
+import { baselineComplete, nextDue } from "./proof/logic";
+import { planPhantom, planSession, planVisual, type ProofError } from "./proof/plan";
+import { changeProof, listProofs, loadProof, proofPath, putProof } from "./proof/store";
+import { createPhantomExecutors } from "./graphs/proof-setup";
 import { planIngest, type IngestError } from "./look/ingest";
 import { planLook, suggestLook, type LookError } from "./look/plan";
 import { lookDownloader, seedLookFake } from "./look/synthetic";
@@ -46,7 +55,7 @@ import { savedPrefix } from "./runner/save";
 import { createTwinExecutors } from "./graphs/build-twin";
 import { planTwinBuild, type BuildError } from "./twin/build";
 import { HttpEngineClient, type EngineClient } from "./twin/engine-client";
-import { deleteProfile, exportProfile, inventory, uploadsPrefix } from "./twin/profile";
+import { deleteProfile, exportProfile, inventory, twinPath, uploadsPrefix } from "./twin/profile";
 import { seedTwinFake } from "./twin/synthetic";
 import {
   UPLOAD_LIMITS,
@@ -153,6 +162,8 @@ export function buildApp(
       ...createShadeExecutors({ engine: engines }),
       ...createLookExecutors({ engine: engines, ports, synthetic }),
       ...createGarmentExecutors({ engine: engines, ports }),
+      ...createProofExecutors({ engine: engines, ports }),
+      ...createPhantomExecutors({ engine: engines, ports }),
     },
     caps: {
       session: env.MIRA_SESSION_UNIT_CAP,
@@ -582,6 +593,266 @@ export function buildApp(
       .send(Buffer.from(blob.bytes));
   });
 
+  // ---- Proof: a product, its claim, the baseline, check-ins, the phantom and the review ----
+  const proofStatus = (e: ProofError): number =>
+    e.code === "proof_not_found"
+      ? 404
+      : e.code === "upload_foreign"
+        ? 400
+        : e.code === "upload_missing" ||
+            e.code === "photos_duplicate" ||
+            e.code === "wrong_photo_count"
+          ? 422
+          : e.code === "engine_failed"
+            ? 502
+            : e.code === "quote_failed"
+              ? e.detail.code === "price_unavailable"
+                ? 502
+                : 422
+              : e.code === "graph_rejected"
+                ? 500
+                : 409;
+  const proofSend = async (
+    reply: { status(code: number): { send(body: unknown): unknown } },
+    req: { traceId?: string },
+    planned: Awaited<ReturnType<typeof planSession>>,
+    start: boolean,
+  ) => {
+    if (!planned.ok) {
+      return await reply
+        .status(proofStatus(planned.error))
+        .send({ ...planned.error, error: planned.error.code, traceId: req.traceId });
+    }
+    return await reply.status(start ? 201 : 200).send({ ...planned.value, synthetic });
+  };
+  const proofView = (p: ProofRecord) => ({
+    proof: p,
+    nextDue: nextDue(p),
+    baselineComplete: baselineComplete(p),
+    synthetic,
+  });
+  const ProofIds = z.object({ userId: UserId, proofId: ProofId });
+  app.post("/internal/proof", async (req, reply) => {
+    const body = z
+      .object({
+        userId: UserId,
+        product: z.object({
+          name: z.string().min(1).max(120),
+          url: z.string().max(2_000).optional(),
+        }),
+        claim: Claim,
+      })
+      .safeParse(req.body);
+    if (!body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    const proof = ProofRecord.parse({
+      id: newId("prf"),
+      userId: body.data.userId,
+      product: body.data.product,
+      claim: body.data.claim,
+      status: "baseline",
+      createdAt: new Date(ports.clock.now()).toISOString(),
+      sessions: [],
+      verdicts: [],
+      confound: { flagged: false },
+    });
+    await putProof(ports, proof);
+    return await reply.status(201).send(proofView(proof));
+  });
+  app.get("/internal/proof/:userId", async (req, reply) => {
+    const id = UserId.safeParse((req.params as { userId: string }).userId);
+    if (!id.success)
+      return await reply.status(400).send({ error: "invalid_user", traceId: req.traceId });
+    return { proofs: (await listProofs(ports, id.data)).map(proofView) };
+  });
+  app.get("/internal/proof/:userId/:proofId", async (req, reply) => {
+    const ids = ProofIds.safeParse(req.params);
+    if (!ids.success)
+      return await reply.status(400).send({ error: "invalid_id", traceId: req.traceId });
+    const proof = await loadProof(ports, ids.data.userId, ids.data.proofId);
+    if (!proof)
+      return await reply.status(404).send({ error: "proof_not_found", traceId: req.traceId });
+    return proofView(proof);
+  });
+  const SessionBody = ProofIds.extend({
+    sessionId: SessionId,
+    kind: z.enum(["baseline", "check_in"]),
+    photos: z.array(blobKey).min(1).max(5),
+    confound: z.boolean().optional(),
+    confirmedTotal: z.number().int().nonnegative().optional(),
+  });
+  for (const start of [false, true]) {
+    app.post(
+      start ? "/internal/proof/session/start" : "/internal/proof/session/quote",
+      async (req, reply) => {
+        const body = SessionBody.safeParse(req.body);
+        if (!body.success)
+          return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+        if (start && body.data.confirmedTotal === undefined) {
+          return await reply
+            .status(400)
+            .send({ error: "confirmed_total_required", traceId: req.traceId });
+        }
+        return await proofSend(
+          reply,
+          req,
+          await planSession(engine, ports, body.data, start),
+          start,
+        );
+      },
+    );
+    const OnePhoto = ProofIds.extend({
+      sessionId: SessionId,
+      photo: blobKey,
+      confirmedTotal: z.number().int().nonnegative().optional(),
+    });
+    app.post(
+      start ? "/internal/proof/phantom/start" : "/internal/proof/phantom/quote",
+      async (req, reply) => {
+        const body = OnePhoto.safeParse(req.body);
+        if (!body.success)
+          return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+        if (start && body.data.confirmedTotal === undefined) {
+          return await reply
+            .status(400)
+            .send({ error: "confirmed_total_required", traceId: req.traceId });
+        }
+        return await proofSend(
+          reply,
+          req,
+          await planPhantom(engine, ports, body.data, start),
+          start,
+        );
+      },
+    );
+    app.post(
+      start ? "/internal/proof/visual/start" : "/internal/proof/visual/quote",
+      async (req, reply) => {
+        const body = OnePhoto.extend({ target: z.enum(["verdict", "preview"]) }).safeParse(
+          req.body,
+        );
+        if (!body.success)
+          return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+        if (start && body.data.confirmedTotal === undefined) {
+          return await reply
+            .status(400)
+            .send({ error: "confirmed_total_required", traceId: req.traceId });
+        }
+        return await proofSend(
+          reply,
+          req,
+          await planVisual(engine, ports, engines, body.data, start),
+          start,
+        );
+      },
+    );
+  }
+  // The person says they have started using the product: the claim window begins, and baseline
+  // sessions end.
+  app.post("/internal/proof/:proofId/begin", async (req, reply) => {
+    const ids = ProofIds.safeParse({
+      ...(req.params as object),
+      userId: (req.body as { userId?: string } | null)?.userId,
+    });
+    if (!ids.success)
+      return await reply.status(400).send({ error: "invalid_id", traceId: req.traceId });
+    const proof = await loadProof(ports, ids.data.userId, ids.data.proofId);
+    if (!proof)
+      return await reply.status(404).send({ error: "proof_not_found", traceId: req.traceId });
+    if (proof.status !== "ready" || !baselineComplete(proof)) {
+      return await reply
+        .status(409)
+        .send({ error: "wrong_state", status: proof.status, traceId: req.traceId });
+    }
+    const next = await changeProof(ports, ids.data.userId, ids.data.proofId, (x) => ({
+      ...x,
+      status: "tracking",
+      startedAt: new Date(ports.clock.now()).toISOString(),
+    }));
+    return next ? proofView(next) : await reply.status(404).send({ error: "proof_not_found" });
+  });
+  app.post("/internal/proof/:proofId/stop", async (req, reply) => {
+    const ids = ProofIds.safeParse({
+      ...(req.params as object),
+      userId: (req.body as { userId?: string } | null)?.userId,
+    });
+    if (!ids.success)
+      return await reply.status(400).send({ error: "invalid_id", traceId: req.traceId });
+    const next = await changeProof(ports, ids.data.userId, ids.data.proofId, (x) => ({
+      ...x,
+      status: "stopped",
+    }));
+    return next
+      ? proofView(next)
+      : await reply.status(404).send({ error: "proof_not_found", traceId: req.traceId });
+  });
+  // "Two new products at once": the person said another product started. The warning stays with
+  // the verdicts from here on.
+  app.post("/internal/proof/:proofId/confound", async (req, reply) => {
+    const ids = ProofIds.safeParse({
+      ...(req.params as object),
+      userId: (req.body as { userId?: string } | null)?.userId,
+    });
+    if (!ids.success)
+      return await reply.status(400).send({ error: "invalid_id", traceId: req.traceId });
+    const next = await changeProof(ports, ids.data.userId, ids.data.proofId, (x) => ({
+      ...x,
+      confound: { flagged: true, at: new Date(ports.clock.now()).toISOString() },
+    }));
+    return next
+      ? proofView(next)
+      : await reply.status(404).send({ error: "proof_not_found", traceId: req.traceId });
+  });
+  app.delete("/internal/proof/:userId/:proofId", async (req, reply) => {
+    const ids = ProofIds.safeParse(req.params);
+    if (!ids.success)
+      return await reply.status(400).send({ error: "invalid_id", traceId: req.traceId });
+    await ports.state.delete(proofPath(ids.data.userId, ids.data.proofId));
+    return await reply.status(204).send();
+  });
+  // The measured review: one finished proof, anonymised, for the brand console. It needs a yes,
+  // and carries nothing that names the person (docs/DATA_MODEL.md §3).
+  app.post("/internal/proof/:proofId/review", async (req, reply) => {
+    const body = z.object({ userId: UserId, consent: z.literal(true) }).safeParse({
+      ...(req.body as object),
+      userId: (req.body as { userId?: string } | null)?.userId,
+    });
+    const id = ProofId.safeParse((req.params as { proofId: string }).proofId);
+    if (!body.success || !id.success)
+      return await reply.status(400).send({ error: "consent_required", traceId: req.traceId });
+    const proof = await loadProof(ports, body.data.userId, id.data);
+    if (!proof)
+      return await reply.status(404).send({ error: "proof_not_found", traceId: req.traceId });
+    const verdict = proof.verdicts.at(-1);
+    const finished =
+      proof.status === "ended" || (verdict !== undefined && verdict.day >= proof.claim.windowDays);
+    if (!verdict || !finished || proof.reviewPublishedAt !== undefined) {
+      return await reply.status(409).send({
+        error: proof.reviewPublishedAt ? "already_published" : "not_finished",
+        traceId: req.traceId,
+      });
+    }
+    const twin = await getDoc(ports.state, twinPath(body.data.userId), Twin);
+    const band = twin?.metrics["colour.fitzpatrick_band"];
+    const now = new Date(ports.clock.now());
+    const outcome = EfficacyOutcome.parse({
+      product_id: proof.product.url ?? proof.product.name,
+      concern: proof.claim.concern,
+      delta: verdict.delta,
+      mdc: verdict.mdc,
+      words: verdict.words,
+      fitzpatrick_band: band?.kind === "category" ? band.value : null,
+      skin_type: null,
+      week: isoWeek(now),
+    });
+    await ports.state.set(`efficacy_outcomes/${newId("led")}`, outcome);
+    await changeProof(ports, body.data.userId, id.data, (x) => ({
+      ...x,
+      reviewPublishedAt: now.toISOString(),
+    }));
+    return await reply.status(201).send({ published: outcome });
+  });
+
   // ---- the Twin: quote, build, read, download, delete ----
   const BuildBody = z.object({
     userId: UserId,
@@ -692,6 +963,14 @@ export function buildApp(
       await ports.state.set(`twins/${body.data.userId}`, body.data);
       return await reply.status(201).send({ ok: true });
     });
+    // Writes a proof as given, so a test can show every verdict state without waiting for days.
+    app.post("/internal/dev/proof", async (req, reply) => {
+      const body = ProofRecord.safeParse(req.body);
+      if (!body.success)
+        return await reply.status(400).send({ error: "invalid_proof", traceId: req.traceId });
+      await putProof(ports, body.data);
+      return await reply.status(201).send({ ok: true });
+    });
   }
 
   // ---- the demo graph (mock only: it uses a synthetic YouCam) ----
@@ -722,4 +1001,14 @@ function subscribe(bus: EventBus, runId: string, send: (event: unknown) => void)
   return bus.subscribe(RUN_EVENTS_TOPIC, (event) => {
     if ((event as { runId?: string }).runId === runId) send(event);
   });
+}
+
+/** `2026-W44`: the ISO week of a date, so an outcome says when without saying which day. */
+function isoWeek(d: Date): string {
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const yearStart = Date.UTC(t.getUTCFullYear(), 0, 1);
+  const week = Math.ceil(((t.getTime() - yearStart) / 86_400_000 + 1) / 7);
+  return `${String(t.getUTCFullYear())}-W${String(week).padStart(2, "0")}`;
 }

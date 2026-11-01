@@ -84,6 +84,20 @@ export const CONFIG = {
       false,
     ),
   },
+  proof: {
+    /** Sessions of captures on different days before a product can be judged (docs/ENGINES.md §8). */
+    baselineSessions: setting(3, "docs/PHASE_09: 3 sessions on different days", true),
+    /** Captures in one session. */
+    capturesPerSession: setting(3, "docs/ENGINES.md §8: k = 3", true),
+    /** Two sessions closer than this are the same day to the person, not different days. */
+    minSessionGapHours: setting(12, "Product choice: sessions on different days", false),
+    /** A check-in is due this often once tracking has started. */
+    checkInEveryDays: setting(7, "Product choice: weekly", false),
+    minWindowDays: setting(7, "Product choice: a shorter claim is not measurable", false),
+    maxWindowDays: setting(180, "Product choice: the session cookie lasts 180 days", false),
+    /** Spacing of the five Skin Simulation intensities for the phantom (docs/ENGINES.md §9). */
+    phantomIntensities: setting([0, 0.25, 0.5, 0.75, 1], "docs/ENGINES.md §9", true),
+  },
   look: {
     /** Request strengths for a look's lip and blush (0-100). Starting values, not calibrated. */
     lipColourIntensity: setting(70, "Product choice; Phase 8 chain-quality experiment", false),

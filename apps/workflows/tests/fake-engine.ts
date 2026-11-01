@@ -4,7 +4,9 @@ import type {
   ColourReading,
   EngineClient,
   EngineFailure,
+  ChangeReading,
   FinishReading,
+  PhantomReading,
   GarmentAuditReading,
   GarmentColourReading,
   IdentityReading,
@@ -25,6 +27,8 @@ export class FakeEngine implements EngineClient {
   readonly noiseCalls: number[][][] = [];
   failColour: EngineFailure | undefined;
   failNoise: EngineFailure | undefined;
+  /** Proof: what the variation estimate says once there is enough to say it. */
+  noiseFloorOverride: Partial<NoiseFloorReading> | undefined;
   failShade: EngineFailure | undefined;
 
   /** What the shade endpoints answer next; tests set these to script a case. */
@@ -101,6 +105,45 @@ export class FakeEngine implements EngineClient {
         config: { IDENTITY_DRIFT_MAX: { value: 0.08, calibrated: false } },
       }),
     );
+  }
+
+  /** Proof: what the change and phantom endpoints answer next. */
+  changeFor:
+    ((i: { baseline: number; now: number; mdc: number | null }) => ChangeReading) | undefined;
+  phantom: PhantomReading = {
+    usable: true,
+    rho: -1,
+    score_range: 12,
+    reason: "ok",
+    intensities: [0, 0.25, 0.5, 0.75, 1],
+    fitted_delta: [0, -3, -6, -9, -12],
+    inverted_intensity: 0.5,
+  };
+  readonly proofCalls: string[] = [];
+
+  change(i: Parameters<EngineClient["change"]>[0]) {
+    this.proofCalls.push("change");
+    if (this.failLook) return Promise.resolve(err(this.failLook));
+    const delta = i.now - i.baseline;
+    const value: ChangeReading = this.changeFor?.(i) ?? {
+      delta,
+      words:
+        i.mdc === null
+          ? "n/a"
+          : Math.abs(delta) < i.mdc
+            ? "within"
+            : delta > 0
+              ? "clear"
+              : "opposite",
+      phrase: "x",
+    };
+    return Promise.resolve(ok({ value, engineVersion: "engines-test" }));
+  }
+
+  phantomFit(_i: Parameters<EngineClient["phantomFit"]>[0]) {
+    this.proofCalls.push("phantom");
+    if (this.failLook) return Promise.resolve(err(this.failLook));
+    return Promise.resolve(ok({ value: this.phantom, engineVersion: "engines-test" }));
   }
 
   closedLoopFor: ((render: LabTuple) => ClosedLoopReading) | undefined;
@@ -185,6 +228,7 @@ export class FakeEngine implements EngineClient {
       s_d_source: "unknown",
       se: null,
       mdc: null,
+      ...this.noiseFloorOverride,
     };
     return Promise.resolve(ok({ value, engineVersion: "engines-test" }));
   }
