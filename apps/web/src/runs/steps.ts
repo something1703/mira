@@ -17,6 +17,22 @@ const WORDS: Record<string, string> = {
   "step.measure_render": "Measuring the preview",
   "step.check_render": "Checking the preview against your skin",
   "step.rank_shades": "Ranking the shades",
+  "step.try_outfit": "Trying on the outfit",
+  "step.try_shoes": "Trying on the shoes",
+  "step.try_bag": "Adding the bag",
+  "step.try_makeup": "Applying the makeup",
+  "step.try_hair": "Trying the hair colour",
+  "step.place_venue": "Placing you in the venue",
+  "step.make_video": "Making a short video",
+  "step.check_garment": "Checking the garment colour matches the product",
+  "step.measure_lip": "Measuring the lip colour",
+  "step.check_lip": "Checking the lip colour matches the product",
+  "step.check_face": "Reading your face in the preview",
+  "step.compare_face": "Comparing your face with your profile",
+  "step.check_before_video": "Checking every preview before the video",
+  "step.put_look_together": "Putting the look together",
+  "step.remove_background": "Removing the background",
+  "step.read_garment_colour": "Reading the garment colour",
 };
 
 export const stepLabel = (key: string): string => WORDS[key] ?? key;

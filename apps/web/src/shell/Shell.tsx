@@ -25,6 +25,8 @@ export function Shell({ children }: { children: ReactNode }) {
           <nav className="shell__nav" aria-label="Main">
             <Link href="/profile">Profile</Link>
             <Link href="/shade">Shade</Link>
+            <Link href="/look">Look</Link>
+            <Link href="/event">Event</Link>
             <Link href="/settings/privacy">Privacy</Link>
           </nav>
           <div className="shell__tools">

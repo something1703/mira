@@ -227,12 +227,22 @@ describe("plans and the confirmation guard", () => {
     expect(res.state).toBe("answer");
   });
 
-  it("says a module is not built yet instead of inventing a quote", async () => {
+  it("hands a look over to Look Studio: it needs a photo and garments only that screen holds", async () => {
     const t = toolEnv([
       { step: { tools: [{ name: "plan_compose_look", input: { slots: ["outfit"] } }] } },
-      say("Build a look is not ready in this assistant yet. It works from its own screen."),
+      say("Build a look works from its own screen. Add your photo and pick an outfit there."),
     ]);
     const res = await runAsk(request("build a sangeet look"), t.env);
+    expect(res.plans).toEqual([]);
+    expect(res.needs[0]).toMatchObject({ need: "photo", screen: "/look" });
+  });
+
+  it("says a module is not built yet instead of inventing a quote", async () => {
+    const t = toolEnv([
+      { step: { tools: [{ name: "plan_start_proof", input: { product: "serum" } }] } },
+      say("Check my progress works from its own screen for now."),
+    ]);
+    const res = await runAsk(request("check my serum"), t.env);
     expect(res.plans).toEqual([]);
     expect(res.needs[0]?.need).toBe("module_unavailable");
   });

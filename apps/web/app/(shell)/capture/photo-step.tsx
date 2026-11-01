@@ -353,6 +353,7 @@ const ANGLE_LABELS: Record<UploadKind, string> = {
   hair_front: "Hair, from the front",
   hair_right: "Hair, from the right",
   hair_left: "Hair, from the left",
+  garment: "Garment photo",
 };
 
 /** File choosers: one for most steps, front/right/left for hair (front is enough on its own). */

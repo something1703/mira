@@ -1,8 +1,10 @@
 import {
+  LookResult,
   Run,
   RunNode,
   ShadeResult,
   Twin,
+  type LookStep,
   type Metric,
   type TwinGroup,
   type ShadeOutcome,
@@ -338,6 +340,129 @@ export async function serveCraftedRun(
   await page.route(`**/api/runs/${runId}/images/*`, (route) =>
     options.previewsGone
       ? route.fulfill({ status: 404, json: { error: "image_gone" } })
+      : route.fulfill({
+          contentType: "image/png",
+          body: Buffer.from(placeholderPng({ hex: "#C79A78" })),
+        }),
+  );
+}
+
+// ---- Look: crafted results and runs ----
+
+/** The hair colour a profile needs for makeup suggestions; the shared fixtures leave it out. */
+export const HAIR_COLOUR: Metric = {
+  ...stamp,
+  id: "colour.hair",
+  kind: "colour",
+  lab: [22, 6, 9],
+  hex: "#42280E",
+  source: SRC("skin-tone-analysis"),
+};
+
+/** A profile with everything a look needs: skin, lip and hair colour, and the face ratios. */
+export const lookTwin = (userId: string): Twin =>
+  makeTwin(userId, {
+    metrics: [...SKIN_METRICS, ...COLOUR_METRICS, HAIR_COLOUR, ...FACE_METRICS, ...HAIR_METRICS],
+  });
+
+export function lookStep(id: LookStep["id"], over: Partial<LookStep> = {}): LookStep {
+  return { id, node: id, verdict: "unchecked", ...over };
+}
+
+/** A finished look with every step made and checked, unless overridden. */
+export function lookResult(over: Partial<LookResult> = {}): LookResult {
+  return LookResult.parse({
+    steps: [
+      lookStep("outfit", { verdict: "verified", de: 2.4 }),
+      lookStep("makeup", { verdict: "verified", de: 1.1 }),
+      lookStep("hair"),
+      lookStep("venue"),
+    ],
+    identity: { verdict: "verified", drift: 0.02, max: 0.08 },
+    plate: "venue",
+    withheld: [],
+    video: { status: "not_requested" },
+    thresholds: { garmentDe: 6, lipDe: 3, identityMax: 0.08, calibrated: false },
+    ...over,
+  });
+}
+
+/** A look run as `/api/runs/:id` returns it, in the state the test needs. */
+export function lookRunView(
+  userId: string,
+  runId: string,
+  result: LookResult | undefined,
+  options: { status?: Run["status"]; running?: string[] } = {},
+) {
+  const at = "2026-11-01T09:00:00.000Z";
+  const run = Run.parse({
+    id: runId,
+    type: "compose_look",
+    userId,
+    sessionId: "ses_crafted0001",
+    status: options.status ?? (result ? "succeeded" : "failed"),
+    planId: "plan_crafted001",
+    quote: {
+      lines: [],
+      total: 0,
+      sessionUnitsLeft: 100,
+      overCap: false,
+      pricing: { source: "feature-cost", pricedAt: at },
+    },
+    unitsSpent: 0,
+    traceId: "trc_crafted0001",
+    recorded: false,
+    startedAt: at,
+    endedAt: at,
+  });
+  const node = (id: string, extra: object = {}) =>
+    RunNode.parse({
+      id,
+      runId,
+      kind: "youcam",
+      label: `step.try_${id === "outfit" ? "outfit" : id}`,
+      feature: "cloth-v4",
+      status: options.running?.includes(id) ? "running" : "done",
+      dependsOn: [],
+      ...extra,
+    });
+  const ids = result ? result.steps.map((s) => s.id as string) : (options.running ?? ["outfit"]);
+  const nodes = [
+    ...ids.map((id) => node(id)),
+    ...(result?.video?.status === "done"
+      ? [node("video", { feature: "image-to-video/youcam" })]
+      : []),
+    ...(options.running?.includes("video")
+      ? [node("video", { feature: "image-to-video/youcam" })]
+      : []),
+    ...(result
+      ? [
+          node("assemble", {
+            kind: "system",
+            label: "step.put_look_together",
+            feature: "look-assemble",
+            output: result,
+          }),
+        ]
+      : []),
+  ];
+  return { run, nodes, ledger: [], synthetic: false };
+}
+
+/** Serves a crafted look run and a picture for every step in place of the real routes. */
+export async function serveCraftedLook(
+  page: Page,
+  userId: string,
+  runId: string,
+  result: LookResult | undefined,
+  options: { status?: Run["status"]; running?: string[]; withheld?: boolean } = {},
+): Promise<void> {
+  await page.route(`**/api/runs/${runId}`, (route) =>
+    route.fulfill({ json: lookRunView(userId, runId, result, options) }),
+  );
+  await page.route(`**/api/runs/${runId}/images/*`, (route) =>
+    options.withheld
+      ? route.fulfill({ status: 404, json: { error: "image_withheld" } })
       : route.fulfill({
           contentType: "image/png",
           body: Buffer.from(placeholderPng({ hex: "#C79A78" })),

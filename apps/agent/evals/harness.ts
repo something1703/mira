@@ -112,6 +112,12 @@ export function fakeWorkflows(opts: FakeOptions = {}): Workflows & { calls: Call
       if (path === "/internal/shade/ranges") return Promise.resolve(reply(200, { ranges }));
       return Promise.resolve(reply(404, { error: "not_found" }));
     },
+    postBytes(path, bytes) {
+      calls.push({ method: "POST", path, body: { bytes: bytes.byteLength } });
+      return Promise.resolve(
+        reply(201, { key: `uploads/${USER}/up_garmentfetched.jpg`, width: 800, height: 1000 }),
+      );
+    },
     post(path, body) {
       calls.push({ method: "POST", path, body });
       const isBuild = path.endsWith("/build");

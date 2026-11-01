@@ -3,7 +3,16 @@ import { isResponse, relay, requireSession, toWorkflows } from "../../../src/twi
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const TYPES = new Set(["image/jpeg", "image/png"]);
-const KINDS = new Set(["face", "repeat", "body", "hand", "hair_front", "hair_right", "hair_left"]);
+const KINDS = new Set([
+  "face",
+  "repeat",
+  "body",
+  "hand",
+  "hair_front",
+  "hair_right",
+  "hair_left",
+  "garment",
+]);
 
 /**
  * A capture or uploaded photo, sent as the raw file. It goes to storage under the person's own

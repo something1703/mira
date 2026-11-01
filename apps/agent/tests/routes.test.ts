@@ -125,6 +125,7 @@ describe("narrating a finished run", () => {
   const workflowsFor = (view: unknown) => ({
     get: () => Promise.resolve({ ok: true as const, status: 200, body: view }),
     post: () => Promise.resolve({ ok: false as const }),
+    postBytes: () => Promise.resolve({ ok: false as const }),
   });
 
   it("describes the run with the run's own numbers", async () => {

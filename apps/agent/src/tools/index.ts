@@ -368,9 +368,11 @@ export async function runTool(
         ok: true,
         result: await planMatchShade(env, state, input.data as z.infer<typeof PlanMatchShadeInput>),
       };
-    // Look Studio (Phase 8) and Proof (Phase 9) own these workflows; until they land the plan
-    // tools say so instead of inventing a quote.
+    // A look needs a full-length photo and garments the person picked, which only Look Studio
+    // holds (D38 (5), D39): the plan hands over to that screen instead of guessing either.
     case "plan_compose_look":
+      return { ok: true, result: need(state, "photo", "/look") };
+    // Proof (Phase 9) owns these workflows; until it lands the plan tools say so.
     case "plan_start_proof":
     case "plan_proof_check_in":
       return { ok: true, result: need(state, "module_unavailable", "/") };

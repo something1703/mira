@@ -95,10 +95,19 @@ export function checkUrl(
   return { ok: true, url };
 }
 
+/** What a fetch accepts: pages, or the two picture types YouCam takes. */
+type Want = "html" | "image";
+const TYPES: Record<Want, RegExp> = {
+  html: /text\/html|application\/xhtml/,
+  image: /^image\/(?:jpeg|png)\b/,
+};
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
 function getOnce(
   url: URL,
+  want: Want = "html",
 ): Promise<
-  | { kind: "page"; html: string }
+  | { kind: "body"; bytes: Buffer; type: string }
   | { kind: "redirect"; to: string }
   | { kind: "failed"; reason: FetchFailure }
 > {
@@ -109,7 +118,10 @@ function getOnce(
         method: "GET",
         lookup: validatingLookup,
         timeout: TIMEOUT_MS,
-        headers: { accept: "text/html", "user-agent": "MIRA shade reader" },
+        headers: {
+          accept: want === "html" ? "text/html" : "image/jpeg,image/png",
+          "user-agent": "MIRA shade reader",
+        },
       },
       (res) => {
         const status = res.statusCode ?? 0;
@@ -119,16 +131,17 @@ function getOnce(
           return;
         }
         const type = res.headers["content-type"] ?? "";
-        if (status !== 200 || !/text\/html|application\/xhtml/.test(type)) {
+        if (status !== 200 || !TYPES[want].test(type)) {
           res.resume();
           resolve({ kind: "failed", reason: status === 200 ? "not_html" : "fetch_failed" });
           return;
         }
+        const limit = want === "html" ? MAX_PAGE_BYTES : MAX_IMAGE_BYTES;
         const chunks: Buffer[] = [];
         let size = 0;
         res.on("data", (c: Buffer) => {
           size += c.length;
-          if (size > MAX_PAGE_BYTES) {
+          if (size > limit) {
             res.destroy();
             resolve({ kind: "failed", reason: "too_large" });
             return;
@@ -136,7 +149,7 @@ function getOnce(
           chunks.push(c);
         });
         res.on("end", () => {
-          resolve({ kind: "page", html: Buffer.concat(chunks).toString("utf8") });
+          resolve({ kind: "body", bytes: Buffer.concat(chunks), type });
         });
         res.on("error", () => {
           resolve({ kind: "failed", reason: "fetch_failed" });
@@ -163,7 +176,34 @@ export async function fetchPage(raw: string): Promise<PageResult> {
     const checked = checkUrl(current);
     if (!checked.ok) return checked;
     const got = await getOnce(checked.url);
-    if (got.kind === "page") return { ok: true, html: got.html, finalUrl: checked.url.toString() };
+    if (got.kind === "body") {
+      return { ok: true, html: got.bytes.toString("utf8"), finalUrl: checked.url.toString() };
+    }
+    if (got.kind === "failed") return { ok: false, reason: got.reason };
+    current = got.to;
+  }
+  return { ok: false, reason: "too_many_redirects" };
+}
+
+export type ImageResult =
+  | { ok: true; bytes: Uint8Array; contentType: "image/jpeg" | "image/png"; finalUrl: string }
+  | { ok: false; reason: FetchFailure };
+
+/** Fetches a picture with the same guards as a page: https, public addresses, re-checked redirects. */
+export async function fetchImage(raw: string): Promise<ImageResult> {
+  let current = raw;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    const checked = checkUrl(current);
+    if (!checked.ok) return checked;
+    const got = await getOnce(checked.url, "image");
+    if (got.kind === "body") {
+      return {
+        ok: true,
+        bytes: new Uint8Array(got.bytes),
+        contentType: got.type.startsWith("image/png") ? "image/png" : "image/jpeg",
+        finalUrl: checked.url.toString(),
+      };
+    }
     if (got.kind === "failed") return { ok: false, reason: got.reason };
     current = got.to;
   }

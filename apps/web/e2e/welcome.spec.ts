@@ -46,7 +46,7 @@ test.describe("Welcome (UX_FLOWS §1)", () => {
 
   test("links to screens that later phases build land on an explained screen", async ({ page }) => {
     await page.goto("/?profile=returning");
-    await page.getByRole("link", { name: "Build a look" }).click();
+    await page.getByRole("link", { name: "Check my progress" }).click();
     await expect(
       page.getByRole("heading", { name: "This screen is not available yet." }),
     ).toBeVisible();

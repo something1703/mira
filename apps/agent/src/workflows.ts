@@ -10,6 +10,8 @@ export type WorkflowsReply = { ok: true; status: number; body: unknown } | { ok:
 export interface Workflows {
   get(path: string): Promise<WorkflowsReply>;
   post(path: string, body: unknown): Promise<WorkflowsReply>;
+  /** A raw body (a picture), for the upload route. */
+  postBytes(path: string, bytes: Uint8Array, contentType: string): Promise<WorkflowsReply>;
 }
 
 export function httpWorkflows(
@@ -18,14 +20,18 @@ export function httpWorkflows(
 ): Workflows {
   const identity = options.identity ?? new Identity();
   const doFetch = options.fetch ?? fetch;
-  const call = async (path: string, init: RequestInit): Promise<WorkflowsReply> => {
+  const call = async (
+    path: string,
+    init: RequestInit,
+    contentType = "application/json",
+  ): Promise<WorkflowsReply> => {
     try {
       const auth = options.live ? await identity.headers(base) : {};
       const res = await doFetch(`${base}${path}`, {
         cache: "no-store",
         signal: AbortSignal.timeout(15_000),
         ...init,
-        headers: { "content-type": "application/json", ...auth },
+        headers: { "content-type": contentType, ...auth },
       });
       const text = await res.text();
       let body: unknown = null;
@@ -42,5 +48,7 @@ export function httpWorkflows(
   return {
     get: (path) => call(path, { method: "GET" }),
     post: (path, body) => call(path, { method: "POST", body: JSON.stringify(body) }),
+    postBytes: (path, bytes, contentType) =>
+      call(path, { method: "POST", body: Buffer.from(bytes) }, contentType),
   };
 }

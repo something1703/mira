@@ -4,7 +4,7 @@
  * it refuses comes back as a code that this maps to plain words.
  */
 export type UploadKind =
-  "face" | "repeat" | "body" | "hand" | "hair_front" | "hair_right" | "hair_left";
+  "face" | "repeat" | "body" | "hand" | "hair_front" | "hair_right" | "hair_left" | "garment";
 
 export interface Uploaded {
   key: string;

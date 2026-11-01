@@ -98,8 +98,8 @@ export const CONFIG = {
     /** Longest chain shown by default until the chain-quality experiment decides (F-row). */
     defaultChainLength: setting(7, "Phase 8 chain-quality experiment pending", false),
     /** Video lengths and resolutions offered. */
-    videoDurationSec: setting(5 as 5 | 10, "Cheapest length (docs/YOUCAM_API.md §3)", false),
-    videoResolution: setting("480" as "480" | "720" | "1080", "Cheapest resolution", false),
+    videoDurationSec: setting<5 | 10>(5, "Cheapest length (docs/YOUCAM_API.md §3)", false),
+    videoResolution: setting<"480" | "720" | "1080">("480", "Cheapest resolution", false),
   },
   twin: {
     /**

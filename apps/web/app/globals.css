@@ -614,3 +614,197 @@ a {
 .shade__options[hidden] {
   display: none;
 }
+
+/* ---------- Look Studio and Event Mode ---------- */
+.look {
+  display: grid;
+  gap: var(--mira-space-5);
+  max-width: 64rem;
+}
+.look h1 {
+  margin: 0 0 var(--mira-space-2);
+}
+.look__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--mira-space-6);
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .look__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.look__slots {
+  display: grid;
+  gap: var(--mira-space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.look__slot {
+  display: grid;
+  gap: var(--mira-space-2);
+  padding: var(--mira-space-4);
+  border: 1px solid var(--mira-rule);
+  border-radius: var(--mira-radius-panel);
+}
+.look__slot h2 {
+  margin: 0;
+}
+.look__slot-body {
+  display: grid;
+  gap: var(--mira-space-2);
+  justify-items: start;
+}
+.look__slot-body p {
+  margin: 0;
+}
+.look__stage,
+.look__side {
+  display: grid;
+  gap: var(--mira-space-4);
+  align-content: start;
+}
+.look__garment {
+  display: flex;
+  align-items: center;
+  gap: var(--mira-space-2);
+}
+.look__chip {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  border-radius: var(--mira-radius-swatch);
+  border: 1px solid var(--mira-rule);
+}
+.look__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mira-space-2);
+}
+.look__select {
+  display: grid;
+  gap: var(--mira-space-1);
+}
+.look__form,
+.look__adder {
+  display: grid;
+  gap: var(--mira-space-3);
+}
+.look__samples {
+  display: grid;
+  gap: var(--mira-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.look__samples button {
+  display: flex;
+  align-items: center;
+  gap: var(--mira-space-3);
+  width: 100%;
+  font: inherit;
+  color: var(--mira-ink);
+  text-align: left;
+  background: var(--mira-surface);
+  border: 1px solid var(--mira-rule);
+  border-radius: var(--mira-radius-control);
+  padding: var(--mira-space-3) var(--mira-space-4);
+  cursor: pointer;
+}
+.look__labels,
+.look__checks {
+  display: grid;
+  gap: var(--mira-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.look__drift {
+  display: grid;
+  gap: var(--mira-space-3);
+}
+.look__video {
+  display: grid;
+  gap: var(--mira-space-2);
+}
+.look__videoimg {
+  width: 100%;
+  max-height: 24rem;
+  object-fit: contain;
+  background: var(--mira-mat);
+  border-radius: var(--mira-radius-panel);
+}
+.event {
+  display: grid;
+  gap: var(--mira-space-5);
+  max-width: 64rem;
+}
+.event h1 {
+  margin: 0 0 var(--mira-space-2);
+}
+.event__functions {
+  display: grid;
+  gap: var(--mira-space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.event__function {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)) auto;
+  gap: var(--mira-space-3);
+  align-items: end;
+  padding: var(--mira-space-4);
+  border: 1px solid var(--mira-rule);
+  border-radius: var(--mira-radius-panel);
+}
+@media (max-width: 760px) {
+  .event__function {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.event__board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--mira-space-4);
+  padding: var(--mira-space-5);
+  background: var(--mira-mat);
+  border-radius: var(--mira-radius-panel);
+  list-style: none;
+  margin: 0;
+}
+.event__card {
+  display: grid;
+  gap: var(--mira-space-2);
+}
+/* Words and buttons on the mat sit on a raised card: white on the mat is under AA (D22). */
+.event__foot {
+  display: grid;
+  gap: var(--mira-space-2);
+  padding: var(--mira-space-3);
+  background: var(--mira-raised);
+  color: var(--mira-ink);
+  border-radius: var(--mira-radius-control);
+}
+.event__foot p {
+  margin: 0;
+}
+.event__card img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: var(--mira-radius-control);
+}
+.event__empty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  padding: var(--mira-space-3);
+  text-align: center;
+  background: var(--mira-raised);
+  color: var(--mira-ink);
+  border-radius: var(--mira-radius-control);
+}

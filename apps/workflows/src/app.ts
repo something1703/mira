@@ -42,6 +42,7 @@ import { planShadeMatch, type ShadeBuildError } from "./shade/build";
 import { planShade } from "./shade/plan";
 import { seedShadeFake, syntheticDownloader } from "./shade/synthetic";
 import { cleanupRun } from "./runner/cleanup";
+import { savedPrefix } from "./runner/save";
 import { createTwinExecutors } from "./graphs/build-twin";
 import { planTwinBuild, type BuildError } from "./twin/build";
 import { HttpEngineClient, type EngineClient } from "./twin/engine-client";
@@ -561,6 +562,25 @@ export function buildApp(
       return await reply.status(start ? 201 : 200).send({ ...planned.value, synthetic });
     });
   }
+
+  // A saved look's picture: the first one, or the named file. Only that person's own prefix is read.
+  app.get("/internal/looks/:userId/:lookId/image", async (req, reply) => {
+    const { userId, lookId } = req.params as { userId: string; lookId: string };
+    const q = z.object({ file: z.string().max(100).optional() }).safeParse(req.query);
+    if (!UserId.safeParse(userId).success || !/^lk_[a-z0-9]{6,64}$/.test(lookId) || !q.success) {
+      return await reply.status(400).send({ error: "invalid_request", traceId: req.traceId });
+    }
+    const prefix = savedPrefix(userId, lookId);
+    const keys = (await ports.blobs.list(prefix)).sort();
+    const key = q.data.file ? keys.find((k) => k === `${prefix}${q.data.file}`) : keys[0];
+    const blob = key === undefined ? undefined : await ports.blobs.get(key);
+    if (!blob)
+      return await reply.status(404).send({ error: "look_not_found", traceId: req.traceId });
+    return await reply
+      .header("content-type", blob.contentType)
+      .header("cache-control", "no-store")
+      .send(Buffer.from(blob.bytes));
+  });
 
   // ---- the Twin: quote, build, read, download, delete ----
   const BuildBody = z.object({

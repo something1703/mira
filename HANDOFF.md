@@ -24,9 +24,10 @@ Phases 1 to 4 are built and verified as far as they can be without a YouCam key 
 | 5 Capture and the Twin | Built and tested in mock mode: capture flow (Camera Kit bridge, plain camera, upload path, repeats, body, hand, hair), upload checks, Build Twin graph and metrics, quote then build, profile screen with every state, privacy screen (inventory, download, delete), held-photo sweep | Needs a real phone and a consented person: the 10-attempt pass rate (DoD), Camera Kit specifics (F33), skin-type mapping (F34), a recorded live Build Twin. Not built: face-crop helper (F35), glasses or fringe detection |
 | 6 Shade | Built and tested in mock mode: range choice (sample ranges and pasted links read by the agent), free pre-rank, quote, unretouched renders, re-measure, blend ranking, every UX_FLOWS §5 state, retry missing, concealer second pass, protocol for F1 and F8 | Needs a consented person and a go-ahead: F1 (38 units) and F8 (420 units), a live run with a real brand range, a real range file in `packages/fixtures/catalogues` (today two invented samples) |
 | 7 Agent | Built and tested in mock mode: provider adapters (Vertex Gemini, Vertex Anthropic, Anthropic direct, mock) over one AI SDK class, the tool loop and its confirmation guard, read tools, plan tools for build twin and match shade, page reading behind the SSRF guard, MCP discovery filter, renderer (digit and placeholder checks, injection of readings, claim linter, one retry, templated fallback), out-of-scope refusals, narration of finished runs, 55 scripted conversations, the Ask MIRA panel with every UX_FLOWS §9 state. **Not done:** a live run of the evals against Vertex (needs the project), a live MCP call, plans for look and proof (Phases 8 and 9), a session-level held photo so a quote can appear in the panel (D38). |
+| 8 Look and Event | Built and tested in mock mode: garment ingest (link, upload or sample, quoted), the lip and blush suggestion with its reason, the compose-look chain (outfit, shoes, bag, makeup, hair, face comparison, venue, video) with garment, lip and identity audits and the gates, withheld pictures never served, Look Studio with every UX_FLOWS §6 state, Event Mode with every §7 state and a downloadable board, protocols for both experiments. **Not done:** Jewellery (needs a mask, F51), a hair suggestion, per-step retry, the face model file for live garment checks (F52), the two experiments (216 and 128 units), a live sangeet look, the Proof timeline in Event Mode (Phase 9). |
 | 4 Engines | Done: colour, ΔE2000 (all 34 Sharma pairs), shade, look, garment, audit, identity, noise floor, phantom, every endpoint, generated Python models with a contract test | Needs a deploy: Cloud Run with service-account auth. `faces.py` needs a BlazeFace `.tflite` model via `MIRA_FACE_MODEL_PATH` (not bundled; untested until supplied) |
 
-Test counts (all pass, `pnpm check` exit 0): 1,074 unit and contract tests (schemas 78, runtime 33, youcam-client 172, workflows 202, webhook 14, fixtures 49, ui 184, web 43, agent 148, mcp 1, engines 150) and 316 Playwright tests in light, dark and mobile with axe (single-pass full runs are skipped on the other projects on purpose; 26 skipped).
+Test counts (all pass, `pnpm check` exit 0): 1,118 unit and contract tests (schemas 78, runtime 33, youcam-client 175, workflows 229, webhook 14, fixtures 54, ui 184, web 43, agent 157, mcp 1, engines 150) and 394 Playwright tests in light, dark and mobile with axe (single-pass full runs are skipped on the other projects on purpose; 26 skipped).
 
 ## What exists
 
@@ -61,6 +62,16 @@ Useful pages in mock mode: `/` and `/consent`, `/dev/components` (every componen
 ## Decisions (full text in `docs/DECISIONS.md`, D1 to D34)
 
 D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam feature. D12 chain on the previous result URL. D13 verify webhooks and always poll as fallback. D14 anonymous signed sessions (built). D15 agent text uses placeholders for product and shade names (Phase 7). D16 Build Twin gives a same-session estimate, not a noise floor. D19 a gallery instead of Storybook, plain CSS instead of Tailwind. D20 two contrast fixes. D21 Atkinson keeps tabular figures. D22 and D27 design reviews. D23 images are never cached across runs. D24 the webhook forwards, workflows stays the only writer. D25 mock mode never calls synthetic results a recording. D26 prices only from feature-cost, fail closed. D28 generated Python models and how engines must read JSON (strict). D29 the client-side rate limiter. D30 saved looks are copied to `saved/`. D31 Build Twin: eight HD concerns, one face photo, optional separately quoted repeats. D32 body and hand photos are held at most two hours, visibly. D33 a failed retry never wipes a profile; delete waits for running runs. D34 confidence words say only what is known.
+
+## Phase 8 map
+
+- **Workflows:** `src/graphs/compose-look.ts` (graph, audits, gates, `look-assemble`), `src/look/{garments,ingest,plan,synthetic}.ts`. HTTP: `/internal/look/{catalogue,garments/sample,garments/quote,garments/ingest,suggest,quote,build}`, `/internal/looks/:userId/:lookId/image`. The images and save routes refuse a withheld node.
+- **Schemas:** `packages/schemas/src/look.ts` (garment, suggestion, `LookResult`, event plan). `CONFIG.look` holds the request strengths.
+- **Engines client:** `lookSuggest`, `garmentColour`, `auditGarment`, `auditLip`, `auditIdentity` on `EngineClient`.
+- **Fixtures:** `scenePng`, `cutoutPng`, `placeholderHex` (drawn scenes for mock mode), `catalogues/look/{lips,garments}.json`, `pages/sample-garment.html`.
+- **Agent:** `extract/garment.ts`, `extract/safe-fetch.ts` `fetchImage`, `POST /internal/extract/garment`, `GET /internal/look/backgrounds`.
+- **Web:** `app/(shell)/look/` (`look-studio`, `garment-adder`, `look-run`), `app/(shell)/event/event-board.tsx`, `src/look/`, `src/event/store.ts` (the plan, in localStorage), routes under `app/api/look` and `app/api/looks`.
+- **Experiments:** `experiments/chain-quality/`, `experiments/drape/` (protocol and estimate only).
 
 ## Phase 7 map
 
@@ -125,7 +136,7 @@ Four independent reviews read the whole repo against the vision. What was fixed 
 1. With a consented photo, run `pnpm smoke:live --input <photo>` (about 57 units, it quotes and asks first), then `pnpm fixtures:record` for the Phase 5 and 6 features. That records the face features and settles the remaining `_confirm_` items. Note the CLI declines without a terminal; run it in one.
 2. Phase 5 is built for mock mode. To close it: run capture on a real phone in live mode ten times and record the pass rate (F-row), confirm F33 and F34 from a recorded run, then decide whether to build the face-crop helper (needs a face-detector model).
 3. Decide the Phase 6 preview-measurement question first: re-measure shade previews with YouCam (about 21 units per shade, hex only) or sample the pixels locally (Phase 4's colour code makes that cheap to try).
-4. Then Phases 8 to 10 as written. Phase 8 should settle a session-level held photo, so the panel's quote can appear (D38 (5)), and wire `plan_compose_look`.
+4. Then Phases 9 and 10 as written. A session-level held photo is still open (D38 (5), D39 (12)): until it exists the assistant hands a look to Look Studio.
 
 ## Working rules that are easy to miss
 
