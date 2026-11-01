@@ -184,7 +184,7 @@ info:
         > *If the number of images or video duration isn’t evenly divisible, units round up.
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -215,19 +215,19 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/VideoFileV1.1'
+                - $ref: "#/components/schemas/VideoFileV1.1"
       responses:
-        '200':
+        "200":
           description: Successful retrieval of file upload information
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/VideoFileResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+                  - $ref: "#/components/schemas/VideoFileResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
   /s2s/v2.0/task/obj-rem-vid:
     post:
       summary: Run an AI Video Object Removal task.
@@ -254,7 +254,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunVidTaskV2WithRequiredMsk'
+                - $ref: "#/components/schemas/BasicRunVidTaskV2WithRequiredMsk"
                 - type: object
                   required:
                     - frame_idx
@@ -267,23 +267,23 @@ paths:
                         to the total frame count minus 1.
                       example: 0
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/obj-rem-vid/{task_id}:
     get:
       summary: Check the status of a AI Video Object Removal task.
@@ -300,18 +300,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VidTaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/VidTaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -408,7 +408,7 @@ components:
           example: 200
           description: Response status
         data: null
-      $ref: '#/components/schemas/BasicVideoFileResponse'
+      $ref: "#/components/schemas/BasicVideoFileResponse"
     BasicRunTaskV2VidSrcFileUrl:
       type: object
       required:
@@ -456,26 +456,26 @@ components:
             - title: Run task with src video url & msk file url
               required:
                 - msk_file_url
-            - $ref: '#/components/schemas/BasicRunTaskV2VidSrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2MskFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2VidSrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2MskFileUrl"
         - allOf:
             - title: Run task with src video url & msk file ID
               required:
                 - msk_file_id
-            - $ref: '#/components/schemas/BasicRunTaskV2VidSrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2MskFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2VidSrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2MskFileId"
         - allOf:
             - title: Run task with src file ID & msk file url
               required:
                 - msk_file_url
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2MskFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2MskFileUrl"
         - allOf:
             - title: Run task with src file ID & msk file ID
               required:
                 - msk_file_id
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2MskFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2MskFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -598,12 +598,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/VidTaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/VidTaskStatusResponseBodySingleUrlResultsV2"
   responses:
     InvalidParameters:
       description: Invalid request parameters

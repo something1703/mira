@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Hair Extension Virtual Try-On
   description: "# Overview\nDiscover Your Perfect Hair Extension Match with AI​\nExperiment with a variety of lengths—from long to extra-long—styles, colors, and bangs, all from the comfort of your device. No more guessing games—see exactly how each hair extension style looks on you with the advanced Generative AI. Make informed styling decisions before committing to a new look.​\nWith the advanced Hair Extension Try-On, which naturally blends with your current hair length, it’s the perfect time to experiment with super-long styles.\n\nUse case:\n![AI Hair Extension](https://bcw-media.s3.ap-northeast-1.amazonaws.com/YCE_web_Hair_Extension_Filter_S2_img_07_098b6e08c4.jpg \"AI Hair Extension\")\n\n![AI Hair Extension](https://bcw-media.s3.ap-northeast-1.amazonaws.com/YCE_web_Hair_Extension_Filter_S1_img_01_eab88fe3e2.jpg \"AI Hair Extension\")\n\nSuggestions for How to Shoot:\n![Suggestions for How to Shoot](https://bcw-media.s3.ap-northeast-1.amazonaws.com/AI_Hair_Extension_recommendation_ba24bd5d92.png \"Suggestions for How to Shoot\")\n\n---\n\n## File Specs & Errors\n\n* Supported Formats & Dimensions\n\n|AI Feature|Supported Dimensions|Supported File Size|Supported Formats|\n|  ----  | ----  | ----  | ----  |\n|AI Hair Extension|long side <= 1024, face width >= 128, face pose: -10 < pitch < +10, -45 < yaw < +45, -15 < roll < +15, single face only, need to show full face|< 10MB|jpg/jpeg|\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n|error_no_shoulder\t|Shoulders are not visible in the source image\n|error_large_face_angle\t|The face angle in the uploaded image is too large\n|error_insufficient_landmarks\t|Cannot detect sufficient face or body landmarks in the source image\n|error_hair_too_short\t|Input hair is too short\n|error_face_pose\t|The face pose of source image is unsupported\n|error_bald_image\t|Input hairstyle is bald\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Hair Extension Virtual Try-On V1.0 | 1 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -42,12 +42,12 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
-          $ref: '#/components/responses/TemplateResponse'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+        "200":
+          $ref: "#/components/responses/TemplateResponse"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
   /s2s/v2.0/task/hair-ext:
     post:
       summary: Run an AI Hair Extension task.
@@ -65,25 +65,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RunWithSingleTemplateAndSrcUrl'
+              $ref: "#/components/schemas/RunWithSingleTemplateAndSrcUrl"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/responses/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/responses/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/hair-ext/{task_id}:
     get:
       summary: Check the status of a AI Hair Extension task.
@@ -100,18 +100,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -229,7 +229,7 @@ components:
           example: 200
           description: Response status
         data:
-          $ref: '#/components/schemas/BasicFileResponse'
+          $ref: "#/components/schemas/BasicFileResponse"
     BasicRunTaskV2SrcFileUrl:
       title: Run task with src file url
       type: object
@@ -253,8 +253,8 @@ components:
     BasicRunTaskV2:
       title: BasicRunTaskV2
       anyOf:
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     RunWithSingleTemplate:
       title: RunWithSingleTemplate
       type: object
@@ -270,8 +270,8 @@ components:
     RunWithSingleTemplateAndSrcUrl:
       title: RunWithSingleTemplateAndSrcUrl
       allOf:
-        - $ref: '#/components/schemas/RunWithSingleTemplate'
-        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: "#/components/schemas/RunWithSingleTemplate"
+        - $ref: "#/components/schemas/BasicRunTaskV2"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -313,12 +313,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results:
-              $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+              $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
     Template:
       type: object
       properties:
@@ -373,7 +373,7 @@ components:
           type: array
           description: The styles belong to this category.
           items:
-            $ref: '#/components/schemas/Style'
+            $ref: "#/components/schemas/Style"
         sub_categories:
           type: array
           items:
@@ -406,7 +406,7 @@ components:
             templates:
               type: array
               items:
-                $ref: '#/components/schemas/Template'
+                $ref: "#/components/schemas/Template"
             next_token:
               type: string
               example: 73a3c9e69b89
@@ -504,4 +504,4 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/TemplateResponseSchema'
+            $ref: "#/components/schemas/TemplateResponseSchema"

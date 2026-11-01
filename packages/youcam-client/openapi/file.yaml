@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: File Management
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -27,19 +27,19 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/FileV1.1'
+                - $ref: "#/components/schemas/FileV1.1"
       responses:
-        '200':
+        "200":
           description: Successful retrieval of file upload information
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/FileResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+                  - $ref: "#/components/schemas/FileResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -137,7 +137,7 @@ components:
           example: 200
           description: Response status
         data: null
-      $ref: '#/components/schemas/BasicFileResponse'
+      $ref: "#/components/schemas/BasicFileResponse"
   responses:
     InvalidParameters:
       description: Invalid request parameters

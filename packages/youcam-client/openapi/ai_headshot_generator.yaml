@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Headshot Generator
   description: "# Overview\nTransform your photos into stunning professional headshots with our AI Headshot Generator. Elevate your headshots quickly and effectively using our powerful AI tools designed to deliver professional-quality results.\n* Variety of Styles: From polished LinkedIn headshots and professional business headshots to creative model headshots, our AI headshot generator helps you select the perfect look to suit your needs.\n* Professional Results: Leveraging AI to ensure your headshots look natural and flattering, making a strong impression on potential employers and clients.\n* Convenience: Generate multiple AI headshots anytime, anywhere, without the need for a photographer. Perfect for busy professionals.\n\nFor more AI Headshot styles, please refer to https://yce.makeupar.com/ai-headshot-generator.\n\nUse cases:\n![AI Headshot Generator](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_headshot_s2_img_03_4b55742358.jpg \"AI Headshot Generator\")\n\n![AI Headshot Generator](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_headshot_s1_img_1_d03183d7e0.jpg \"AI Headshot Generator\")\n\n\nSuggestions for How to Shoot:\n![Suggestions for How to Shoot](https://bcw-media.s3.ap-northeast-1.amazonaws.com/AI_Hair_Extension_recommendation_ba24bd5d92.png \"Suggestions for How to Shoot\")\n\n\n---\n\n## File Specs & Errors\n\n* Supported Formats & Dimensions\n\n|AI Feature|Supported Dimensions|Supported File Size|Supported Formats|\n|  ----  | ----  | ----  | ----  |\n| AI Headshot Generator | Ensure the input image contains a single person with both shoulder points and a full face visible from OpenPose, and that its short side is ≤ 1024 pixels — otherwise, the engine will automatically resize it to 1024. Output: long side <= 1024 | < 10MB | jpg/jpeg/png |\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n| exceed_max_filesize |\tInput file size exceeds the maximum limit |\n| invalid_parameter |\tInvalid parameter value |\n| error_download_image\t| Download source image error |\n| error_decode_image\t| Decode source image error |\n| error_nsfw_content_detected\t| NSFW content detected in source image |\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Headshot Generator V1.0 | 1 unit for 2 images * |\n\n    > *If the number of images or video duration isn’t evenly divisible, units round up.\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -42,12 +42,12 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
-          $ref: '#/components/responses/TemplateResponse'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+        "200":
+          $ref: "#/components/responses/TemplateResponse"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
   /s2s/v2.0/task/headshot:
     post:
       summary: Run an AI Headshot Generator task.
@@ -74,26 +74,26 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RunWithSingleTemplateAndSrcUrl'
-                - $ref: '#/components/schemas/RunWithOutputCntCustom200'
+                - $ref: "#/components/schemas/RunWithSingleTemplateAndSrcUrl"
+                - $ref: "#/components/schemas/RunWithOutputCntCustom200"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/headshot/{task_id}:
     get:
       summary: Check the status of the AI Headshot Generator task.
@@ -110,18 +110,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseMultiResV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseMultiResV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -183,15 +183,15 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     RunWithSingleTemplateAndSrcUrl:
       title: RunWithSingleTemplateAndSrcUrl
       allOf:
-        - $ref: '#/components/schemas/RunWithSingleTemplate'
-        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: "#/components/schemas/RunWithSingleTemplate"
+        - $ref: "#/components/schemas/BasicRunTaskV2"
     RunWithOutputCntCustom200:
       type: object
       required:
@@ -330,12 +330,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodyMultiUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodyMultiUrlResultsV2"
   responses:
     TemplateResponse:
       description: Successful retrieval of styles
@@ -354,7 +354,7 @@ components:
                   templates:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Template'
+                      $ref: "#/components/schemas/Template"
                   next_token:
                     type: string
                     example: 73a3c9e69b89

@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Hair Volume Virtual Try-On
   description: "# Overview\nEnhance Your Look with Fuller, More Voluminous Hair Instantly!​\nAdd natural volume to fine or thinning hair. Seamlessly fill gaps or add hair with AI. Works for all hair types: straight, curly, thin. Perfect for dating profiles, resumes & more.\nOur AI tool helps you achieve perfect hair volume and density in all your photos, whether for personal, professional, or social use. Say goodbye to bad hair days in pictures and hello to fresh, voluminous hair every time.\n\nUse case:\n![AI Hair Volume Generator](https://bcw-media.s3.ap-northeast-1.amazonaws.com/YCE_web_Hair_Volume_Filter_S4_img_01_836436ca00.jpg \"AI Hair Volume Generator\")\n\n![AI Hair Volume Generator](https://plugins-media.makeupar.com/smb/blog/post/2024-08-26/51eadc51-aaa7-4ebc-ac78-e389be5e16b0.jpg \"AI Hair Volume Generator\")\n\nSuggestions for How to Shoot:\n![Suggestions for How to Shoot](https://bcw-media.s3.ap-northeast-1.amazonaws.com/AI_Hair_Extension_recommendation_ba24bd5d92.png \"Suggestions for How to Shoot\")\n\n---\n\n## File Specs & Errors\n\n* Supported Formats & Dimensions\n\n|AI Feature|Supported Dimensions|Supported File Size|Supported Formats|\n|  ----  | ----  | ----  | ----  |\n|AI Hair Volume Generator|long side <= 1024, face width >= 128, face pose: -10 < pitch < +10, -45 < yaw < +45, -15 < roll < +15, single face only, need to show full face|< 10MB|jpg/jpeg/png|\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n|error_no_shoulder\t|Shoulders are not visible in the source image\n|error_large_face_angle\t|The face angle in the uploaded image is too large\n|error_insufficient_landmarks\t|Cannot detect sufficient face or body landmarks in the source image\n|error_hair_too_short\t|Input hair is too short\n|error_face_pose\t|The face pose of source image is unsupported\n|error_bald_image\t|Input hairstyle is bald\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Hair Volume Virtual Try-On V1.0 | 2 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -20,15 +20,15 @@ paths:
       security:
         - BearerAuthenticationV2: []
       parameters:
-        - $ref: '#/components/parameters/TemplatePageSize'
-        - $ref: '#/components/parameters/TemplateStartingToken'
+        - $ref: "#/components/parameters/TemplatePageSize"
+        - $ref: "#/components/parameters/TemplateStartingToken"
       responses:
-        '200':
-          $ref: '#/components/responses/TemplateResponse'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+        "200":
+          $ref: "#/components/responses/TemplateResponse"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
   /s2s/v2.0/task/hair-vol:
     post:
       summary: Run an AI Hair Volume Generator task.
@@ -55,25 +55,25 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RunWithSingleTemplateAndSrcUrl'
+                - $ref: "#/components/schemas/RunWithSingleTemplateAndSrcUrl"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/hair-vol/{task_id}:
     get:
       summary: Check the status of a AI Hair Volume Generator task.
@@ -90,18 +90,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -184,15 +184,15 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     RunWithSingleTemplateAndSrcUrl:
       title: RunWithSingleTemplateAndSrcUrl
       allOf:
-        - $ref: '#/components/schemas/RunWithSingleTemplate'
-        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: "#/components/schemas/RunWithSingleTemplate"
+        - $ref: "#/components/schemas/BasicRunTaskV2"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -315,12 +315,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   responses:
     TemplateResponse:
       description: Successful retrieval of styles
@@ -339,7 +339,7 @@ components:
                   templates:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Template'
+                      $ref: "#/components/schemas/Template"
                   next_token:
                     type: string
                     example: 73a3c9e69b89

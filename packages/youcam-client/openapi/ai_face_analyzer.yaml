@@ -332,7 +332,7 @@ info:
 
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -360,34 +360,34 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - $ref: "#/components/schemas/BasicRunTaskV2"
                 - type: object
                   properties:
                     face_angle_strictness_level:
                       $ref: >-
                         #/components/schemas/BasicFaceAttrReqFaceAngleStrictnessLevel
                     features:
-                      $ref: '#/components/schemas/BasicFaceAttrReqFeatures'
+                      $ref: "#/components/schemas/BasicFaceAttrReqFeatures"
                   required:
                     - features
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/face-attr-analysis/{task_id}:
     get:
       summary: Check an Face Attribute Analysis task status.
@@ -404,7 +404,7 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
@@ -426,7 +426,7 @@ paths:
                           - error
                         description: Status of this task
                       error:
-                        $ref: '#/components/schemas/EngineErrorCode'
+                        $ref: "#/components/schemas/EngineErrorCode"
                       error_message:
                         type: string
                         description: Detailed description of error
@@ -513,7 +513,7 @@ paths:
                                       - Average
                                   size:
                                     type: string
-                                    description: 'alternatives: [Big, Small, Average]'
+                                    description: "alternatives: [Big, Small, Average]"
                                     enum:
                                       - Big
                                       - Small
@@ -658,13 +658,13 @@ paths:
                                     type: string
                                     format: color
                                     enum:
-                                      - '#a0a0a0'
-                                      - '#722626'
-                                      - '#000000'
-                                      - '#FAF0BE'
-                                      - '#42280E'
-                                      - '#808080'
-                                      - '#B56637'
+                                      - "#a0a0a0"
+                                      - "#722626"
+                                      - "#000000"
+                                      - "#FAF0BE"
+                                      - "#42280E"
+                                      - "#808080"
+                                      - "#B56637"
                                   hair_color_name:
                                     type: string
                                     enum:
@@ -685,12 +685,12 @@ paths:
                                       - female
                                       - male
                                       - unknown
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -953,10 +953,10 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:

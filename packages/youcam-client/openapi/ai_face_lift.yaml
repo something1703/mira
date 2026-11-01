@@ -243,7 +243,7 @@ info:
 
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -298,25 +298,25 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - $ref: "#/components/schemas/BasicRunTaskV2"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/face-lift/pre-process/{task_id}:
     get:
       summary: Check the status of an AI Face Lift detection task.
@@ -333,19 +333,19 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
                 $ref: >-
                   #/components/schemas/TaskStatusResponsePreProcessSingleIndexWithTimed
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
   /s2s/v2.0/task/face-lift:
     post:
       summary: Run an AI Face Lift task.
@@ -371,25 +371,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FaceLiftRunTask'
+              $ref: "#/components/schemas/FaceLiftRunTask"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/face-lift/{task_id}:
     get:
       summary: Check the status of a AI Face Lift task.
@@ -406,19 +406,19 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
                 $ref: >-
                   #/components/schemas/TaskStatusResponseV2WithTimedAndTimedApply
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -434,7 +434,7 @@ components:
         - anyOf:
             - allOf:
                 - title: Run task with src_file_url & 'auto' type
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
                 - required:
                     - src_file_url
                   properties:
@@ -444,7 +444,7 @@ components:
                         - auto
             - allOf:
                 - title: Run task with src_file_url & 'custom' type
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
                 - required:
                     - src_file_url
                     - features
@@ -477,7 +477,7 @@ components:
                               - 0
             - allOf:
                 - title: Run task with src_file_id & 'auto' type
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
                 - required:
                     - src_file_id
                   properties:
@@ -489,7 +489,7 @@ components:
                       minProperties: 1
             - allOf:
                 - title: Run task with src_file_id & 'custom' type
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
                 - required:
                     - src_file_id
                     - features
@@ -527,8 +527,8 @@ components:
               description: >
                 Version of the features specification. Defaults to `"1.0"`
                 unless otherwise specified.
-              default: '1.0'
-              example: '1.0'
+              default: "1.0"
+              example: "1.0"
             index:
               type: integer
               example: 0
@@ -598,7 +598,7 @@ components:
                   minimum: 0
                   maximum: 100
             global:
-              $ref: '#/components/schemas/GlobalSkinSmoothCommon'
+              $ref: "#/components/schemas/GlobalSkinSmoothCommon"
     BasicRunTaskV2SrcFileUrl:
       type: object
       required:
@@ -622,10 +622,10 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -741,13 +741,13 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
     TaskStatusResponsePreProcessSingleIndexWithTimed:
       allOf:
-        - $ref: '#/components/schemas/TaskStatusResponsePreProcessNoUrlBase'
+        - $ref: "#/components/schemas/TaskStatusResponsePreProcessNoUrlBase"
         - type: object
           properties:
             data:
@@ -809,15 +809,15 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
     TaskStatusResponseV2WithTimedAndTimedApply:
       allOf:
-        - $ref: '#/components/schemas/TaskStatusResponseV2'
+        - $ref: "#/components/schemas/TaskStatusResponseV2"
         - type: object
           properties:
             data:
@@ -838,7 +838,7 @@ components:
                     - error
                   description: Status of this task
                 error:
-                  $ref: '#/components/schemas/EngineErrorCode'
+                  $ref: "#/components/schemas/EngineErrorCode"
                 error_message:
                   type: string
                   description: Detailed description of error

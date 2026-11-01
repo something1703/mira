@@ -1,0 +1,26 @@
+{
+  "name": "@mira/youcam-client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The one YouCam client (AGENTS.md §2.1): paths, payloads, versions, error mapping and a test double.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/fake.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mira/schemas": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@mira/runtime": "workspace:*",
+    "@types/node": "26.6.6",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}

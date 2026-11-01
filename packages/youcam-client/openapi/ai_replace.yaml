@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Replace
   description: "# Overview\nReplace unwanted elements with new objects using AI Replace. By using this API, you can instantly remove unwanted object from your photo and replace it with a new one just by using text. Eliminate anything from bags to cars and beyond.​\n\nSample:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_web_AI_replace_S3_feature_img_02_a73a26bcc3.jpg)\n\n\nFor content creators aiming to perfect their social media presence, AI Replace offers a hassle-free way to polish travel photos or promotional images. Remove and replace elements with ease, ensuring your content stands out.\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_web_AI_replace_S3_feature_img_03_42c9cd98d0.jpg)\n\n\nCreate stunning room mockups with AI Replace by filling empty spaces with aesthetically pleasing furniture and objects, transforming the perception of any space.\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_web_AI_replace_S3_feature_img_04_4d2d82f76e.jpg)\n\n---\n\n## File Specs & Errors\n* Supported Formats & Dimensions\n\n| AI Feature | Supported Dimensions | Supported File Size | Supported Formats |\n| ---- | ---- | ----  | ---- |\n| AI Replace | long side <= 2048 | < 10MB | jpg/jpeg/png |\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n| exceed_max_filesize |\tInput file size exceeds the maximum limit |\n| invalid_parameter |\tInvalid parameter value |\n| error_download_image\t| Download source image error |\n| error_decode_image\t| Decode source image error |\n| error_nsfw_content_detected\t| NSFW content detected in source image |\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Replace V1.0 | 1 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -35,7 +35,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2WithRequiredMsk'
+                - $ref: "#/components/schemas/BasicRunTaskV2WithRequiredMsk"
                 - type: object
                   required:
                     - prompt
@@ -45,23 +45,23 @@ paths:
                       description: Prompt for generating objects in the masked area.
                       example: a cute cat
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/obj-replace/{task_id}:
     get:
       summary: Check an AI Replace task status.
@@ -78,18 +78,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -147,26 +147,26 @@ components:
             - title: Run task with src file url & msk file url
               required:
                 - msk_file_url
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2MskFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2MskFileUrl"
         - allOf:
             - title: Run task with src file url & msk file ID
               required:
                 - msk_file_id
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2MskFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2MskFileId"
         - allOf:
             - title: Run task with src file ID & msk file url
               required:
                 - msk_file_url
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2MskFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2MskFileUrl"
         - allOf:
             - title: Run task with src file ID & msk file ID
               required:
                 - msk_file_id
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2MskFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2MskFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -289,12 +289,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   responses:
     InvalidApiKey:
       description: Invalid or missing API key

@@ -1335,7 +1335,7 @@ info:
 
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -1364,7 +1364,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - $ref: "#/components/schemas/BasicRunTaskV2"
                 - type: object
                   required:
                     - effects
@@ -1374,8 +1374,8 @@ paths:
                       description: >
                         Version of the makeup effect specification. Defaults to
                         `"1.0"` unless otherwise specified.
-                      default: '1.0'
-                      example: '1.0'
+                      default: "1.0"
+                      example: "1.0"
                     effects:
                       type: array
                       description: >
@@ -1384,37 +1384,37 @@ paths:
                         makeup type.
                       items:
                         anyOf:
-                          - $ref: '#/components/schemas/SkinSmoothEffect'
-                          - $ref: '#/components/schemas/BlushEffect'
-                          - $ref: '#/components/schemas/BronzerEffect'
-                          - $ref: '#/components/schemas/ConcealerEffect'
-                          - $ref: '#/components/schemas/ContourEffect'
-                          - $ref: '#/components/schemas/EyebrowsEffect'
-                          - $ref: '#/components/schemas/EyelinerEffect'
-                          - $ref: '#/components/schemas/EyeshadowEffect'
-                          - $ref: '#/components/schemas/EyelashesEffect'
-                          - $ref: '#/components/schemas/FoundationEffect'
-                          - $ref: '#/components/schemas/HighlighterEffect'
-                          - $ref: '#/components/schemas/LipColorEffect'
-                          - $ref: '#/components/schemas/LipLinerEffect'
+                          - $ref: "#/components/schemas/SkinSmoothEffect"
+                          - $ref: "#/components/schemas/BlushEffect"
+                          - $ref: "#/components/schemas/BronzerEffect"
+                          - $ref: "#/components/schemas/ConcealerEffect"
+                          - $ref: "#/components/schemas/ContourEffect"
+                          - $ref: "#/components/schemas/EyebrowsEffect"
+                          - $ref: "#/components/schemas/EyelinerEffect"
+                          - $ref: "#/components/schemas/EyeshadowEffect"
+                          - $ref: "#/components/schemas/EyelashesEffect"
+                          - $ref: "#/components/schemas/FoundationEffect"
+                          - $ref: "#/components/schemas/HighlighterEffect"
+                          - $ref: "#/components/schemas/LipColorEffect"
+                          - $ref: "#/components/schemas/LipLinerEffect"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/responses/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/responses/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/makeup-vto/{task_id}:
     get:
       summary: Check the status of a AI Makeup Virtual Try On task.
@@ -1431,18 +1431,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -1560,7 +1560,7 @@ components:
           example: 200
           description: Response status
         data:
-          $ref: '#/components/schemas/BasicFileResponse'
+          $ref: "#/components/schemas/BasicFileResponse"
     BasicRunTaskV2SrcFileUrl:
       title: Run task with src file url
       type: object
@@ -1584,8 +1584,8 @@ components:
     BasicRunTaskV2:
       title: BasicRunTaskV2
       anyOf:
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -1627,12 +1627,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results:
-              $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+              $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
     SkinSmoothEffect:
       type: object
       description: >
@@ -1760,7 +1760,7 @@ components:
         pattern:
           name: 1color1
         palettes:
-          - color: '#ff7777'
+          - color: "#ff7777"
             texture: matte
             colorIntensity: 60
     BronzerEffect:
@@ -1818,7 +1818,7 @@ components:
         pattern:
           name: Bronzer1
         palettes:
-          - color: '#c08050'
+          - color: "#c08050"
             colorIntensity: 50
     ConcealerEffect:
       type: object
@@ -1882,7 +1882,7 @@ components:
       example:
         category: concealer
         palettes:
-          - color: '#e6c7a8'
+          - color: "#e6c7a8"
             colorIntensity: 50
             colorUnderEyeIntensity: 50
             coverageLevel: 60
@@ -1946,7 +1946,7 @@ components:
         pattern:
           name: OvalFace6
         palettes:
-          - color: '#8a5b3e'
+          - color: "#8a5b3e"
             colorIntensity: 55
     EyebrowsEffect:
       type: object
@@ -2084,7 +2084,7 @@ components:
           thickness: 5
           definition: 50
         palettes:
-          - color: '#3b2f2f'
+          - color: "#3b2f2f"
             colorIntensity: 70
             texture: matte
     EyelinerEffect:
@@ -2179,7 +2179,7 @@ components:
         pattern:
           name: Arabic3
         palettes:
-          - color: '#000000'
+          - color: "#000000"
             texture: matte
             colorIntensity: 80
     EyeshadowEffect:
@@ -2272,12 +2272,12 @@ components:
         pattern:
           name: 2colors1
         palettes:
-          - color: '#b07baf'
+          - color: "#b07baf"
             texture: shimmer
-            shimmerColor: '#f2d3f5'
+            shimmerColor: "#f2d3f5"
             shimmerIntensity: 60
             colorIntensity: 70
-          - color: '#8e5c9c'
+          - color: "#8e5c9c"
             texture: matte
             colorIntensity: 65
     EyelashesEffect:
@@ -2338,7 +2338,7 @@ components:
         pattern:
           name: Upper1
         palettes:
-          - color: '#000000'
+          - color: "#000000"
             colorIntensity: 80
     FoundationEffect:
       type: object
@@ -2399,7 +2399,7 @@ components:
       example:
         category: foundation
         palettes:
-          - color: '#eac595'
+          - color: "#eac595"
             colorIntensity: 50
             glowIntensity: 10
             coverageIntensity: 50
@@ -2494,7 +2494,7 @@ components:
         pattern:
           name: SquareFace3
         palettes:
-          - color: '#FFF7F8'
+          - color: "#FFF7F8"
             glowIntensity: 60
             shimmerIntensity: 50
             shimmerDensity: 40
@@ -2672,7 +2672,7 @@ components:
         style:
           type: full
         palettes:
-          - color: '#C2185B'
+          - color: "#C2185B"
             texture: gloss
             colorIntensity: 80
             gloss: 70
@@ -2757,7 +2757,7 @@ components:
         pattern:
           name: Natural1
         palettes:
-          - color: '#A63A50'
+          - color: "#A63A50"
             texture: matte
             colorIntensity: 70
             thickness: 40
