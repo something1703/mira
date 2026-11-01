@@ -1,4 +1,4 @@
-import type { Metric, MetricId } from "@mira/schemas";
+import type { Metric, MetricId } from "./metrics";
 
 /** What a metric id means, in plain words (docs/COPY.md). Matched from the most specific prefix. */
 const ENTRIES: readonly { prefix: string; definition: string; how: string }[] = [

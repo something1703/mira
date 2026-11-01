@@ -14,3 +14,4 @@ export * from "./agent-tools";
 export * from "./format";
 export * from "./look";
 export * from "./proof";
+export * from "./glossary";

@@ -72,9 +72,21 @@ Full setup, including Google Cloud, is in [`phases/PHASE_01_FOUNDATION.md`](phas
 | `docs/DEMO_AND_SUBMISSION.md` | Demo script and Devpost checklist |
 | `phases/` | Ten build phases, each with tasks and a definition of done |
 | `apps/`, `services/`, `packages/` | The services and shared packages (layout in `AGENTS.md` §4; `packages/runtime` holds shared service plumbing) |
+| `skills/` | A Skill in the YouCam Skills format (`measured-shade-match`) |
 | `infra/` | Terraform, Dockerfiles and Cloud Build config |
 | `assets/brand/` | Logo set (lockup, mark, wordmark, favicon; light, dark, mono) |
 | `assets/design/` | Living UI reference page with screenshots in both themes |
+
+## For other agents
+
+MIRA's measurements are available to other agents through an MCP server (`packages/mira-mcp`). It
+has four read-only tools: `shade_match`, `measure_change`, `audit_render` and `explain_metric`. A
+caller needs a bearer token, and each token has a daily allowance of units. The tools return the
+numbers and the thresholds that decided them, and keep no image.
+
+`skills/measured-shade-match` is the same shade ranking as a Skill in the YouCam Skills format
+(`SKILL.md`, a script and an `api-fallback.yaml`). It has been tested against a local server; the
+Skills CLI's install command for it has not been tried.
 
 ## Honesty
 

@@ -1,5 +1,6 @@
 import {
   ExplainMetricInput,
+  explain,
   GetTwinSummaryInput,
   ListBackgroundsInput,
   ListLookTemplatesInput,
@@ -27,7 +28,6 @@ import type { LookDiscovery } from "../mcp/youcam";
 import { planView, type PlanStore } from "../plans";
 import type { ModelProvider, ToolSpec } from "../providers/types";
 import type { Workflows } from "../workflows";
-import { explain } from "./glossary";
 import { readProductPage, rangeFromUrl, type PageDeps } from "./page";
 
 export interface ToolEnv {
