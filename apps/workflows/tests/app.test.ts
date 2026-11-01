@@ -104,7 +104,7 @@ describe("mira-workflows (mock mode)", () => {
     expect(unknown.json()).toEqual({ known: false });
     expect(
       (await ctx.app.inject({ method: "POST", url: "/internal/webhook", payload: {} })).statusCode,
-    ).toBe(500);
+    ).toBe(400);
   });
 
   it("cancel closes the run once running steps finish", async () => {

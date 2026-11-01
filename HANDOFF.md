@@ -96,7 +96,35 @@ Full report with a source per line: `docs/research/youcam-api-2026-11-01.md`. Th
   - Playwright screenshots are attached to test results for review, not diffed (fonts load from Google at dev time).
   - `pnpm check` runs e2e under turbo, which hides `PLAYWRIGHT_BROWSERS_PATH`. In this container run `pnpm --filter @mira/web exec playwright test` directly.
   - This container has Node 22; the repo wants 24.
-- **Next:** Phase 3 (ports and adapters from D10, then the YouCam client and lifecycle), then Phase 5. Decide the Phase 6 preview-measurement question first. Phase 4's colour code now makes the local option (sample pixels, convert to Lab) cheap to try.
+- **Next:** see the Phase 3 update below.
+
+## Update 2026-11-01 (latest): Phase 3 built, except what needs a key or a deploy
+
+- **Built and tested:**
+  - `packages/runtime` ports (state, queue, events, blobs, clock) with file-backed and in-process mock adapters (D10).
+  - `packages/youcam-client`: the typed client, a feature registry with request builders (the `skin_smooth` rule is enforced and tested), the error-code mapping, the pricing selectors, a `FakeYouCam` test double and a `ReplayYouCam` that replays recorded fixtures.
+  - `apps/workflows`: the node lifecycle (all eight steps), the ledger, the result cache, the quote builder, the graph runner and end-of-run cleanup.
+  - `apps/webhook`: Standard Webhooks verification (it passes the specification's reference vector). It forwards the task ID to workflows.
+  - `mira-web` proxies the public webhook and MCP paths.
+  - The run viewer at `/dev/runs`, with the demo graph and a second run that finishes from cache at zero units.
+  - `pnpm fixtures:record` and `pnpm smoke:live` (both quote, ask, and refuse without a terminal).
+  - `packages/fixtures` with the consent register.
+- **Not built, and why:**
+  - **Live adapters** (Firestore, Cloud Tasks, Pub/Sub, Cloud Storage) wait for the deploy. `mira-workflows` refuses to start in live mode and says so.
+  - **OIDC verification** of Cloud Tasks calls is not built. The queue endpoint is deny-by-default in live mode.
+  - **Recorded fixtures** need your YouCam key and consented faces.
+  - **Image resizing** and the face-crop helper before upload.
+  - **Accessories, jewellery and hair transfer** request builders arrive with Phase 8.
+  - The `_confirm_` items in `docs/YOUCAM_API.md` §2 each need one live response.
+- **Things to know:**
+  - The lifecycle was tested only against `FakeYouCam`. Everything marked "Built (test double)" in `docs/FACTS.md` (F21 to F23) should be re-checked with one live run.
+  - **Duplicate-charge risk:** if `createTask` succeeds on YouCam's side but the response is lost to a network error, a retry creates a second task and charges twice. YouCam documents no idempotency key. The retry limit is 4. Worth asking the organisers.
+  - Mock mode says "sample results" until fixtures exist (D25). Setting `MIRA_FIXTURES=recorded` switches to replay.
+  - Price selection for skin analysis and video uses SKU descriptions and fails closed (D26, F20). The first live feature-cost read will show whether the descriptions match.
+- **Next, in order:**
+  1. Add the YouCam key to `.env.local`, then run `pnpm fixtures:record` for the Phase 5 and 6 features. Add the consent rows first.
+  2. Phase 5 (capture and the Twin). The graph, metrics and ports it needs now exist.
+  3. Decide the Phase 6 preview-measurement question (local pixel sampling vs 21 units per shade).
 
 ## Working rules that are easy to miss
 

@@ -8,11 +8,13 @@ import {
 } from "@mira/runtime";
 import { Run, RunNode, WorkItem } from "@mira/schemas";
 import { getDoc, listDocs } from "@mira/runtime";
-import { HttpYouCamApi, type YouCamApi } from "@mira/youcam-client";
+import { HttpYouCamApi, ReplayYouCam, type YouCamApi } from "@mira/youcam-client";
+import { fixtureDownloader, hasRecordings, loadFixtures } from "@mira/fixtures";
 import { FakeYouCam } from "@mira/youcam-client/testing";
 import { z } from "zod";
 import { DEMO_PRICES, demoExecutors, newDemoSession, seedDemoFake, startDemoRun } from "./demo";
 import { createEngine, type Engine } from "./engine";
+import { fetchDownloader } from "./lifecycle/download";
 import { RUN_EVENTS_TOPIC, type Downloader } from "./lifecycle/types";
 
 export const ENGINE_VERSION = "0.1.0";
@@ -39,26 +41,6 @@ export interface WorkflowsContext extends ServiceContext {
   readonly ports: Ports;
 }
 
-const fetchDownloader: Downloader = async (url) => {
-  try {
-    const res = await fetch(url);
-    if (!res.ok)
-      return { ok: false, error: { message: `download answered ${String(res.status)}` } };
-    return {
-      ok: true,
-      value: {
-        bytes: new Uint8Array(await res.arrayBuffer()),
-        contentType: res.headers.get("content-type") ?? "application/octet-stream",
-      },
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error: { message: error instanceof Error ? error.message : "download failed" },
-    };
-  }
-};
-
 /** mira-workflows: graph runner, node lifecycle, unit ledger and result cache. */
 export function buildApp(
   source?: CreateServiceOptions["source"],
@@ -76,18 +58,24 @@ export function buildApp(
   const ports = options.ports ?? createMockPorts(options.dataDir ? { dir: options.dataDir } : {});
   const fake = new FakeYouCam({ clock: ports.clock, prices: DEMO_PRICES });
   seedDemoFake(fake);
+  // With real recordings on disk (MIRA_FIXTURES=recorded) mock mode replays them; with none it
+  // says so and shows the synthetic demo instead. It never pretends the demo is a recording.
+  const replaying = mock && process.env.MIRA_FIXTURES === "recorded" && hasRecordings();
+  const loaded = replaying ? loadFixtures() : undefined;
   const api: YouCamApi =
     options.api ??
-    (mock
-      ? fake
-      : new HttpYouCamApi({
-          apiKey: env.YOUCAM_API_KEY ?? "",
-          ...(env.YOUCAM_API_BASE_URL ? { baseUrl: env.YOUCAM_API_BASE_URL } : {}),
-        }));
+    (loaded
+      ? new ReplayYouCam({ clock: ports.clock, fixtures: loaded.fixtures, skus: loaded.skus })
+      : mock
+        ? fake
+        : new HttpYouCamApi({
+            apiKey: env.YOUCAM_API_KEY ?? "",
+            ...(env.YOUCAM_API_BASE_URL ? { baseUrl: env.YOUCAM_API_BASE_URL } : {}),
+          }));
   const engine = createEngine({
     ports,
     api,
-    download: options.download ?? fetchDownloader,
+    download: options.download ?? (replaying ? fixtureDownloader() : fetchDownloader),
     engineVersion: ENGINE_VERSION,
     executors: demoExecutors,
     log: (message, fields) => {
@@ -120,11 +108,13 @@ export function buildApp(
   });
 
   // ---- webhook, forwarded by mira-webhook ----
-  app.post("/internal/webhook", async (req) => {
+  app.post("/internal/webhook", async (req, reply) => {
     const body = z
       .object({ taskId: z.string().min(1), webhookId: z.string().min(1) })
-      .parse(req.body);
-    return { known: await engine.runner.lifecycle.pollNow(body.taskId, body.webhookId) };
+      .safeParse(req.body);
+    if (!body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    return { known: await engine.runner.lifecycle.pollNow(body.data.taskId, body.data.webhookId) };
   });
 
   // ---- reads, for the run viewer ----
@@ -134,7 +124,7 @@ export function buildApp(
     if (!run) return await reply.status(404).send({ error: "run_not_found", traceId: req.traceId });
     const nodes = (await listDocs(ports.state, `runs/${runId}/nodes`, RunNode)).map((n) => n.value);
     const ledger = await engine.ledger.entries(runId);
-    return { run, nodes, ledger, synthetic: mock && options.api === undefined };
+    return { run, nodes, ledger, synthetic: mock && options.api === undefined && !replaying };
   });
 
   app.get("/internal/runs/:runId/events", (req, reply) => {
@@ -161,7 +151,8 @@ export function buildApp(
   // ---- the demo graph (mock only: it uses a synthetic YouCam) ----
   const demo = newDemoSession();
   app.post("/internal/runs/demo", async (req, reply) => {
-    if (!mock) return await reply.status(404).send({ error: "not_found", traceId: req.traceId });
+    if (!mock || replaying)
+      return await reply.status(404).send({ error: "not_found", traceId: req.traceId });
     const started = await startDemoRun(engine, ports, demo);
     if (!started.ok)
       return await reply

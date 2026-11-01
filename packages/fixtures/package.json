@@ -1,0 +1,25 @@
+{
+  "name": "@mira/fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Recorded real YouCam responses for mock mode, and the consent register for any face in them.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mira/schemas": "workspace:*",
+    "@mira/youcam-client": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}

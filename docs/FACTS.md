@@ -23,5 +23,9 @@ Every number or capability claimed in the UI, README, Devpost description or dem
 | F17 | CIEDE2000 matches all 34 Sharma, Wu and Dalal (2005) reference pairs to 4 decimals, and an independent `colour-science` implementation | `services/engines/tests/data/sharma_2005.csv`, `tests/test_colour.py` | 2026-11-01 | Built |
 | F18 | Noise-floor MDC averages within 10% of the analytic value over 1,000 simulated seeds (12 sessions × 3 captures) | `services/engines/tests/test_stats.py` | 2026-11-01 | Built |
 | F19 | Every UI text and non-text colour pair meets WCAG 2.2 AA in both themes; axe finds no violations on Welcome, Consent and the component gallery in light, dark and mobile | `packages/ui/tests/contrast.test.ts`, `apps/web/e2e/*.spec.ts` | 2026-11-01 | Built |
+| F20 | Skin-analysis and video prices are selected from feature-cost SKU descriptions ("SD 5~7 concerns", "720") | `packages/youcam-client/src/pricing.ts`; selectors fail closed | 2026-11-01 | To measure: confirm the real descriptions on the first live feature-cost read |
+| F21 | A crash after submit resumes polling the stored task and never creates a second task; a failed task releases its reserved units | `apps/workflows/tests/lifecycle.test.ts` ("crash and resume", "errors") | 2026-11-01 | Built (against a test double; confirm with a live probe) |
+| F22 | Images and YouCam tasks are deleted at the end of every run, images first | `apps/workflows/src/runner/cleanup.ts`, `tests/lifecycle.test.ts` ("cleanup") | 2026-11-01 | Built (blob store and YouCam double; confirm live) |
+| F23 | The webhook receiver verifies Standard Webhooks signatures, including the specification's reference vector | `apps/webhook/tests/webhook.test.ts` | 2026-11-01 | Built (confirm with a real YouCam callback) |
 
 Add rows as you build. Status values: Source read, Measured, Built, To build, To measure, Withdrawn.

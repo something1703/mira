@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@mira/fixtures": "workspace:*",
     "@mira/runtime": "workspace:*",
     "@mira/schemas": "workspace:*",
     "@mira/youcam-client": "workspace:*",

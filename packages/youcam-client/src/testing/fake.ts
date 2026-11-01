@@ -27,6 +27,8 @@ export interface FakeOptions {
   /** Unit price per feature slug, charged on success. Default 1 for anything unlisted. */
   prices?: Record<string, number>;
   startingUnits?: number;
+  /** Full SKU list for feature-cost, for features priced by description. Overrides `prices`. */
+  skus?: Sku[];
 }
 
 interface Task {
@@ -241,6 +243,7 @@ export class FakeYouCam implements YouCamApi {
   getFeatureCosts(): Res<Sku[]> {
     const blocked = this.gate("getFeatureCosts");
     if (blocked) return Promise.resolve(err(blocked));
+    if (this.options.skus) return Promise.resolve(ok([...this.options.skus]));
     const prices = this.options.prices ?? {};
     return Promise.resolve(
       ok(
