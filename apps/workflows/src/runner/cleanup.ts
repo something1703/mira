@@ -2,6 +2,8 @@ import { Run, RunNode } from "@mira/schemas";
 import { getDoc, listDocs, updateDoc } from "@mira/runtime";
 import type { LifecycleDeps } from "../lifecycle/types";
 
+/** Node inputs that name an uploaded capture: `blob:uploads/{userId}/...`. */
+export const UPLOAD_INPUT = "blob:uploads/";
 const MAX_ATTEMPTS = 10;
 const RETRY_DELAY_MS = 30_000;
 
@@ -22,6 +24,18 @@ export async function cleanupRun(
   const nodes = (await listDocs(d.state, `runs/${runId}/nodes`, RunNode)).map((n) => n.value);
   let blobsDeleted = 0;
   for (const key of await d.blobs.list(`runs/${runId}/`)) {
+    await d.blobs.delete(key);
+    blobsDeleted += 1;
+  }
+  // Captures the person uploaded for this run live under `uploads/` and are used by this run only
+  // (a retry uploads again), so they go with it. Other prefixes are not ours to delete.
+  const uploads = new Set<string>();
+  for (const node of nodes) {
+    for (const spec of Object.values(node.inputs)) {
+      if (spec.startsWith(UPLOAD_INPUT)) uploads.add(spec.slice("blob:".length));
+    }
+  }
+  for (const key of uploads) {
     await d.blobs.delete(key);
     blobsDeleted += 1;
   }

@@ -116,6 +116,12 @@ export const RunNode = z.object({
   attempts: z.number().int().nonnegative().default(0),
   /** Optional nodes (e.g. video) can be removed in the QuoteSheet without breaking the graph. */
   optional: z.boolean().default(false),
+  /**
+   * A tolerant node runs once every dependency has finished, whether or not they succeeded, and
+   * reads what is there. The Twin write uses it so a failed analyser leaves a partial profile
+   * instead of nothing (docs/UX_FLOWS.md §4).
+   */
+  tolerant: z.boolean().default(false),
   startedAt: z.iso.datetime().optional(),
   endedAt: z.iso.datetime().optional(),
 });

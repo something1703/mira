@@ -74,7 +74,7 @@ export const Twin = z.object({
   }),
   /** Face Attributes ratio vectors by name, kept for identity drift (docs/ENGINES.md §7.3). */
   faceRatios: z.record(z.string(), z.array(z.number())).default({}),
-  /** By concern, e.g. `hd_pore`. Empty without repeat captures. */
+  /** By metric id, e.g. `skin.hd_pore.whole`. Empty without repeat captures. */
   noiseFloors: z.record(z.string(), NoiseFloorEntry).default({}),
   captureMeta: CaptureMeta,
   /** The runs that built this profile. Ids only: the runs and their images are long gone. */

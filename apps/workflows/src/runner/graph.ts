@@ -14,6 +14,8 @@ export interface NodeSpec {
   inputs?: Record<string, string>;
   /** The person can remove it in the QuoteSheet, and its failure does not stop the run. */
   optional?: boolean;
+  /** Runs when its dependencies are all finished, even if some failed or were skipped. */
+  tolerant?: boolean;
 }
 
 export interface GraphSpec {

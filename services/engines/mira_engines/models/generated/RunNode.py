@@ -102,5 +102,6 @@ class RunNode(BaseModel):
     error: Optional[Error] = None
     attempts: Annotated[Optional[int], Field(ge=0, le=9007199254740991)] = 0
     optional: Optional[bool] = False
+    tolerant: Optional[bool] = False
     startedAt: Optional[AwareDatetime] = None
     endedAt: Optional[AwareDatetime] = None

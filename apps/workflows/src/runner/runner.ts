@@ -98,6 +98,7 @@ export class Runner {
           params: spec.params ?? {},
           inputs: spec.inputs ?? {},
           optional: spec.optional ?? false,
+          tolerant: spec.tolerant ?? false,
           status: skip ? "skipped" : "queued",
         }),
       );
@@ -122,7 +123,11 @@ export class Runner {
       for (const node of nodes) {
         if (node.status !== "queued") continue;
         const deps = node.dependsOn.map((id) => byId.get(id));
-        if (deps.some((x) => x !== undefined && FAILED_LIKE.has(x.status))) {
+        if (node.tolerant) {
+          if (deps.every((x) => x === undefined || isTerminal(x.status))) {
+            await this.schedule(run, node);
+          }
+        } else if (deps.some((x) => x !== undefined && FAILED_LIKE.has(x.status))) {
           await this.setStatus(run, node, "skipped");
           skipped = true;
         } else if (deps.every((x) => x?.status === "done" || x?.status === "cached")) {
