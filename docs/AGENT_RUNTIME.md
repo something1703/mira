@@ -94,3 +94,13 @@ Stored at `apps/agent/src/prompts/system.v1.md`. Sections:
 ## 9. Evaluation set
 
 `apps/agent/evals/` holds at least 40 scripted conversations with expected tool calls and forbidden outputs, covering every module, medical-question refusals, confirmation bypass attempts, missing-twin cases and prompt-injection text inside product pages. `pnpm eval:agent` runs them in mock mode; CI fails below 95% pass.
+
+## 10. As built (Phase 7)
+
+- The loop is MIRA's own (`apps/agent/src/loop.ts`); the model adapters make one call at a time and never run a tool (D38).
+- `start_run` refuses unless the plan was confirmed through `POST /internal/agent/plans/:id/confirm`, which only the web app's Confirm button calls. That route also starts the plan.
+- The renderer refuses digits in any script and numbers written out (except "one"), then fills placeholders from the metric store, then runs the claim linter on the rendered text. One retry shows the model what was wrong; then the templated fallback.
+- Medical, identity and body questions are refused by `prompts/scope.ts` before any model call and again by the prompt.
+- After a run finishes, `POST /internal/agent/narrate` has the model describe it from the run's own readings (`shade.best.blend_de` and so on).
+- `plan_compose_look`, `plan_start_proof` and `plan_proof_check_in` say "module unavailable" until Phases 8 and 9.
+- `pnpm eval:agent` runs 55 scripted conversations; `--live` runs the same against the configured provider.

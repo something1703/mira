@@ -1,7 +1,7 @@
 import { Lockup } from "@mira/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AskMiraPanel } from "./AskMiraPanel";
+import { AskMiraPanel } from "../ask-mira/AskMiraPanel";
 import { BudgetBanner } from "./BudgetBanner";
 import { FlashToast } from "./FlashToast";
 import { SessionBanners } from "./SessionBanners";

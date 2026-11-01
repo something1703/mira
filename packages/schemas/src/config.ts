@@ -71,6 +71,18 @@ export const CONFIG = {
     /** Invalid model output gets one retry, then a templated fallback (AGENTS.md §9). */
     outputRetries: setting(1, "AGENTS.md §9", true),
     segmentMaxChars: setting(400, "docs/AGENT_RUNTIME.md §4", true),
+    /** A quote stays valid this long; after that the person is quoted again. */
+    planTtlMs: setting(
+      15 * 60 * 1000,
+      "Product choice: prices are read live, so a quote goes stale",
+      false,
+    ),
+    /** Characters of page text the extraction model is shown. */
+    pageTextChars: setting(
+      6_000,
+      "Product choice: enough for a product page, bounded for cost",
+      false,
+    ),
   },
   twin: {
     /**

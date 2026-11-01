@@ -10,3 +10,5 @@ export * from "./shade";
 export * from "./config";
 export * from "./trace";
 export * from "./claim-linter";
+export * from "./agent-tools";
+export * from "./format";

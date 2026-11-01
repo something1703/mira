@@ -88,7 +88,7 @@ function attrs(tag: string): Record<string, string> {
 }
 
 /** The page with scripts, styles, comments and hidden elements removed: what a person could see. */
-function visibleHtml(html: string): string {
+export function visibleHtml(html: string): string {
   return html
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<(script|style|noscript|template)\b[\s\S]*?<\/\1>/gi, " ")
@@ -96,6 +96,16 @@ function visibleHtml(html: string): string {
       /<([a-z0-9]+)\b[^>]*\b(?:hidden|style\s*=\s*"[^"]*display\s*:\s*none[^"]*")[^>]*>[\s\S]*?<\/\1>/gi,
       " ",
     );
+}
+
+/** The visible text of a page, tags removed and spaces collapsed, cut to `max` characters. */
+export function pageText(html: string, max: number): string {
+  const text = decode(visibleHtml(html).replace(/<[^>]*>/g, " "));
+  return text
+    .replace(/\p{Cc}/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
 }
 
 const meta = (html: string, property: string): string | undefined => {

@@ -119,9 +119,9 @@ a {
   right: 0;
   top: 0;
   bottom: 0;
-  width: min(400px, 100vw);
+  width: min(420px, 100vw);
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   background: var(--mira-raised);
   border-left: 1px solid var(--mira-rule);
   padding: var(--mira-space-5);
@@ -137,15 +137,82 @@ a {
 }
 .ask__body {
   color: var(--mira-ink-2);
+  overflow-y: auto;
+  min-height: 0;
 }
 .ask__body p {
   margin: 0;
+}
+.ask__idle {
+  display: grid;
+  gap: var(--mira-space-4);
+}
+.ask__suggestions {
+  display: grid;
+  gap: var(--mira-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ask__suggestion {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--mira-ink);
+  background: var(--mira-surface);
+  border: 1px solid var(--mira-rule);
+  border-radius: var(--mira-radius-control);
+  padding: var(--mira-space-3) var(--mira-space-4);
+  cursor: pointer;
+}
+.ask__suggestion:hover {
+  border-color: var(--mira-accent);
+}
+.ask__log {
+  display: grid;
+  gap: var(--mira-space-4);
+  align-content: start;
+}
+.ask__msg {
+  display: grid;
+  gap: var(--mira-space-3);
+  color: var(--mira-ink);
+}
+.ask__msg--user {
+  justify-self: end;
+  max-width: 85%;
+  background: var(--mira-accent-wash);
+  border-radius: var(--mira-radius-control);
+  padding: var(--mira-space-2) var(--mira-space-4);
+}
+.ask__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mira-space-2);
+}
+.ask__run {
+  display: grid;
+  gap: var(--mira-space-3);
+}
+.ask__form {
+  display: flex;
+  gap: var(--mira-space-2);
+}
+.ask__input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--mira-ink);
+  background: var(--mira-surface);
+  border: 1px solid var(--mira-rule);
+  border-radius: var(--mira-radius-control);
+  padding: var(--mira-space-2) var(--mira-space-4);
 }
 @media (max-width: 640px) {
   .ask {
     top: auto;
     width: 100vw;
-    max-height: 70dvh;
+    height: 80dvh;
     border-left: 0;
     border-top: 1px solid var(--mira-rule);
     border-radius: var(--mira-radius-panel) var(--mira-radius-panel) 0 0;

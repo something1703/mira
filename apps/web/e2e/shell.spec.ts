@@ -46,11 +46,7 @@ test.describe("App shell", () => {
     const panel = page.getByRole("complementary", { name: "Ask MIRA" });
     await expect(panel).toBeVisible();
     await expect(panel.getByRole("heading", { name: "Ask MIRA" })).toBeFocused();
-    await expect(
-      panel.getByText(
-        "The assistant is unavailable right now. Every tool still works from its own screen.",
-      ),
-    ).toBeVisible();
+    await expect(panel.getByRole("list", { name: "Suggestions" })).toBeVisible();
     await expectAccessible(page);
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);

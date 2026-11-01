@@ -1,7 +1,7 @@
 {
   "name": "mira",
   "private": true,
-  "description": "MIRA — look, measured. Built on Perfect Corp's YouCam API.",
+  "description": "MIRA \u2014 look, measured. Built on Perfect Corp's YouCam API.",
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@11.5.3",
@@ -21,7 +21,8 @@
     "typecheck": "turbo run typecheck",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e",
     "fixtures:record": "tsx scripts/fixtures-record.ts",
-    "smoke:live": "tsx scripts/smoke-live.ts"
+    "smoke:live": "tsx scripts/smoke-live.ts",
+    "eval:agent": "pnpm --filter @mira/agent eval"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

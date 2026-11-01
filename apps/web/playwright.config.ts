@@ -71,12 +71,16 @@ export default defineConfig({
       },
     },
     {
-      // Reads shade ranges from product pages (saved pages in mock mode).
+      // Ask MIRA, and the shade-range reader (saved pages in mock mode). Its model is the mock one.
       command: "pnpm --filter @mira/agent exec tsx src/main.ts",
       url: `http://localhost:${AGENT_PORT}/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
-      env: { MIRA_MODE: "mock", PORT: String(AGENT_PORT) },
+      env: {
+        MIRA_MODE: "mock",
+        PORT: String(AGENT_PORT),
+        MIRA_WORKFLOWS_URL: `http://localhost:${WORKFLOWS_PORT}`,
+      },
     },
     {
       // The measurement engines: Build Twin derives colour and the repeat-capture spread here.
