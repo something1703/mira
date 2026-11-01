@@ -46,6 +46,54 @@ export const CONFIG = {
     outputRetries: setting(1, "AGENTS.md §9", true),
     segmentMaxChars: setting(400, "docs/AGENT_RUNTIME.md §4", true),
   },
+  twin: {
+    /**
+     * HD skin concerns read when building a profile. Skin Analysis is priced in tiers by concern
+     * count (HD: 1-4 = 12, 5-8 = 16, 9-12 = 20 units, read live 2026-11-01), so eight is the most
+     * that stays in the 16-unit tier. The set serves the phases that read them: pores, wrinkles,
+     * texture, acne, oiliness and redness for Proof (Phase 9); redness and acne for the coverage
+     * rule (ENGINES §4.3); dark circles for the concealer pass (Phase 6); skin type for finish.
+     * Age spots and eye bags are left out to stay in the tier; Phase 6 can request them as a
+     * separate, quoted step.
+     */
+    skinConcerns: setting(
+      [
+        "hd_pore",
+        "hd_wrinkle",
+        "hd_texture",
+        "hd_acne",
+        "hd_oiliness",
+        "hd_redness",
+        "hd_dark_circle",
+        "hd_skin_type",
+      ] as readonly string[],
+      "docs/ENGINES.md §4.3, §8; feature-cost tiers (docs/FACTS.md F2)",
+      false,
+    ),
+    /**
+     * Face Attributes features read: five stays in the 10-unit tier (1-5 features). They are the
+     * ratios identity drift compares (docs/ENGINES.md §7.3) and the proportions the profile shows.
+     */
+    faceFeatures: setting(
+      [
+        "faceAspectRatio",
+        "horizontalThird",
+        "verticalFifth",
+        "eyeAspectRatio",
+        "noseWidthToMouthWidth",
+      ] as readonly string[],
+      "docs/ENGINES.md §7.3; feature-cost tiers",
+      false,
+    ),
+    /** Extra face captures taken seconds apart, so s_w can be estimated (docs/ENGINES.md §8, k = 3). */
+    repeatCaptures: setting(2, "docs/UX_FLOWS.md §3; docs/ENGINES.md §8 default k = 3", true),
+    /** The face must fill more than this share of the photo's width for Skin Analysis. */
+    minFaceWidthShare: setting(
+      0.6,
+      "docs/YOUCAM_API.md §3 (face wider than 60% of the image)",
+      true,
+    ),
+  },
   plan: {
     /** A quote is honoured for this long; afterwards the plan must be re-quoted. */
     ttlMinutes: setting(

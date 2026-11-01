@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { z } from "zod";
-import { Audit, Lab, LedgerEntry, Metric, Plan, Quote, Run, RunEvent, RunNode } from "../src";
+import { Audit, Lab, LedgerEntry, Metric, Plan, Quote, Run, RunEvent, RunNode, Twin } from "../src";
 
 type Json = Record<string, unknown>;
 interface Case {
@@ -74,7 +74,93 @@ const metricBase = {
   measuredAt: at,
 };
 
+const group = { status: "measured", at };
+const twin: Json = {
+  userId: "usr_aaaaaaaa",
+  createdAt: at,
+  updatedAt: at,
+  metrics: {
+    "skin.hd_pore.whole": { ...metricBase, kind: "number", value: 71.2, unit: "raw score" },
+  },
+  groups: { skin: group, colouring: group, face: group, hair: group },
+  captureMeta: { mode: "hd", source: "camera", repeatsCaptured: 2, qualityChecksPassed: true },
+  synthetic: false,
+};
+
 const CASES: Record<string, Case> = {
+  Twin: {
+    schema: Twin,
+    valid: [
+      twin,
+      {
+        ...twin,
+        groups: {
+          ...(twin.groups as Json),
+          hair: {
+            status: "partial",
+            missing: [{ reading: "hair_type", reason: "hair_photos_mismatch", guidance: "retake" }],
+            at,
+          },
+        },
+        faceRatios: { horizontal_third: [0.33, 0.34, 0.33] },
+        noiseFloors: {
+          hd_pore: {
+            sessions: 1,
+            capturesPerSession: 3,
+            sW: 1.4,
+            sD: null,
+            sDSource: "unknown",
+            se: null,
+            mdc: null,
+          },
+        },
+        captureMeta: {
+          mode: "sd",
+          source: "upload",
+          repeatsCaptured: 0,
+          qualityChecksPassed: null,
+        },
+        synthetic: true,
+      },
+    ],
+    invalid: [
+      {
+        why: "a group missing",
+        value: { ...twin, groups: { skin: group, colouring: group, face: group } },
+      },
+      {
+        why: "unknown capture mode",
+        value: {
+          ...twin,
+          captureMeta: {
+            mode: "4k",
+            source: "camera",
+            repeatsCaptured: 0,
+            qualityChecksPassed: true,
+          },
+        },
+      },
+      { why: "the synthetic flag left out", value: { ...twin, synthetic: undefined } },
+      {
+        why: "a noise floor with one capture",
+        value: {
+          ...twin,
+          noiseFloors: {
+            hd_pore: {
+              sessions: 1,
+              capturesPerSession: 1,
+              sW: 1,
+              sD: null,
+              sDSource: "unknown",
+              se: null,
+              mdc: null,
+            },
+          },
+        },
+      },
+      { why: "a user id that is a session id", value: { ...twin, userId: "ses_aaaaaaaa" } },
+    ],
+  },
   Lab: {
     schema: Lab,
     valid: [

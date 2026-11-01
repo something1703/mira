@@ -5,6 +5,7 @@ export * from "./plan";
 export * from "./run";
 export * from "./ledger";
 export * from "./lifecycle";
+export * from "./twin";
 export * from "./config";
 export * from "./trace";
 export * from "./claim-linter";

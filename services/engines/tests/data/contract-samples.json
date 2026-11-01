@@ -1,4 +1,371 @@
 {
+  "Twin": {
+    "valid": [
+      {
+        "userId": "usr_aaaaaaaa",
+        "createdAt": "2026-11-01T10:00:00.000Z",
+        "updatedAt": "2026-11-01T10:00:00.000Z",
+        "metrics": {
+          "skin.hd_pore.whole": {
+            "id": "skin.hd_pore.whole",
+            "source": {
+              "feature": "skin-analysis",
+              "version": "v2.1",
+              "taskRunId": "task_1"
+            },
+            "confidence": "within",
+            "measuredAt": "2026-11-01T10:00:00.000Z",
+            "kind": "number",
+            "value": 71.2,
+            "unit": "raw score"
+          }
+        },
+        "groups": {
+          "skin": {
+            "status": "measured",
+            "at": "2026-11-01T10:00:00.000Z"
+          },
+          "colouring": {
+            "status": "measured",
+            "at": "2026-11-01T10:00:00.000Z"
+          },
+          "face": {
+            "status": "measured",
+            "at": "2026-11-01T10:00:00.000Z"
+          },
+          "hair": {
+            "status": "measured",
+            "at": "2026-11-01T10:00:00.000Z"
+          }
+        },
+        "captureMeta": {
+          "mode": "hd",
+          "source": "camera",
+          "repeatsCaptured": 2,
+          "qualityChecksPassed": true
+        },
+        "synthetic": false
+      },
+      {
+        "userId": "usr_aaaaaaaa",
+        "createdAt": "2026-11-01T10:00:00.000Z",
+        "updatedAt": "2026-11-01T10:00:00.000Z",
+        "metrics": {
+          "skin.hd_pore.whole": {
+            "id": "skin.hd_pore.whole",
+            "source": {
+              "feature": "skin-analysis",
+              "version": "v2.1",
+              "taskRunId": "task_1"
+            },
+            "confidence": "within",
+            "measuredAt": "2026-11-01T10:00:00.000Z",
+            "kind": "number",
+            "value": 71.2,
+            "unit": "raw score"
+          }
+        },
+        "groups": {
+          "skin": {
+            "status": "measured",
+            "at": "2026-11-01T10:00:00.000Z"
+          },
+          "colouring": {
+            "status": "measured",
+            "at": "2026-11-01T10:00:00.000Z"
+          },
+          "face": {
+            "status": "measured",
+            "at": "2026-11-01T10:00:00.000Z"
+          },
+          "hair": {
+            "status": "partial",
+            "missing": [
+              {
+                "reading": "hair_type",
+                "reason": "hair_photos_mismatch",
+                "guidance": "retake"
+              }
+            ],
+            "at": "2026-11-01T10:00:00.000Z"
+          }
+        },
+        "captureMeta": {
+          "mode": "sd",
+          "source": "upload",
+          "repeatsCaptured": 0,
+          "qualityChecksPassed": null
+        },
+        "synthetic": true,
+        "faceRatios": {
+          "horizontal_third": [
+            0.33,
+            0.34,
+            0.33
+          ]
+        },
+        "noiseFloors": {
+          "hd_pore": {
+            "sessions": 1,
+            "capturesPerSession": 3,
+            "sW": 1.4,
+            "sD": null,
+            "sDSource": "unknown",
+            "se": null,
+            "mdc": null
+          }
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "why": "a group missing",
+        "value": {
+          "userId": "usr_aaaaaaaa",
+          "createdAt": "2026-11-01T10:00:00.000Z",
+          "updatedAt": "2026-11-01T10:00:00.000Z",
+          "metrics": {
+            "skin.hd_pore.whole": {
+              "id": "skin.hd_pore.whole",
+              "source": {
+                "feature": "skin-analysis",
+                "version": "v2.1",
+                "taskRunId": "task_1"
+              },
+              "confidence": "within",
+              "measuredAt": "2026-11-01T10:00:00.000Z",
+              "kind": "number",
+              "value": 71.2,
+              "unit": "raw score"
+            }
+          },
+          "groups": {
+            "skin": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "colouring": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "face": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            }
+          },
+          "captureMeta": {
+            "mode": "hd",
+            "source": "camera",
+            "repeatsCaptured": 2,
+            "qualityChecksPassed": true
+          },
+          "synthetic": false
+        }
+      },
+      {
+        "why": "unknown capture mode",
+        "value": {
+          "userId": "usr_aaaaaaaa",
+          "createdAt": "2026-11-01T10:00:00.000Z",
+          "updatedAt": "2026-11-01T10:00:00.000Z",
+          "metrics": {
+            "skin.hd_pore.whole": {
+              "id": "skin.hd_pore.whole",
+              "source": {
+                "feature": "skin-analysis",
+                "version": "v2.1",
+                "taskRunId": "task_1"
+              },
+              "confidence": "within",
+              "measuredAt": "2026-11-01T10:00:00.000Z",
+              "kind": "number",
+              "value": 71.2,
+              "unit": "raw score"
+            }
+          },
+          "groups": {
+            "skin": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "colouring": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "face": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "hair": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            }
+          },
+          "captureMeta": {
+            "mode": "4k",
+            "source": "camera",
+            "repeatsCaptured": 0,
+            "qualityChecksPassed": true
+          },
+          "synthetic": false
+        }
+      },
+      {
+        "why": "the synthetic flag left out",
+        "value": {
+          "userId": "usr_aaaaaaaa",
+          "createdAt": "2026-11-01T10:00:00.000Z",
+          "updatedAt": "2026-11-01T10:00:00.000Z",
+          "metrics": {
+            "skin.hd_pore.whole": {
+              "id": "skin.hd_pore.whole",
+              "source": {
+                "feature": "skin-analysis",
+                "version": "v2.1",
+                "taskRunId": "task_1"
+              },
+              "confidence": "within",
+              "measuredAt": "2026-11-01T10:00:00.000Z",
+              "kind": "number",
+              "value": 71.2,
+              "unit": "raw score"
+            }
+          },
+          "groups": {
+            "skin": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "colouring": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "face": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "hair": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            }
+          },
+          "captureMeta": {
+            "mode": "hd",
+            "source": "camera",
+            "repeatsCaptured": 2,
+            "qualityChecksPassed": true
+          }
+        }
+      },
+      {
+        "why": "a noise floor with one capture",
+        "value": {
+          "userId": "usr_aaaaaaaa",
+          "createdAt": "2026-11-01T10:00:00.000Z",
+          "updatedAt": "2026-11-01T10:00:00.000Z",
+          "metrics": {
+            "skin.hd_pore.whole": {
+              "id": "skin.hd_pore.whole",
+              "source": {
+                "feature": "skin-analysis",
+                "version": "v2.1",
+                "taskRunId": "task_1"
+              },
+              "confidence": "within",
+              "measuredAt": "2026-11-01T10:00:00.000Z",
+              "kind": "number",
+              "value": 71.2,
+              "unit": "raw score"
+            }
+          },
+          "groups": {
+            "skin": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "colouring": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "face": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "hair": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            }
+          },
+          "captureMeta": {
+            "mode": "hd",
+            "source": "camera",
+            "repeatsCaptured": 2,
+            "qualityChecksPassed": true
+          },
+          "synthetic": false,
+          "noiseFloors": {
+            "hd_pore": {
+              "sessions": 1,
+              "capturesPerSession": 1,
+              "sW": 1,
+              "sD": null,
+              "sDSource": "unknown",
+              "se": null,
+              "mdc": null
+            }
+          }
+        }
+      },
+      {
+        "why": "a user id that is a session id",
+        "value": {
+          "userId": "ses_aaaaaaaa",
+          "createdAt": "2026-11-01T10:00:00.000Z",
+          "updatedAt": "2026-11-01T10:00:00.000Z",
+          "metrics": {
+            "skin.hd_pore.whole": {
+              "id": "skin.hd_pore.whole",
+              "source": {
+                "feature": "skin-analysis",
+                "version": "v2.1",
+                "taskRunId": "task_1"
+              },
+              "confidence": "within",
+              "measuredAt": "2026-11-01T10:00:00.000Z",
+              "kind": "number",
+              "value": 71.2,
+              "unit": "raw score"
+            }
+          },
+          "groups": {
+            "skin": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "colouring": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "face": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            },
+            "hair": {
+              "status": "measured",
+              "at": "2026-11-01T10:00:00.000Z"
+            }
+          },
+          "captureMeta": {
+            "mode": "hd",
+            "source": "camera",
+            "repeatsCaptured": 2,
+            "qualityChecksPassed": true
+          },
+          "synthetic": false
+        }
+      }
+    ]
+  },
   "Lab": {
     "valid": [
       [
