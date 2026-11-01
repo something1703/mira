@@ -10,7 +10,7 @@ Built for the **YouCam API Skin AI & eCommerce VTO Hackathon** (Perfect Corp × 
 
 - **Try-on previews airbrush you by default.** `makeup-vto` applies skin smoothing at strength 50 unless told otherwise, so the shopper buys a product that never looked like the preview. MIRA renders unretouched.
 - **Nobody verifies a render.** A try-on can return the wrong garment colour, the wrong lip shade, or a subtly different face. MIRA re-measures every render and labels its fidelity.
-- **Skin scores move with lighting, not just skin.** MIRA measures each person's noise floor and only reports a change bigger than it.
+- **Skin scores move with lighting, not just skin.** MIRA measures each person's day-to-day variation (a same-session estimate first, then across days) and only reports a change bigger than it.
 - **Brands cannot see who their range fails.** The brand console shows which measured skin tones have no matching shade.
 
 ## What it does

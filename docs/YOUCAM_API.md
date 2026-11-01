@@ -166,7 +166,7 @@ Paths are under `https://yce-api-01.makeupar.com`. "Units" are from each bundle'
 3. **CASTING: try-ons are slow.** One try-on took 16.5–28.0 s in their measurements, and YouCam publishes no latency figures. Run fan-outs in parallel within the rate limit and stream results.
 4. **CASTING and ShadeSpan: clothes try-on cost 2 units.** The bundle confirms this for V2 and V3. V4's cost comes from feature-cost.
 5. **Aloud: pin response shapes with fixtures from real runs.** Aloud reported errors arriving as stringified tuples; the docs don't mention it, and MIRA keeps defensive parsing.
-6. **New for MIRA: patch the bundles before generating types.** Many bundles mis-nest `results` (shown as `null` with the `$ref` hoisted), and `FileResponseV2` has the same bug. MIRA writes Zod schemas per feature from the bundles rather than generating types (D10).
+6. **New for MIRA: patch the bundles before generating types.** Many bundles mis-nest `results` (shown as `null` with the `$ref` hoisted), and `FileResponseV2` has the same bug. MIRA writes Zod schemas per feature from the bundles rather than generating types (D11).
 
 ## 8. Recording fixtures
 

@@ -8,7 +8,7 @@
 
 | Path | What |
 | --- | --- |
-| `packages/youcam-client/src/generated/` | Types generated from Perfect Corp's OpenAPI bundles |
+| `packages/youcam-client/src/schemas/` | Hand-written Zod request and response schemas per feature, checked against the saved OpenAPI bundles (D11) |
 | `packages/youcam-client/src/features.ts` | Feature registry: slug, version, file endpoint, task endpoint, webhook support, request builder, result parser |
 | `packages/youcam-client/src/mock/` | Fixture replay with recorded latencies |
 | `packages/fixtures/` | Recorded responses for every feature MIRA uses + `CONSENT.md` |
@@ -21,7 +21,7 @@
 ## Tasks
 
 ### Client
-- [ ] Download the OpenAPI bundles for every feature in `docs/YOUCAM_API.md` §2; generate types; commit with the bundle date.
+- [ ] Write Zod schemas per feature from the saved bundles in `packages/youcam-client/openapi/` (D11); note the bundle date in each file.
 - [ ] Confirm every _confirm_ entry in `docs/YOUCAM_API.md` §2 from the bundles; update the doc and `docs/FACTS.md`.
 - [ ] Feature registry with request builders; `makeup-vto` builder injects `skin_smooth: 0` unless `allowSmoothing` is explicitly true.
   *Accept:* unit test fails if any makeup request lacks `skin_smooth`.
@@ -40,6 +40,10 @@
 - [ ] Graph runner: typed graph definition, dependency resolution, parallel ready nodes up to queue rate, partial-failure semantics, cancellation of unstarted nodes.
 - [ ] Pub/Sub `run-events` (node started, done, cached, failed, audited); web subscribes through a server-sent events endpoint.
 - [ ] End-of-run cleanup: delete Cloud Storage objects and YouCam tasks unless the user saved the output.
+
+### Ports, adapters and edges
+- [ ] Ports and adapters in `packages/runtime` for state, queue, events and blobs (D10): file-backed / in-process for mock, Firestore / Cloud Tasks / Pub/Sub / Cloud Storage live.
+- [ ] `mira-web` proxies the public webhook and MCP paths to the internal services; `mira-workflows` verifies Google OIDC tokens on Cloud Tasks calls itself.
 
 ### Tools
 - [ ] `pnpm fixtures:record` (quote + confirm, scrubs signed URLs).

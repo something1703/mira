@@ -14,7 +14,7 @@
 | `packages/schemas/src/claim-linter.ts` | Claim linter with the banned list from `docs/COPY.md` |
 | `infra/` | Terraform for every GCP resource below |
 | `.github/workflows/ci.yml` | `pnpm check` on every push |
-| `scripts/dev-mock.sh` | Starts all services with `MIRA_MODE=mock` and the Firestore emulator |
+| `scripts/dev-mock.sh` | Starts all services with `MIRA_MODE=mock` (file-backed state, no emulator; D10) |
 
 ## Tasks
 
@@ -51,7 +51,7 @@
 
 - [ ] `pnpm check` passes locally and in CI.
 - [ ] `pnpm dev:mock` works on a fresh clone with no credentials.
-- [ ] All five services deployed and returning 200 on `/health` in the cloud.
+- [ ] All six services deployed and returning 200 on `/health` in the cloud.
 - [ ] Vertex smoke test passes; model IDs recorded.
 
 ## Demo moment

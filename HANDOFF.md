@@ -46,7 +46,7 @@ Done: repo and tooling, scripts, config loader, trace middleware, claim linter, 
 
 Not done, all of them blocked on the user's go-ahead or credentials (see `phases/PHASE_01_FOUNDATION.md`):
 
-- `terraform apply` and "all five services return 200 in the cloud" (needs the cost approval)
+- `terraform apply` and "all six services return 200 in the cloud" (needs the cost approval)
 - Vertex smoke test and recording the exact model IDs in `docs/FACTS.md`
 - Cloud Build trigger for deploys on `main`
 - Devpost registration, YouCam sign-up, API key into Secret Manager (the user says the account side is done)

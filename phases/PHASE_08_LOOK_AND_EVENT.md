@@ -22,7 +22,7 @@
 
 ### Workflow
 - [ ] Garment ingest from a product link: image → background removal → garment colour (engine) → catalogue item.
-- [ ] Graph order: clothes (with garment audit) → accessories chained on `dst_id` → makeup (`skin_smooth: 0`, shades from look suggestions, lip audit) → hair → identity drift → background → video (only if all audits passed and the user kept video in the quote).
+- [ ] Graph order: clothes (with garment audit) → accessories chained on the previous `results.url` (D12) → makeup (`skin_smooth: 0`, shades from look suggestions, lip audit) → hair → identity drift → background → video (only if all audits passed and the user kept video in the quote).
 - [ ] Withhold renders on identity drift; label drift on garment or lip; partial results with retry per step.
 - [ ] Saved looks copied to `saved/` storage; everything else deleted at run end.
 

@@ -99,8 +99,8 @@ Detailed in `docs/DATA_MODEL.md`. Firestore holds live state, Cloud Storage hold
 
 | Env | YouCam | Models | Data |
 | --- | --- | --- | --- |
-| `mock` | Fixtures replayed by `packages/youcam-client/mock` | Stubbed responses from `packages/fixtures/agent` | Firestore emulator |
-| `dev` | Live, low caps | Vertex | Firestore emulator or a dev database |
+| `mock` | Fixtures replayed by `packages/youcam-client/mock` | Stubbed responses from `packages/fixtures/agent` | File-backed store, in-process queue and bus (D10) |
+| `dev` | Live, low caps | Vertex | A dev Firestore database |
 | `prod` | Live, demo caps | Vertex | Production Firestore |
 
 ## 8. Failure model
