@@ -5,13 +5,23 @@ import { groupOf, type TwinGroupName } from "@mira/schemas";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { GROUP_TITLES, captionOf } from "../../../../src/profile/copy";
+import { GROUP_TITLES, captionOf, orderMetrics } from "../../../../src/profile/copy";
 import { formatDate, formatMetric } from "../../../../src/profile/format";
 import type { Inventory } from "../../../../src/profile/inventory";
 import { flash } from "../../../../src/shell/flash";
 
 const ORDER: readonly TwinGroupName[] = ["skin", "colouring", "face", "hair"];
 const plural = (n: number, one: string, many = `${one}s`) => `${String(n)} ${n === 1 ? one : many}`;
+
+const PHOTO_KINDS: Record<string, string> = {
+  face: "Face photo",
+  repeat: "Repeat face photo",
+  body: "Full-body photo",
+  hand: "Hand photo",
+  hair_front: "Hair photo, front",
+  hair_right: "Hair photo, right",
+  hair_left: "Hair photo, left",
+};
 
 type Phase = "idle" | "confirm" | "deleting" | "blocked" | "failed";
 
@@ -92,9 +102,9 @@ export function PrivacyPanel({ inventory }: { inventory: Inventory }) {
                 {twin.synthetic ? ". These are sample results, not measurements of you" : ""}.
               </p>
               {ORDER.map((group) => {
-                const rows = Object.values(twin.metrics)
-                  .filter((m) => groupOf(m.id) === group)
-                  .sort((a, b) => a.id.localeCompare(b.id));
+                const rows = orderMetrics(
+                  Object.values(twin.metrics).filter((m) => groupOf(m.id) === group),
+                );
                 if (rows.length === 0) return null;
                 return (
                   <table key={group} className="privacy__table">
@@ -178,7 +188,19 @@ export function PrivacyPanel({ inventory }: { inventory: Inventory }) {
                 Runs kept: {inventory.runs.length}, using{" "}
                 {inventory.runs.reduce((n, r) => n + r.unitsSpent, 0)} units in total
               </li>
-              <li>Photos waiting to be used: {inventory.pendingUploads}</li>
+              <li>
+                Photos waiting to be used: {inventory.pendingUploads}
+                {inventory.heldPhotos.length > 0 ? (
+                  <ul className="privacy__list">
+                    {inventory.heldPhotos.map((p) => (
+                      <li key={p.at + p.kind}>
+                        {PHOTO_KINDS[p.kind] ?? "Photo"}, deleted automatically by{" "}
+                        {p.expiresAt.slice(11, 16)} UTC
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </li>
             </ul>
           </section>
         </>

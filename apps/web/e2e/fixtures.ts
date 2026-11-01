@@ -194,7 +194,7 @@ let counter = 0;
 /** A fresh upload (distinct bytes, so never a saved result) as the signed-in person. */
 export async function uploadPhoto(page: Page, name = "face"): Promise<string> {
   counter += 1;
-  const res = await page.request.post("/api/uploads", {
+  const res = await page.request.post("/api/uploads?kind=face", {
     headers: { "content-type": "image/jpeg" },
     data: jpegBytes(1200, 1600, (Date.now() % 60000) + counter),
   });

@@ -28,7 +28,14 @@ import { planTwinBuild, type BuildError } from "./twin/build";
 import { HttpEngineClient, type EngineClient } from "./twin/engine-client";
 import { deleteProfile, exportProfile, inventory, uploadsPrefix } from "./twin/profile";
 import { seedTwinFake } from "./twin/synthetic";
-import { UPLOAD_LIMITS, checkUpload } from "./twin/uploads";
+import {
+  UPLOAD_LIMITS,
+  UploadKind,
+  checkUpload,
+  forgetUpload,
+  recordUpload,
+  sweepUploads,
+} from "./twin/uploads";
 import { fetchDownloader } from "./lifecycle/download";
 import { liveYouCam } from "./lifecycle/live-api";
 import { RUN_EVENTS_TOPIC, type Downloader } from "./lifecycle/types";
@@ -117,7 +124,17 @@ export function buildApp(
   });
   if (options.pump) {
     ports.queue.start(250);
+    // Photos that waited for a run are deleted after the held time, even if nobody comes back.
+    const sweep = () => {
+      void sweepUploads(ports).then((r) => {
+        if (r.deleted > 0) logger.info(r, "deleted held photos past their time");
+      });
+    };
+    sweep();
+    const sweeper = setInterval(sweep, 5 * 60_000);
+    sweeper.unref();
     app.addHook("onClose", () => {
+      clearInterval(sweeper);
       ports.queue.stop();
     });
   }
@@ -219,9 +236,9 @@ export function buildApp(
     done(null, body);
   });
   app.post("/internal/uploads", async (req, reply) => {
-    const who = z.object({ userId: UserId }).safeParse(req.query);
+    const who = z.object({ userId: UserId, kind: UploadKind }).safeParse(req.query);
     if (!who.success)
-      return await reply.status(400).send({ error: "invalid_user", traceId: req.traceId });
+      return await reply.status(400).send({ error: "invalid_upload_query", traceId: req.traceId });
     if (!Buffer.isBuffer(req.body)) {
       return await reply.status(415).send({ error: "unsupported_type", traceId: req.traceId });
     }
@@ -240,6 +257,11 @@ export function buildApp(
     const ext = checked.value.info.type === "image/png" ? "png" : "jpg";
     const key = `${uploadsPrefix(who.data.userId)}${newId("up")}.${ext}`;
     await ports.blobs.put(key, bytes, checked.value.info.type);
+    await recordUpload(ports, {
+      key,
+      kind: who.data.kind,
+      at: new Date(ports.clock.now()).toISOString(),
+    });
     return await reply.status(201).send({
       key,
       width: checked.value.info.width,
@@ -253,6 +275,7 @@ export function buildApp(
     if (!q.success || !q.data.key.startsWith(uploadsPrefix(q.data.userId)))
       return await reply.status(400).send({ error: "invalid_upload", traceId: req.traceId });
     await ports.blobs.delete(q.data.key);
+    await forgetUpload(ports, q.data.key);
     return await reply.status(204).send();
   });
 

@@ -2,6 +2,7 @@ import { isResponse, relay, requireSession, toWorkflows } from "../../../src/twi
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const TYPES = new Set(["image/jpeg", "image/png"]);
+const KINDS = new Set(["face", "repeat", "body", "hand", "hair_front", "hair_right", "hair_left"]);
 
 /**
  * A capture or uploaded photo, sent as the raw file. It goes to storage under the person's own
@@ -10,6 +11,8 @@ const TYPES = new Set(["image/jpeg", "image/png"]);
 export async function POST(req: Request) {
   const session = await requireSession();
   if (isResponse(session)) return session;
+  const kind = new URL(req.url).searchParams.get("kind") ?? "";
+  if (!KINDS.has(kind)) return Response.json({ error: "invalid_kind" }, { status: 400 });
   const type = req.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
   if (!TYPES.has(type)) return Response.json({ error: "unsupported_type" }, { status: 415 });
   const length = Number(req.headers.get("content-length") ?? 0);
@@ -18,7 +21,7 @@ export async function POST(req: Request) {
   }
   const bytes = await req.arrayBuffer();
   const res = await toWorkflows(
-    `/internal/uploads?userId=${session.userId}`,
+    `/internal/uploads?userId=${session.userId}&kind=${kind}`,
     { method: "POST", headers: { "content-type": type }, body: bytes },
     30_000,
   );

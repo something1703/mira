@@ -2,6 +2,7 @@ import { FakeClock, createMockPorts } from "@mira/runtime";
 import { newId } from "@mira/schemas";
 import { describe, expect, it } from "vitest";
 import { buildApp } from "../src/app";
+import { sweepUploads } from "../src/twin/uploads";
 import { FakeEngine } from "./fake-engine";
 
 /** A JPEG header with the given size: enough for the server's header checks, not a real picture. */
@@ -100,10 +101,11 @@ function make() {
     body: Buffer = jpeg(1200, 1600, ++salt),
     user = userId,
     type = "image/jpeg",
+    kind = "face",
   ) =>
     await ctx.app.inject({
       method: "POST",
-      url: `/internal/uploads?userId=${user}`,
+      url: `/internal/uploads?userId=${user}&kind=${kind}`,
       headers: { "content-type": type },
       payload: body,
     });
@@ -156,6 +158,9 @@ describe("uploads", () => {
     expect((await t.upload(Buffer.from("x"), t.userId, "text/plain")).statusCode).toBe(415);
     expect((await t.upload(Buffer.alloc(0))).statusCode).toBe(422);
     expect((await t.upload(jpeg(1200, 1600), "nope")).statusCode).toBe(400);
+    expect((await t.upload(jpeg(1200, 1600), t.userId, "image/jpeg", "selfie")).statusCode).toBe(
+      400,
+    );
     expect(await t.ports.blobs.list("uploads/")).toEqual([]);
   });
 
@@ -393,5 +398,62 @@ describe("per-session cap (mock mode)", () => {
     expect((await t.post("/internal/dev/session-cap", { sessionId: "x", cap: 1 })).statusCode).toBe(
       400,
     );
+  });
+});
+
+describe("held photos", () => {
+  it("records what each upload is for and lists it in the inventory with its deadline", async () => {
+    const t = make();
+    await t.upload(jpeg(1200, 1600, 1), t.userId, "image/jpeg", "body");
+    await t.clock.advance(60_000);
+    await t.upload(jpeg(1200, 1600, 2), t.userId, "image/jpeg", "hand");
+    const inv = (await t.ctx.app.inject({ url: `/internal/twin/${t.userId}/inventory` })).json<{
+      pendingUploads: number;
+      heldPhotos: { kind: string; at: string; expiresAt: string }[];
+    }>();
+    expect(inv.pendingUploads).toBe(2);
+    expect(inv.heldPhotos.map((p) => p.kind)).toEqual(["body", "hand"]);
+    const first = inv.heldPhotos[0];
+    expect(Date.parse(first?.expiresAt ?? "") - Date.parse(first?.at ?? "")).toBe(120 * 60_000);
+  });
+
+  it("deletes photos older than the held time and keeps newer ones", async () => {
+    const t = make();
+    const old = (await t.upload(jpeg(1200, 1600, 1), t.userId, "image/jpeg", "body")).json<{
+      key: string;
+    }>().key;
+    await t.clock.advance(100 * 60_000);
+    const fresh = (await t.upload(jpeg(1200, 1600, 2), t.userId, "image/jpeg", "hand")).json<{
+      key: string;
+    }>().key;
+    await t.clock.advance(30 * 60_000);
+    expect(await sweepUploads(t.ports)).toEqual({ deleted: 1 });
+    expect(await t.ports.blobs.list("uploads/")).toEqual([fresh]);
+    expect(await t.ports.blobs.get(old)).toBeUndefined();
+  });
+
+  it("deletes a photo that has no record rather than holding it forever", async () => {
+    const t = make();
+    await t.ports.blobs.put(`uploads/${t.userId}/up_orphan.jpg`, new Uint8Array([1]), "image/jpeg");
+    expect(await sweepUploads(t.ports)).toEqual({ deleted: 1 });
+  });
+
+  it("a run's end deletes its photos and their records; deleting the profile deletes the rest", async () => {
+    const t = make();
+    await t.upload(jpeg(1200, 1600, 3), t.userId, "image/jpeg", "body");
+    const start = await t.post("/internal/twin/build", await t.body());
+    expect(start.statusCode).toBe(201);
+    await t.settle();
+    // The face photo was consumed and is gone with its record; the body photo still waits.
+    const inv = (await t.ctx.app.inject({ url: `/internal/twin/${t.userId}/inventory` })).json<{
+      heldPhotos: { kind: string }[];
+    }>();
+    expect(inv.heldPhotos.map((p) => p.kind)).toEqual(["body"]);
+    expect(await t.ports.state.list(`uploads-index/${t.userId}`)).toHaveLength(1);
+
+    const del = await t.ctx.app.inject({ method: "DELETE", url: `/internal/twin/${t.userId}` });
+    expect(del.json<{ removed: { uploads: number } }>().removed.uploads).toBe(1);
+    expect(await t.ports.state.list(`uploads-index/${t.userId}`)).toEqual([]);
+    expect(await t.ports.blobs.list("uploads/")).toEqual([]);
   });
 });

@@ -158,7 +158,9 @@ test.describe("Measured profile (UX_FLOWS §4)", () => {
 
   test("a run that does not exist says so and offers to measure again", async ({ page }) => {
     await page.goto("/profile?run=run_doesnotexist1");
-    await expect(page.locator(".mira-error")).toContainText("This measuring run could not be found.");
+    await expect(page.locator(".mira-error")).toContainText(
+      "This measuring run could not be found.",
+    );
     await expect(page.getByRole("link", { name: "Measure again" })).toBeVisible();
   });
 

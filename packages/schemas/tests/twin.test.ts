@@ -215,5 +215,6 @@ describe("twin configuration", () => {
   it("two repeat captures plus the first make the three of one session (docs/ENGINES.md §8)", () => {
     expect(1 + CONFIG.twin.repeatCaptures.value).toBe(3);
     expect(CONFIG.twin.minFaceWidthShare.value).toBe(0.6);
+    expect(CONFIG.twin.heldPhotoMinutes.value).toBe(120);
   });
 });

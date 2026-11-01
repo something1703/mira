@@ -1,6 +1,7 @@
 import { Run, RunNode } from "@mira/schemas";
 import { getDoc, listDocs, updateDoc } from "@mira/runtime";
 import type { LifecycleDeps } from "../lifecycle/types";
+import { forgetUpload } from "../twin/uploads";
 
 /** Node inputs that name an uploaded capture: `blob:uploads/{userId}/...`. */
 export const UPLOAD_INPUT = "blob:uploads/";
@@ -37,6 +38,7 @@ export async function cleanupRun(
   }
   for (const key of uploads) {
     await d.blobs.delete(key);
+    await forgetUpload(d, key);
     blobsDeleted += 1;
   }
 

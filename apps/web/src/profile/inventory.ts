@@ -10,6 +10,7 @@ export const Inventory = z.object({
   looks: z.number().int().nonnegative(),
   savedLooks: z.array(z.object({ lookId: z.string(), images: z.number().int().nonnegative() })),
   pendingUploads: z.number().int().nonnegative(),
+  heldPhotos: z.array(z.object({ kind: z.string(), at: z.string(), expiresAt: z.string() })),
   runs: z.array(
     z.object({
       id: z.string(),

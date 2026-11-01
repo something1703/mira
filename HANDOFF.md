@@ -1,10 +1,10 @@
 # Handoff: where MIRA stands
 
-Last updated 2026-11-01, after an audit of Phases 1 to 4 against their own definitions of done. Read `AGENTS.md` first (the rules), then this file, then the phase you are working on in `phases/`.
+Last updated 2026-11-01, after building Phase 5 (capture and the measured profile) on top of the audited Phases 1 to 4. Read `AGENTS.md` first (the rules), then this file, then the phase you are working on in `phases/`.
 
 ## In one paragraph
 
-Phases 1 to 4 are built and verified as far as they can be without a YouCam key or a deploy. Nothing is deployed to Google Cloud and no YouCam units have been spent. The repo runs end to end in mock mode with no credentials: the design system, the Welcome and Consent screens, the YouCam client and node lifecycle (cache, ledger, crash-safe polling, cleanup), the signed webhook door, the measurement engines and a run viewer that shows a demo graph finishing, then finishing again from cache at zero units. Every YouCam result in mock mode is synthetic and says so; no real YouCam response has been recorded yet. No product screen beyond Welcome and Consent exists (capture, profile, shade, look, proof are Phases 5 to 10).
+Phases 1 to 4 are built and verified as far as they can be without a YouCam key or a deploy. Nothing is deployed to Google Cloud and no YouCam units have been spent. The repo runs end to end in mock mode with no credentials: the design system, the Welcome and Consent screens, the YouCam client and node lifecycle (cache, ledger, crash-safe polling, cleanup), the signed webhook door, the measurement engines and a run viewer that shows a demo graph finishing, then finishing again from cache at zero units. Every YouCam result in mock mode is synthetic and says so; no real YouCam response has been recorded yet. Phase 5 adds the capture flow, the measured profile and the privacy screen, all working end to end in mock mode (sample results, a fake Camera Kit in tests). Shade, look and proof screens are Phases 6 to 10.
 
 ## Standing preferences from the user
 
@@ -21,9 +21,10 @@ Phases 1 to 4 are built and verified as far as they can be without a YouCam key 
 | 1 Foundation | Local work done and verified: `pnpm check` exits 0; a fresh clone with no credentials runs `pnpm dev:mock` (six services healthy in 9 s, demo run succeeds, state survives a restart, F24) | Needs you: GCP project and APIs, `terraform apply` (cost approval), Vertex smoke test and model IDs, Cloud Build trigger, YouCam key into Secret Manager |
 | 2 Design system | Done. 18 components, tokens in CSS and TypeScript (a test keeps them equal), contrast test, gallery, Welcome, Consent, sessions, budget banner, error screen, icons and manifest | Nothing blocking. The budget banner's "See what uses units" link waits for a units page |
 | 3 YouCam client and lifecycle | Done for everything testable without a key. Request builders are validated against the saved OpenAPI bundles, every documented error code is mapped, a client-side limiter keeps under YouCam's rate limit, saved looks are copied out before cleanup | Needs a consented photo or a deploy: recorded fixtures (1 of 15 recorded, live price list and one real task done), the `_confirm_` items, live adapters (Firestore, Cloud Tasks, Pub/Sub, Cloud Storage), OIDC verification of Cloud Tasks calls. Not built: image resizing and the face-crop helper, accessory and jewellery builders (Phase 8) |
+| 5 Capture and the Twin | Built and tested in mock mode: capture flow (Camera Kit bridge, plain camera, upload path, repeats, body, hand, hair), upload checks, Build Twin graph and metrics, quote then build, profile screen with every state, privacy screen (inventory, download, delete), held-photo sweep | Needs a real phone and a consented person: the 10-attempt pass rate (DoD), Camera Kit specifics (F33), skin-type mapping (F34), a recorded live Build Twin. Not built: face-crop helper (F35), glasses or fringe detection |
 | 4 Engines | Done: colour, ΔE2000 (all 34 Sharma pairs), shade, look, garment, audit, identity, noise floor, phantom, every endpoint, generated Python models with a contract test | Needs a deploy: Cloud Run with service-account auth. `faces.py` needs a BlazeFace `.tflite` model via `MIRA_FACE_MODEL_PATH` (not bundled; untested until supplied) |
 
-Test counts (all pass): 656 unit and contract tests (schemas 62, runtime 28, youcam-client 172, workflows 97, webhook 13, fixtures 6, ui 146, web 8, agent 1, mcp 1, engines 122) and 108 Playwright tests in light, dark and mobile with axe.
+Test counts (all pass, `pnpm check` exit 0): 800 unit and contract tests (schemas 75, runtime 28, youcam-client 172, workflows 158, webhook 13, fixtures 43, ui 146, web 36, agent 1, mcp 1, engines 127) and 213 Playwright tests in light, dark and mobile with axe (24 more are skipped on purpose: single-pass full runs and the webhook door on mobile).
 
 ## What exists
 
@@ -55,9 +56,17 @@ Needs Node 24+, pnpm 11, uv. Playwright browsers: `pnpm --filter @mira/web exec 
 
 Useful pages in mock mode: `/` and `/consent`, `/dev/components` (every component state), `/dev/runs` (start the demo graph, then run it again to see it finish from cache).
 
-## Decisions (full text in `docs/DECISIONS.md`, D1 to D30)
+## Decisions (full text in `docs/DECISIONS.md`, D1 to D34)
 
-D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam feature. D12 chain on the previous result URL. D13 verify webhooks and always poll as fallback. D14 anonymous signed sessions (built). D15 agent text uses placeholders for product and shade names (Phase 7). D16 Build Twin gives a same-session estimate, not a noise floor. D19 a gallery instead of Storybook, plain CSS instead of Tailwind. D20 two contrast fixes. D21 Atkinson keeps tabular figures. D22 and D27 design reviews. D23 images are never cached across runs. D24 the webhook forwards, workflows stays the only writer. D25 mock mode never calls synthetic results a recording. D26 prices only from feature-cost, fail closed. D28 generated Python models and how engines must read JSON (strict). D29 the client-side rate limiter. D30 saved looks are copied to `saved/`.
+D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam feature. D12 chain on the previous result URL. D13 verify webhooks and always poll as fallback. D14 anonymous signed sessions (built). D15 agent text uses placeholders for product and shade names (Phase 7). D16 Build Twin gives a same-session estimate, not a noise floor. D19 a gallery instead of Storybook, plain CSS instead of Tailwind. D20 two contrast fixes. D21 Atkinson keeps tabular figures. D22 and D27 design reviews. D23 images are never cached across runs. D24 the webhook forwards, workflows stays the only writer. D25 mock mode never calls synthetic results a recording. D26 prices only from feature-cost, fail closed. D28 generated Python models and how engines must read JSON (strict). D29 the client-side rate limiter. D30 saved looks are copied to `saved/`. D31 Build Twin: eight HD concerns, one face photo, optional separately quoted repeats. D32 body and hand photos are held at most two hours, visibly. D33 a failed retry never wipes a profile; delete waits for running runs. D34 confidence words say only what is known.
+
+## Phase 5 map
+
+- **Workflows:** `src/graphs/build-twin.ts` (graph, `assembleTwin`, executors), `src/twin/{extract,engine-client,uploads,image-info,profile,build,synthetic}.ts`. `tolerant` nodes (runner) let the write step run after failures. HTTP: `/internal/uploads`, `/internal/twin/{quote,build}`, `/internal/twin/:userId` (+ `/inventory`, `/export`, DELETE). Mock-only test knobs: `/internal/dev/session-cap`, `/internal/dev/twin`.
+- **Web:** `app/(shell)/{capture,profile,settings/privacy}`, BFF routes under `app/api/{uploads,twin,runs}` (the person's id always comes from the signed cookie), `src/camera-kit/` (loader, bridge, payload parsing), `src/capture/` (flow rules, upload client, copy), `src/profile/` (copy, formatting, loaders).
+- **Camera Kit URL** lives in `packages/youcam-client/src/camera-kit.ts` (lint keeps YouCam hosts there).
+- **E2E:** Playwright now also starts the engines service (needs `uv sync`). `e2e/fake-camera-kit.ts` stands in for the SDK. Set `E2E_SHOTS_DIR` to also write review screenshots as files.
+- **Mock quotes use the real price list** from `packages/fixtures/recorded/feature-cost.json`; a minimal profile quotes 56 units (16 + 20 + 10 + 10), repeats add 16 each.
 
 ## Things to know before building on this
 
@@ -67,7 +76,8 @@ D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam featu
 - **Price selection by description** for skin analysis and video is a guess until the first live feature-cost read (F20). It fails closed, so a wrong guess blocks a quote instead of misquoting.
 - **Engines must read TypeScript payloads strictly:** `Model.model_validate_json(raw, strict=True)`. The default coerces `"0"` into a number, which Zod never does. The generated models are not yet used by the engine API, which has its own request models.
 - **The recorded-run banner is off** until `MIRA_FIXTURES=recorded` and real recordings exist; until then it says "sample results" (D25).
-- Welcome and Consent link to screens later phases build (`/capture`, `/shade`, `/look`, `/proof`, `/runs/recorded`); they land on an honest "not available yet" screen. The Consent copy promises a Delete my profile control under Privacy; Phase 5 must deliver it, including `deleteSaved()` for saved looks.
+- The Welcome screen still reads the `mira_profile` cookie (set when the profile page loads and when the profile is deleted); the profile and privacy screens read the real store.
+- Welcome and Consent link to screens later phases build (`/shade`, `/look`, `/proof`, `/runs/recorded`); they land on an honest "not available yet" screen. `/capture`, `/profile` and `/settings/privacy` are real; Delete my profile also removes saved looks and their images.
 - The Playwright screenshots are attached to results for review, not diffed (fonts load from Google at dev time).
 - Five exact-duplicate files sit in the user's local project root (`README 2.md` and others). They were never committed and do not exist in a clone.
 
@@ -82,7 +92,7 @@ D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam featu
 ## Next steps, in order
 
 1. With a consented photo, run `pnpm smoke:live --input <photo>` (about 57 units, it quotes and asks first), then `pnpm fixtures:record` for the Phase 5 and 6 features. That records the face features and settles the remaining `_confirm_` items. Note the CLI declines without a terminal; run it in one.
-2. Phase 5 (capture and the Twin). Everything it needs from Phases 2 to 4 exists.
+2. Phase 5 is built for mock mode. To close it: run capture on a real phone in live mode ten times and record the pass rate (F-row), confirm F33 and F34 from a recorded run, then decide whether to build the face-crop helper (needs a face-detector model).
 3. Decide the Phase 6 preview-measurement question first: re-measure shade previews with YouCam (about 21 units per shade, hex only) or sample the pixels locally (Phase 4's colour code makes that cheap to try).
 4. Then Phases 6 to 10 as written.
 

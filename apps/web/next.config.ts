@@ -5,7 +5,7 @@ const config: NextConfig = {
   // Self-contained server for the Cloud Run image.
   output: "standalone",
   outputFileTracingRoot: resolve(process.cwd(), "../.."),
-  transpilePackages: ["@mira/schemas", "@mira/ui"],
+  transpilePackages: ["@mira/schemas", "@mira/ui", "@mira/youcam-client"],
   reactStrictMode: true,
   poweredByHeader: false,
   typedRoutes: true,

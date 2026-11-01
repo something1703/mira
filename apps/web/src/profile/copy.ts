@@ -1,4 +1,10 @@
-import type { MissingReading, TwinGroupName } from "@mira/schemas";
+import {
+  CONFIG,
+  COLOUR_PARTS,
+  type Metric,
+  type MissingReading,
+  type TwinGroupName,
+} from "@mira/schemas";
 
 /**
  * The words of the profile screen (docs/COPY.md): what the scan measured, never a judgement of the
@@ -172,3 +178,24 @@ export const missingName = (reading: string): string =>
         } as const
       )[reading]
     : (SKIN_CONCERN[reading.replace(/^hd_/, "")] ?? words(reading));
+
+/**
+ * The order readings are shown in: skin concerns as MIRA requests them, colour swatches skin to
+ * hair, ratios in their own order, and the rest by name. A stable order lets a person find the same
+ * reading in the same place every time.
+ */
+export function orderMetrics<T extends Pick<Metric, "id">>(metrics: readonly T[]): T[] {
+  const rank = (id: string): number => {
+    const [group, name] = id.split(".");
+    if (group === "skin") {
+      const at = CONFIG.twin.skinConcerns.value.indexOf(`hd_${(name ?? "").replace(/^hd_/, "")}`);
+      return at < 0 ? 100 : at;
+    }
+    if (group === "colour") {
+      const part = COLOUR_PARTS.indexOf((name ?? "") as (typeof COLOUR_PARTS)[number]);
+      return part < 0 ? 100 : part;
+    }
+    return 0;
+  };
+  return [...metrics].sort((a, b) => rank(a.id) - rank(b.id) || a.id.localeCompare(b.id));
+}

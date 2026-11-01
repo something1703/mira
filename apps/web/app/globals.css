@@ -391,3 +391,73 @@ a {
   display: grid;
   gap: var(--mira-space-1);
 }
+
+/* ---------- Capture ---------- */
+.capture {
+  display: grid;
+  gap: var(--mira-space-5);
+  max-width: 44rem;
+}
+.capture__head h1 {
+  margin: 0 0 var(--mira-space-2);
+}
+.capture__head .lead {
+  margin-bottom: var(--mira-space-2);
+}
+.capture__panel {
+  display: grid;
+  gap: var(--mira-space-4);
+  justify-items: start;
+}
+.capture__panel > p {
+  margin: 0;
+}
+/* The Ring is a grid item of a start-aligned grid: without a width it shrinks to nothing. */
+.capture__panel .mira-ring-wrap,
+.capture__plain .mira-ring-wrap {
+  width: min(100%, 420px);
+  justify-self: center;
+}
+.capture__mount,
+.capture__video,
+.capture__preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.capture__video {
+  transform: scaleX(-1);
+}
+.capture__starting {
+  position: absolute;
+  inset: auto 0 0;
+  margin: 0;
+  padding: var(--mira-space-2);
+  text-align: center;
+  color: var(--mira-ink-2);
+}
+.capture__plain {
+  display: grid;
+  gap: var(--mira-space-4);
+  justify-items: start;
+}
+.capture__picker {
+  display: grid;
+  gap: var(--mira-space-4);
+  justify-items: start;
+}
+.capture__file {
+  display: grid;
+  gap: var(--mira-space-1);
+}
+.capture__quote {
+  display: grid;
+  gap: var(--mira-space-4);
+}
+.capture__optional {
+  display: grid;
+  gap: var(--mira-space-2);
+  border: 0;
+  margin: 0;
+  padding: 0;
+}

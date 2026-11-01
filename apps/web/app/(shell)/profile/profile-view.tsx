@@ -14,6 +14,7 @@ import {
   GROUP_TITLES,
   NOISE_MISSING,
   captionOf,
+  orderMetrics,
   missingName,
   reasonCopy,
   retryLabel,
@@ -38,9 +39,7 @@ function Missing({ item }: { item: MissingReading }) {
 }
 
 function Readings({ twin, group }: { twin: Twin; group: TwinGroupName }) {
-  const metrics = Object.values(twin.metrics)
-    .filter((m) => groupOf(m.id) === group)
-    .sort((a, b) => a.id.localeCompare(b.id));
+  const metrics = orderMetrics(Object.values(twin.metrics).filter((m) => groupOf(m.id) === group));
   const colours = metrics.filter(
     (m): m is Extract<Metric, { kind: "colour" }> => m.kind === "colour",
   );

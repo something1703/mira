@@ -1,4 +1,6 @@
 import { CONFIG } from "@mira/schemas";
+import { z } from "zod";
+import type { Ports } from "@mira/runtime";
 import { readImageInfo, type ImageInfo } from "./image-info";
 
 /**
@@ -54,3 +56,69 @@ export function checkUpload(
 
 /** Face width as a share of the image, below which YouCam refuses a skin analysis. */
 export const MIN_FACE_WIDTH_SHARE = CONFIG.twin.minFaceWidthShare.value;
+
+// ---------------------------------------------------------------------------------------------
+// The record of held photos. A photo is deleted when the run that reads it ends; one that waits
+// for a later run (full body, hand) is deleted after `heldPhotoMinutes` instead.
+// ---------------------------------------------------------------------------------------------
+
+export const UploadKind = z.enum([
+  "face",
+  "repeat",
+  "body",
+  "hand",
+  "hair_front",
+  "hair_right",
+  "hair_left",
+]);
+export type UploadKind = z.infer<typeof UploadKind>;
+
+export const UploadRecord = z.object({
+  key: z.string().min(1),
+  kind: UploadKind,
+  at: z.iso.datetime(),
+});
+export type UploadRecord = z.infer<typeof UploadRecord>;
+
+/** `uploads/usr_x/up_y.jpg` → `uploads-index/usr_x/up_y`. */
+export function uploadIndexPath(key: string): string | undefined {
+  const m = /^uploads\/([^/]+)\/([^/.]+)\.[a-z]+$/.exec(key);
+  return m ? `uploads-index/${m[1] ?? ""}/${m[2] ?? ""}` : undefined;
+}
+
+type Store = Pick<Ports, "state" | "blobs" | "clock">;
+
+export async function recordUpload(store: Store, record: UploadRecord): Promise<void> {
+  const path = uploadIndexPath(record.key);
+  if (path !== undefined) await store.state.set(path, record);
+}
+
+/** Forget a photo's record once the photo itself is gone. */
+export async function forgetUpload(store: Pick<Ports, "state">, key: string): Promise<void> {
+  const path = uploadIndexPath(key);
+  if (path !== undefined) await store.state.delete(path);
+}
+
+/**
+ * Deletes held photos older than the limit. A photo with no record is treated as held since the
+ * epoch, so it cannot linger either.
+ */
+export async function sweepUploads(
+  store: Store,
+  maxAgeMs = CONFIG.twin.heldPhotoMinutes.value * 60_000,
+): Promise<{ deleted: number }> {
+  const now = store.clock.now();
+  let deleted = 0;
+  for (const key of await store.blobs.list("uploads/")) {
+    const path = uploadIndexPath(key);
+    const raw = path === undefined ? undefined : await store.state.get(path);
+    const parsed = UploadRecord.safeParse(raw);
+    const at = parsed.success ? Date.parse(parsed.data.at) : 0;
+    if (now - at > maxAgeMs) {
+      await store.blobs.delete(key);
+      await forgetUpload(store, key);
+      deleted += 1;
+    }
+  }
+  return { deleted };
+}

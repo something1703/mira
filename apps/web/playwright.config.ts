@@ -17,6 +17,11 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
+    // A synthetic camera (a test pattern) answers getUserMedia, so the plain-camera steps can run
+    // without hardware. Camera Kit itself is replaced by a fake script in the tests that need it.
+    launchOptions: {
+      args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"],
+    },
   },
   projects: [
     { name: "desktop-light", use: { ...devices["Desktop Chrome"], colorScheme: "light" } },

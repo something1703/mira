@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./camera-kit": "./src/camera-kit.ts",
     "./testing": "./src/testing/fake.ts"
   },
   "scripts": {

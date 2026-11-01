@@ -93,6 +93,12 @@ export const CONFIG = {
       "docs/YOUCAM_API.md §3 (face wider than 60% of the image)",
       true,
     ),
+    /**
+     * How long a photo that is waiting for a run (the full-body and hand captures, which a later
+     * phase reads) is held before MIRA deletes it. A photo a run reads is deleted when that run
+     * ends. The bucket's one-day lifecycle rule is the backstop (docs/SECURITY_PRIVACY.md §1).
+     */
+    heldPhotoMinutes: setting(120, "product choice (D32): the length of one session", true),
   },
   plan: {
     /** A quote is honoured for this long; afterwards the plan must be re-quoted. */

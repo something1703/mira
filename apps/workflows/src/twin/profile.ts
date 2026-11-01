@@ -1,6 +1,17 @@
-import { DeletionRecord, Run, RunNode, Twin, err, newId, ok, type Result } from "@mira/schemas";
+import {
+  CONFIG,
+  DeletionRecord,
+  Run,
+  RunNode,
+  Twin,
+  err,
+  newId,
+  ok,
+  type Result,
+} from "@mira/schemas";
 import { getDoc, listDocs, type Ports } from "@mira/runtime";
 import { savedPrefix } from "../runner/save";
+import { UploadRecord, uploadIndexPath, type UploadKind } from "./uploads";
 
 /**
  * Everything MIRA stores about a person, in one place: read it, download it, delete it
@@ -32,8 +43,9 @@ export interface Inventory {
   proofs: number;
   looks: number;
   savedLooks: SavedLook[];
-  /** Captures waiting for a run. They are deleted when the run ends or with the profile. */
+  /** Captures waiting for a run. They are deleted when the run ends, after a time, or with the profile. */
   pendingUploads: number;
+  heldPhotos: { kind: UploadKind; at: string; expiresAt: string }[];
   runs: RunSummary[];
   deletions: DeletionRecord[];
 }
@@ -54,6 +66,21 @@ export async function inventory(store: Store, userId: string): Promise<Inventory
     runsOf(store, userId),
     listDocs(store.state, deletionsPath(userId), DeletionRecord),
   ]);
+  const held: Inventory["heldPhotos"] = [];
+  for (const key of uploads) {
+    const path = uploadIndexPath(key);
+    const rec = UploadRecord.safeParse(
+      path === undefined ? undefined : await store.state.get(path),
+    );
+    if (!rec.success) continue;
+    held.push({
+      kind: rec.data.kind,
+      at: rec.data.at,
+      expiresAt: new Date(
+        Date.parse(rec.data.at) + CONFIG.twin.heldPhotoMinutes.value * 60_000,
+      ).toISOString(),
+    });
+  }
   const byLook = new Map<string, number>();
   for (const key of saved) {
     const lookId = key.slice(savedPrefix(userId).length).split("/")[0] ?? "";
@@ -65,6 +92,7 @@ export async function inventory(store: Store, userId: string): Promise<Inventory
     looks: looks.length,
     savedLooks: [...byLook].map(([lookId, images]) => ({ lookId, images })),
     pendingUploads: uploads.length,
+    heldPhotos: held.sort((a, b) => a.at.localeCompare(b.at)),
     runs: runs
       .map((r) => ({
         id: r.id,
@@ -125,6 +153,7 @@ export async function deleteProfile(
   }
   const savedImages = await store.blobs.deletePrefix(savedPrefix(userId));
   const uploads = await store.blobs.deletePrefix(uploadsPrefix(userId));
+  await store.state.deleteTree(`uploads-index/${userId}`);
   await store.state.deleteTree(twinPath(userId));
 
   const record = DeletionRecord.parse({
