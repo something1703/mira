@@ -4,10 +4,12 @@ import { Button, Field, buttonClass } from "@mira/ui";
 import { DISCLAIMER } from "@mira/schemas/claim-linter";
 import Link from "next/link";
 import { useId, useState } from "react";
+import { HELD_HOURS } from "../../../src/capture/copy";
 import { later } from "../../../src/routes";
 
 /** Consent and privacy (docs/UX_FLOWS.md §2): default, ticked, declined. */
-export function ConsentForm() {
+/** `recorded` is true only when real YouCam recordings exist (D25); until then it is sample results. */
+export function ConsentForm({ recorded }: { recorded: boolean }) {
   const [agreed, setAgreed] = useState(false);
   const [declined, setDeclined] = useState(false);
   const reasonId = useId();
@@ -15,14 +17,19 @@ export function ConsentForm() {
   if (declined) {
     return (
       <div className="consent">
-        <h1 className="mira-display-l">You can still try MIRA with a recorded run.</h1>
+        <h1 className="mira-display-l">
+          {recorded
+            ? "You can still try MIRA with a recorded run."
+            : "You can still look around MIRA with sample results."}
+        </h1>
         <p className="lead">
-          A recorded run replays real YouCam outputs captured earlier. Nothing about you is
-          measured.
+          {recorded
+            ? "A recorded run replays real YouCam outputs captured earlier. Nothing about you is measured."
+            : "Sample results are made-up numbers that show how MIRA looks. Nothing about you is measured."}
         </p>
         <div className="mira-row">
           <Link href={later("/runs/recorded")} className={buttonClass("primary")}>
-            See a recorded run
+            {recorded ? "See a recorded run" : "See sample results"}
           </Link>
           <Button
             variant="quiet"
@@ -55,8 +62,9 @@ export function ConsentForm() {
             What happens to your photos
           </h2>
           <p>
-            Each photo is used for the measurement and deleted when the run ends. MIRA keeps a photo
-            only if you save that specific look.
+            Each photo is used for the measurement and deleted when the run ends. The full-body and
+            hand photos wait for the clothes and jewellery they are used on, and are deleted after{" "}
+            {HELD_HOURS} hours at most. MIRA keeps a photo only if you save that specific look.
           </p>
         </section>
         <section aria-labelledby="c-kept">

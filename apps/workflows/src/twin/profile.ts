@@ -122,7 +122,18 @@ export async function exportProfile(store: Store, userId: string) {
   };
 }
 
-export type DeleteError = { code: "run_in_progress"; runs: number };
+export type DeleteError =
+  | { code: "run_in_progress"; runs: number }
+  /** A finished run's YouCam tasks could not be deleted yet (one is still running). Try again. */
+  | { code: "cleanup_pending"; runs: number };
+
+export interface DeleteHooks {
+  /**
+   * Finishes a run's own cleanup (its images and YouCam tasks) before the run record that points to
+   * them is removed. Returns false if something could not be deleted yet.
+   */
+  cleanupRun?: (runId: string) => Promise<boolean>;
+}
 
 /**
  * Delete my profile: the Twin, proofs, looks, saved images, pending uploads, the person's runs and
@@ -132,13 +143,24 @@ export type DeleteError = { code: "run_in_progress"; runs: number };
 export async function deleteProfile(
   store: Store,
   userId: string,
+  hooks: DeleteHooks = {},
 ): Promise<Result<DeletionRecord, DeleteError>> {
   const runs = await runsOf(store, userId);
   const running = runs.filter((r) => r.status === "running");
   if (running.length > 0) return err({ code: "run_in_progress", runs: running.length });
 
+  // A run that has not been cleaned still holds photos and YouCam tasks. Deleting its record first
+  // would orphan them, so they are cleaned now, or the delete waits.
+  const dirty = runs.filter((r) => r.cleanedAt === undefined);
+  if (hooks.cleanupRun) {
+    let pending = 0;
+    for (const r of dirty) if (!(await hooks.cleanupRun(r.id))) pending += 1;
+    if (pending > 0) return err({ code: "cleanup_pending", runs: pending });
+  }
+
   const inv = await inventory(store, userId);
   let cachedResults = 0;
+  let unitRecords = 0;
   for (const run of runs) {
     for (const { value: node } of await listDocs(store.state, `runs/${run.id}/nodes`, RunNode)) {
       if (
@@ -148,6 +170,18 @@ export async function deleteProfile(
         await store.state.delete(`cache/${node.cacheKey}`);
         cachedResults += 1;
       }
+    }
+    // Unit accounting records and the task index point at the run; they go with it. The session's
+    // running total in `budgets/` stays (it is a count with no link to a person) so that deleting a
+    // profile cannot be used to reset a spending cap.
+    for (const { id, value } of await store.state.list("ledger")) {
+      if ((value as { runId?: string }).runId === run.id) {
+        await store.state.delete(`ledger/${id}`);
+        unitRecords += 1;
+      }
+    }
+    for (const { value: node } of await listDocs(store.state, `runs/${run.id}/nodes`, RunNode)) {
+      if (node.taskId !== undefined) await store.state.delete(`tasks/${node.taskId}`);
     }
     await store.state.deleteTree(`runs/${run.id}`);
   }
@@ -167,6 +201,7 @@ export async function deleteProfile(
       uploads,
       runs: runs.length,
       cachedResults,
+      unitRecords,
     },
   });
   await store.state.set(`${deletionsPath(userId)}/${record.id}`, record);

@@ -68,12 +68,23 @@ export function PhotoStep(props: PhotoStepProps) {
   });
   const hint = useId();
 
-  useEffect(
-    () => () => {
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
       if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
-    },
-    [],
-  );
+      // Leaving this step (Cancel, Back, a new step) with a photo that was never accepted: it goes.
+      for (const key of heldKeys.current) void discardPhoto(key);
+      heldKeys.current = [];
+    };
+  }, []);
+
+  /** Hands the photos to the flow, which owns them from here (and discards them if replaced). */
+  const hand = (photos: Photo[]) => {
+    heldKeys.current = [];
+    accept.current(photos);
+  };
 
   const toCamera = () => {
     runs.current += 1;
@@ -97,14 +108,21 @@ export function PhotoStep(props: PhotoStepProps) {
       });
       if (!out.ok) {
         for (const p of done) void discardPhoto(p.key);
-        setView({ v: "failed", message: UPLOAD_MESSAGES[out.code] });
+        heldKeys.current = [];
+        if (mounted.current) setView({ v: "failed", message: UPLOAD_MESSAGES[out.code] });
         return;
       }
       done.push({ ...out.value, source: item.source });
+      heldKeys.current = done.map((p) => p.key);
     }
-    heldKeys.current = done.map((p) => p.key);
+    if (!mounted.current) {
+      // The person left while the photo was uploading.
+      for (const p of done) void discardPhoto(p.key);
+      heldKeys.current = [];
+      return;
+    }
     if (review) setView({ v: "review", photos: done, preview });
-    else accept.current(done);
+    else hand(done);
   };
 
   const fromCamera = (shots: CapturedPhoto[]) => {
@@ -269,7 +287,7 @@ export function PhotoStep(props: PhotoStepProps) {
   if (view.v === "uploading") {
     return (
       <div className="capture__panel">
-        <Ring mode="reading" value={view.progress} label={`${label}. Uploading securely`}>
+        <Ring mode="reading" progress value={view.progress} label={`${label}. Uploading securely`}>
           {/* eslint-disable-next-line @next/next/no-img-element -- a local object URL, not a remote image */}
           <img className="capture__preview" src={view.preview} alt="" />
         </Ring>
@@ -288,7 +306,7 @@ export function PhotoStep(props: PhotoStepProps) {
         <div className="mira-row">
           <Button
             onClick={() => {
-              props.onAccept(view.photos);
+              hand(view.photos);
             }}
           >
             Use this photo
@@ -371,6 +389,11 @@ function Picker({
           />
         </label>
       ))}
+      {multi && chosen[0] && Boolean(chosen[1]) !== Boolean(chosen[2]) ? (
+        <p role="status" className="mira-small">
+          Add the other side too, or MIRA will use the front photo only.
+        </p>
+      ) : null}
       {multi ? (
         <Button
           disabled={!chosen[0]}

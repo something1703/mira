@@ -218,3 +218,26 @@ describe("twin configuration", () => {
     expect(CONFIG.twin.heldPhotoMinutes.value).toBe(120);
   });
 });
+
+describe("noise floor entries follow D16", () => {
+  const entry = {
+    sessions: 1,
+    capturesPerSession: 3,
+    sW: 1.2,
+    sD: null,
+    sDSource: "unknown",
+    se: null,
+    mdc: null,
+  };
+  it("accepts a one-session spread with no MDC", () => {
+    expect(NoiseFloorEntry.safeParse(entry).success).toBe(true);
+  });
+  it("refuses an MDC when the day-to-day spread is unknown", () => {
+    expect(NoiseFloorEntry.safeParse({ ...entry, se: 1, mdc: 2.7 }).success).toBe(false);
+  });
+  it("refuses an MDC of zero", () => {
+    expect(
+      NoiseFloorEntry.safeParse({ ...entry, sD: 0, sDSource: "estimated", se: 0, mdc: 0 }).success,
+    ).toBe(false);
+  });
+});

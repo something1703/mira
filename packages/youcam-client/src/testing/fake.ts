@@ -54,6 +54,18 @@ export class FakeYouCam implements YouCamApi {
     this.units = options.startingUnits ?? 1_000;
   }
 
+  /**
+   * What a successful task costs in the fake's own balance: a stated price, else the price list.
+   * A feature priced in tiers has several amounts, and the fake cannot see which one applies, so it
+   * takes the largest: its balance never drifts above what the ledger has committed.
+   */
+  private chargeFor(slug: string): number {
+    const stated = this.options.prices?.[slug];
+    if (stated !== undefined) return stated;
+    const amounts = (this.options.skus ?? []).filter((s) => s.slug === slug).map((s) => s.amount);
+    return amounts.length > 0 ? Math.max(...amounts) : 1;
+  }
+
   /** Queue the script for the next task created for a feature. */
   script(slug: string, script: FakeTaskScript): this {
     (this.scripts[slug] ??= []).push(script);
@@ -188,7 +200,7 @@ export class FakeYouCam implements YouCamApi {
     }
     if (!task.charged) {
       task.charged = true;
-      this.units -= this.options.prices?.[feature.slug] ?? 1;
+      this.units -= this.chargeFor(feature.slug);
     }
     return Promise.resolve(
       ok({

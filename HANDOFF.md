@@ -4,7 +4,7 @@ Last updated 2026-11-01, after building Phase 5 (capture and the measured profil
 
 ## In one paragraph
 
-Phases 1 to 4 are built and verified as far as they can be without a YouCam key or a deploy. Nothing is deployed to Google Cloud and no YouCam units have been spent. The repo runs end to end in mock mode with no credentials: the design system, the Welcome and Consent screens, the YouCam client and node lifecycle (cache, ledger, crash-safe polling, cleanup), the signed webhook door, the measurement engines and a run viewer that shows a demo graph finishing, then finishing again from cache at zero units. Every YouCam result in mock mode is synthetic and says so; no real YouCam response has been recorded yet. Phase 5 adds the capture flow, the measured profile and the privacy screen, all working end to end in mock mode (sample results, a fake Camera Kit in tests). Shade, look and proof screens are Phases 6 to 10.
+Phases 1 to 4 are built and verified as far as they can be without a YouCam key or a deploy. Nothing is deployed to Google Cloud. One real YouCam task has been run (1 unit, F30); nothing else has been spent. The repo runs end to end in mock mode with no credentials: the design system, the Welcome and Consent screens, the YouCam client and node lifecycle (cache, ledger, crash-safe polling, cleanup), the signed webhook door, the measurement engines and a run viewer that shows a demo graph finishing, then finishing again from cache at zero units. Every YouCam result in mock mode is synthetic and says so; one real response (a background-removal task and the price list) has been recorded. Phase 5 adds the capture flow, the measured profile and the privacy screen, all working end to end in mock mode (sample results, a fake Camera Kit in tests). Shade, look and proof screens are Phases 6 to 10.
 
 ## Standing preferences from the user
 
@@ -24,7 +24,7 @@ Phases 1 to 4 are built and verified as far as they can be without a YouCam key 
 | 5 Capture and the Twin | Built and tested in mock mode: capture flow (Camera Kit bridge, plain camera, upload path, repeats, body, hand, hair), upload checks, Build Twin graph and metrics, quote then build, profile screen with every state, privacy screen (inventory, download, delete), held-photo sweep | Needs a real phone and a consented person: the 10-attempt pass rate (DoD), Camera Kit specifics (F33), skin-type mapping (F34), a recorded live Build Twin. Not built: face-crop helper (F35), glasses or fringe detection |
 | 4 Engines | Done: colour, ΔE2000 (all 34 Sharma pairs), shade, look, garment, audit, identity, noise floor, phantom, every endpoint, generated Python models with a contract test | Needs a deploy: Cloud Run with service-account auth. `faces.py` needs a BlazeFace `.tflite` model via `MIRA_FACE_MODEL_PATH` (not bundled; untested until supplied) |
 
-Test counts (all pass, `pnpm check` exit 0): 800 unit and contract tests (schemas 75, runtime 28, youcam-client 172, workflows 158, webhook 13, fixtures 43, ui 146, web 36, agent 1, mcp 1, engines 127) and 213 Playwright tests in light, dark and mobile with axe (24 more are skipped on purpose: single-pass full runs and the webhook door on mobile).
+Test counts (all pass, `pnpm check` exit 0): 881 unit and contract tests (schemas 78, runtime 28, youcam-client 172, workflows 178, webhook 13, fixtures 43, ui 184, web 36, agent 1, mcp 1, engines 147) and 222 Playwright tests in light, dark and mobile with axe (single-pass full runs are skipped on the other projects on purpose).
 
 ## What exists
 
@@ -67,6 +67,18 @@ D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam featu
 - **Camera Kit URL** lives in `packages/youcam-client/src/camera-kit.ts` (lint keeps YouCam hosts there).
 - **E2E:** Playwright now also starts the engines service (needs `uv sync`). `e2e/fake-camera-kit.ts` stands in for the SDK. Set `E2E_SHOTS_DIR` to also write review screenshots as files.
 - **Mock quotes use the real price list** from `packages/fixtures/recorded/feature-cost.json`; a minimal profile quotes 56 units (16 + 20 + 10 + 10), repeats add 16 each.
+
+## Vision review (2026-11-01) and what is still open
+
+Four independent reviews read the whole repo against the vision. What was fixed is in D35 and F36 to F40. **Still open**, in order of weight:
+
+- **No idempotency key at YouCam:** a person who restarts a run after `submit_unknown` can be charged twice. Ask the organisers (already on the list).
+- **The rate limiter is per process.** `infra/variables.tf` allows up to three workflows instances, which could send three times YouCam's limit. Run workflows at one instance, or share a token bucket, before deploying.
+- **Live auth between services and the Firestore security rules are not built**, and Terraform never wires secrets or service URLs into Cloud Run. The deploy path fails closed today.
+- **Retention jobs are not built** (runs and the ledger after 30 days, orphaned profiles).
+- **Accessibility and flow polish not done:** a recorded-run "Use a recorded run" action when over the cap, "See what uses units" on the budget banner, a toast when a background run ends, and a unit-test pass for Welcome reading the profile store rather than a cookie.
+- **Web hardening:** no CSP or HSTS, `/api/uploads` trusts `content-length`, no `.dockerignore`.
+- **Engines:** the phantom rule uses |rho| while ENGINES.md says rho; ITA is shown rounded next to a band computed unrounded.
 
 ## Things to know before building on this
 

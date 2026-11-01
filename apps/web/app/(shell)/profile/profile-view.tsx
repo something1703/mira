@@ -90,8 +90,7 @@ export function ProfileView({ twin }: { twin: Twin }) {
     <div className="profile">
       {twin.synthetic ? (
         <Banner kind="info">
-          Sample results. This profile was built from sample data in mock mode, not from a photo of
-          you.
+          Sample results. This profile was built from sample data, not from a photo of you.
         </Banner>
       ) : null}
       <header>
@@ -139,7 +138,8 @@ export function ProfileView({ twin }: { twin: Twin }) {
             </Link>
           }
         >
-          {NOISE_MISSING} Progress checks need it.
+          {NOISE_MISSING} Telling a real change from your day-to-day variation needs checks on
+          different days.
         </Banner>
       ) : null}
 

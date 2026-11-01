@@ -120,8 +120,17 @@ export class InProcessQueue implements TaskQueue {
   }
 
   start(intervalMs = 250): void {
+    // A tick that is still delivering must not be started again by the timer: two ticks at once
+    // would run two deliveries of the same node, which mock mode must not do and live cannot rule out.
+    let busy = false;
     this.timer ??= setInterval(() => {
-      void this.tick().catch(() => undefined);
+      if (busy) return;
+      busy = true;
+      void this.tick()
+        .catch(() => undefined)
+        .finally(() => {
+          busy = false;
+        });
     }, intervalMs);
   }
 

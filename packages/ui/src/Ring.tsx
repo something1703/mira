@@ -73,12 +73,19 @@ export interface CaptureRing {
 export interface RunRing {
   mode: "run";
   steps: readonly Step[];
+  /**
+   * Announce each settled step to screen readers. Turn off when a StepRail beside the Ring already
+   * does, so a step is not read out twice.
+   */
+  announce?: boolean;
 }
 
 export interface ReadingRing {
   mode: "reading";
   /** Position along the scale, 0–1. */
   value: number;
+  /** The value is the progress of something under way (an upload), not a measurement. */
+  progress?: boolean;
 }
 
 /**
@@ -157,7 +164,18 @@ export function Ring(props: RingProps) {
           "aria-valuetext": `${String(settled)} of ${String(props.steps.length)} steps settled`,
           "aria-label": label,
         }
-      : { role: "img" as const, "aria-label": label };
+      : props.mode === "reading" && props.progress
+        ? {
+            role: "progressbar" as const,
+            "aria-valuemin": 0,
+            "aria-valuemax": 100,
+            "aria-valuenow": Math.round(Math.min(1, Math.max(0, props.value)) * 100),
+            "aria-label": label,
+          }
+        : props.mode === "capture" && children
+          ? // The live camera sits inside: a "group" keeps it, and what the SDK draws, reachable.
+            { role: "group" as const, "aria-label": label }
+          : { role: "img" as const, "aria-label": label };
 
   return (
     <figure className={cx("mira-ring-wrap", className)} data-state={state}>
@@ -228,7 +246,7 @@ export function Ring(props: RingProps) {
           {text}
         </figcaption>
       ) : null}
-      {props.mode === "run" ? (
+      {props.mode === "run" && props.announce !== false ? (
         <p className="mira-sr-only" role="status" aria-live="polite">
           {latestAnnouncement(props.steps)}
         </p>

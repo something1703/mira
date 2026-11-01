@@ -48,13 +48,15 @@ test.describe("Consent (UX_FLOWS §2)", () => {
     await expect(page.getByRole("button", { name: "Open the camera" })).toBeDisabled();
   });
 
-  test("declined: offers the recorded run", async ({ page }, testInfo) => {
+  test("declined: offers sample results, not a recorded run that does not exist (D25)", async ({
+    page,
+  }, testInfo) => {
     await page.goto("/consent");
     await page.getByRole("button", { name: "No thanks" }).click();
     await expect(
-      page.getByRole("heading", { name: "You can still try MIRA with a recorded run." }),
+      page.getByRole("heading", { name: "You can still look around MIRA with sample results." }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: "See a recorded run" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "See sample results" })).toBeVisible();
     await expectAccessible(page);
     await snapshotForReview(page, testInfo, "consent-declined");
     await page.getByRole("button", { name: "Go back" }).click();

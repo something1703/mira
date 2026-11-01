@@ -107,6 +107,11 @@ export class NodeLifecycle {
       await this.enqueuePoll(runId, nodeId, 0, 0);
       return;
     }
+    // A submit was started and never confirmed: the task may exist at YouCam. Never submit again.
+    if (node.submitting !== undefined) {
+      await this.resolveStuckSubmit(run, node);
+      return;
+    }
 
     const feature = this.featureFor(node);
     if (!feature) {
@@ -172,18 +177,39 @@ export class NodeLifecycle {
       return;
     }
 
-    // Step 4: submit and persist the task id before waiting.
+    // Step 4: claim the node, submit, and persist the task id before waiting. The claim is one
+    // atomic write: of two deliveries of this start, only one may create a task.
+    if (!(await this.claimSubmit(runId, nodeId))) return;
     const created = await this.d.api.createTask(
       feature,
       feature.buildBody(parsed.data, inputs.value),
     );
     if (!created.ok) {
-      await this.retryStart(run, node, created.error);
+      if (neverAccepted(created.error)) {
+        // YouCam refused or never saw it, so it is safe to try again.
+        await this.patch(runId, nodeId, (n) => {
+          const { submitting: _claim, ...rest } = n;
+          return rest;
+        });
+        await this.retryStart(run, node, created.error);
+      } else {
+        // A network drop or a server error can follow an accepted task. Repeating the request
+        // could charge twice, so the outcome is called unknown and the step is not repeated.
+        await this.fail(run, node, { code: "submit_unknown", retryable: false }, true);
+      }
       return;
     }
     const { taskId } = created.value;
     await this.d.state.set(`tasks/${taskId}`, { runId, nodeId });
-    await this.patch(runId, nodeId, (n) => ({ ...n, taskId, status: "waiting" }));
+    await this.patch(runId, nodeId, (n) => {
+      const { submitting: _claim, ...rest } = n;
+      return {
+        ...rest,
+        taskId,
+        status: "waiting",
+        submittedAt: iso(this.d.clock.now()),
+      };
+    });
     await this.emit(run, nodeId, "node_waiting");
     await this.enqueuePoll(runId, nodeId, 0, pollDelayMs(0));
   }
@@ -199,6 +225,51 @@ export class NodeLifecycle {
       return;
     }
     await this.fail(run, node, nodeError(e), true);
+  }
+
+  /** Atomically marks the node as submitting. False means another delivery already did. */
+  private async claimSubmit(runId: string, nodeId: string): Promise<boolean> {
+    const out = { won: false };
+    await this.patch(runId, nodeId, (n) => {
+      if (n.taskId !== undefined || n.submitting !== undefined || isTerminal(n.status)) return n;
+      out.won = true;
+      return { ...n, submitting: iso(this.d.clock.now()) };
+    });
+    return out.won;
+  }
+
+  /**
+   * A delivery found a submit that was claimed but never confirmed. If it is recent, another
+   * worker is probably still creating the task, so look again shortly. If it is old, the worker
+   * died after (or before) YouCam accepted the task: the outcome is unknown and is not repeated.
+   */
+  private async resolveStuckSubmit(run: Run, node: RunNode): Promise<void> {
+    const age = this.d.clock.now() - Date.parse(node.submitting ?? "");
+    if (age < CONFIG.youcam.submitLeaseMs.value) {
+      await this.d.queue.enqueue("youcam-submit", {
+        payload: { op: "start", runId: node.runId, nodeId: node.id },
+        delayMs: 15_000,
+        dedupeKey: `start-wait:${node.runId}:${node.id}:${String(Math.floor(this.d.clock.now() / 15_000))}`,
+      });
+      return;
+    }
+    this.d.log("submit outcome unknown; not repeating", { runId: node.runId, nodeId: node.id });
+    await this.fail(run, node, { code: "submit_unknown", retryable: false }, true);
+  }
+
+  /**
+   * The task exists but its outcome is not known (timed out, or YouCam unreachable for too long,
+   * or the result could not be fetched). It may still finish and be charged, so the units stay
+   * counted as spent rather than being returned.
+   */
+  private async failCharged(run: Run, node: RunNode, error: FailInfo): Promise<void> {
+    this.d.balance.invalidate();
+    const units = await this.d.ledger.commit(this.refOf(run, node));
+    await this.patch(run.id, node.id, (n) => ({
+      ...n,
+      unitsCommitted: Math.max(n.unitsCommitted, units),
+    }));
+    await this.fail(run, node, error, false);
   }
 
   // ------------------------------------------------------------------ step 5: wait
@@ -218,14 +289,18 @@ export class NodeLifecycle {
         await this.enqueuePoll(runId, nodeId, n + 1, pollDelayMs(n + 1));
         return;
       }
-      await this.fail(run, node, nodeError(res.error), true);
+      if (res.error.retryable && tooLong) {
+        await this.failCharged(run, node, nodeError(res.error));
+      } else {
+        await this.fail(run, node, nodeError(res.error), true);
+      }
       return;
     }
     const state = res.value;
     if (state.status === "running") {
       if (this.waitedMs(node) > CONFIG.youcam.pollGiveUpMs.value) {
-        // The task may still finish on YouCam's side; it is deleted with the run's other tasks.
-        await this.fail(run, node, { code: "youcam_timeout", retryable: true }, true);
+        // The task may still finish on YouCam's side, so its units stay counted (D35).
+        await this.failCharged(run, node, { code: "youcam_timeout", retryable: true });
         return;
       }
       await this.enqueuePoll(runId, nodeId, n + 1, pollDelayMs(n + 1));
@@ -278,7 +353,8 @@ export class NodeLifecycle {
       const dl = await this.d.download(url);
       if (!dl.ok) {
         if (this.waitedMs(node) > CONFIG.youcam.pollGiveUpMs.value) {
-          await this.fail(run, node, { code: "download_failed", retryable: true }, true);
+          // YouCam reported success, so it charged; only the copy to our storage failed.
+          await this.failCharged(run, node, { code: "download_failed", retryable: true });
           return;
         }
         await this.enqueuePoll(run.id, node.id, n + 1, pollDelayMs(n + 1));
@@ -289,7 +365,8 @@ export class NodeLifecycle {
       await this.d.blobs.put(resultRef, dl.value.bytes, dl.value.contentType);
       resultUrl = url;
     } else {
-      output = result;
+      // Keep what MIRA reads, not everything YouCam sent (see `Feature.retain`).
+      output = feature.retain ? feature.retain(result) : result;
     }
 
     this.d.balance.invalidate();
@@ -308,21 +385,32 @@ export class NodeLifecycle {
     }
 
     const audit = await this.runAudit(run, node, output, resultRef);
-    await this.patch(run.id, node.id, (cur) => ({
-      ...cur,
-      status: "done",
-      unitsCommitted: units,
-      ...(resultRef === undefined ? {} : { resultRef }),
-      ...(resultUrl === undefined ? {} : { resultUrl, resultUrlExpiresAt: expiresAt }),
-      ...(output === undefined ? {} : { output }),
-      ...(audit ? { audit } : {}),
-      endedAt: iso(this.d.clock.now()),
-    }));
+    // Two polls can reach success together (a webhook and the fallback). One settles the node and
+    // announces it; the other changes nothing, and never lowers the units already recorded.
+    const settle = { first: false };
+    await this.patch(run.id, node.id, (cur) => {
+      if (isTerminal(cur.status))
+        return { ...cur, unitsCommitted: Math.max(cur.unitsCommitted, units) };
+      settle.first = true;
+      return {
+        ...cur,
+        status: "done",
+        unitsCommitted: Math.max(cur.unitsCommitted, units),
+        ...(resultRef === undefined ? {} : { resultRef }),
+        ...(resultUrl === undefined ? {} : { resultUrl, resultUrlExpiresAt: expiresAt }),
+        ...(output === undefined ? {} : { output }),
+        ...(audit ? { audit } : {}),
+        endedAt: iso(this.d.clock.now()),
+      };
+    });
+    if (!settle.first) return;
     await this.emit(run, node.id, "node_done");
     await this.d.onSettled(run.id);
   }
 
   private async settleFromCache(run: Run, node: RunNode, hit: CacheEntry): Promise<void> {
+    // An earlier attempt may have reserved units before the cache filled: nothing will be charged.
+    await this.d.ledger.release(this.refOf(run, node));
     const audit = await this.runAudit(run, node, hit.output, hit.resultRef);
     await this.patch(run.id, node.id, (cur) => ({
       ...cur,
@@ -362,9 +450,13 @@ export class NodeLifecycle {
     return audit;
   }
 
-  /** A failed task cost nothing: release the reserve, record why, and let the runner react. */
-  async fail(run: Run, node: RunNode, error: FailInfo, release: boolean): Promise<void> {
-    if (release) await this.d.ledger.release(this.refOf(run, node));
+  /**
+   * A failed task cost nothing: release the reserve, record why, and let the runner react. Release
+   * is safe on every path: a reserve already committed is closed, so releasing it does nothing.
+   * The `release` argument is kept for callers and is ignored for that reason.
+   */
+  async fail(run: Run, node: RunNode, error: FailInfo, _release = true): Promise<void> {
+    await this.d.ledger.release(this.refOf(run, node));
     await this.patch(run.id, node.id, (cur) => ({
       ...cur,
       status: "failed",
@@ -461,7 +553,13 @@ export class NodeLifecycle {
       } else if (spec.startsWith("node:")) {
         const up = await getDoc(this.d.state, nodePath(node.runId, spec.slice(5)), RunNode);
         if (!up) return undefined;
-        parts.push(`${role}=${up.cacheKey ?? `${up.runId}/${up.id}`}`);
+        // What the upstream step actually produced, not what it was asked: a fresh render of the
+        // same inputs is different bytes and must be measured again (D23).
+        const made = up.resultRef === undefined ? undefined : await this.d.blobs.get(up.resultRef);
+        if (made) parts.push(`${role}=${sha256(made.bytes)}`);
+        else if (up.output !== undefined)
+          parts.push(`${role}=${sha256(JSON.stringify(up.output))}`);
+        else return undefined;
       } else {
         parts.push(`${role}=${sha256(spec)}`);
       }
@@ -496,7 +594,8 @@ export class NodeLifecycle {
   }
 
   private waitedMs(node: RunNode): number {
-    return node.startedAt === undefined ? 0 : this.d.clock.now() - Date.parse(node.startedAt);
+    const since = node.submittedAt ?? node.startedAt;
+    return since === undefined ? 0 : this.d.clock.now() - Date.parse(since);
   }
 
   private refOf(run: Run, node: RunNode) {
@@ -566,4 +665,14 @@ function missingInput(role: string): YouCamError {
     guidance: "none",
     unitsCharged: 0,
   };
+}
+
+/**
+ * Whether a failed create call certainly did not start a task: YouCam answered with a refusal, or
+ * the local limiter or a recording held the request back. A dropped connection, a server error or
+ * an unreadable reply can all follow a task that was accepted, so they are not.
+ */
+function neverAccepted(e: YouCamError): boolean {
+  if (e.kind === "network" || e.kind === "invalid_response") return false;
+  return !(e.kind === "http" && (e.status ?? 0) >= 500);
 }

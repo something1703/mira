@@ -37,10 +37,13 @@ def garment_colour(rgba: npt.NDArray[np.uint8]) -> GarmentColour:
     rgb = rgba[..., :3][alpha > GARMENT_ALPHA_MIN.value]
     if rgb.shape[0] == 0:
         raise ValueError("No opaque garment pixels found")
-    lab = rgb8_to_lab(rgb.astype(np.float64))
+    # Subsample before converting: a large cutout would otherwise be turned into float64 Lab in
+    # full first, which for a few thousand pixels square needs gigabytes. The same seed picks the
+    # same pixels as sampling afterwards would.
     rng = np.random.default_rng(int(KMEANS_SEED.value))
-    if lab.shape[0] > _MAX_PIXELS:
-        lab = lab[rng.choice(lab.shape[0], _MAX_PIXELS, replace=False)]
+    if rgb.shape[0] > _MAX_PIXELS:
+        rgb = rgb[rng.choice(rgb.shape[0], _MAX_PIXELS, replace=False)]
+    lab = rgb8_to_lab(rgb.astype(np.float64))
 
     k = min(int(GARMENT_KMEANS_K.value), len(np.unique(lab, axis=0)))
     if k == 1:

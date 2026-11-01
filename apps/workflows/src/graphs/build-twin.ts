@@ -308,6 +308,16 @@ export function assembleTwin(input: AssembleInput): Twin {
     builds.colouring.missing = builds.colouring.missing.filter((m) => m.reading !== "colour");
     builds.colouring.missing.push({ reading: "colour", ...reasonOf(colourNode) });
   }
+  // Skin colour is what shade matching reads. If the answer came back without a usable one, the
+  // group is partial and says which reading is missing, never "measured".
+  if (
+    done(nodes.tone) &&
+    done(colourNode) &&
+    !builds.colouring.metrics.some((m) => m.id === "colour.skin") &&
+    !builds.colouring.missing.some((m) => m.reading === "colour")
+  ) {
+    builds.colouring.missing.push({ reading: "skin_colour", reason: "not_returned" });
+  }
   take(builds.colouring, "skin_tone_band", nodes.fitzpatrick, (o) =>
     extractFitzpatrick(o, stamp(nodes.fitzpatrick)),
   );
@@ -344,6 +354,10 @@ export function assembleTwin(input: AssembleInput): Twin {
     }
   }
   const groups = {} as Record<TwinGroupName, TwinGroup>;
+  // Groups whose earlier readings were kept because this run read nothing for them. Whatever was
+  // derived from the same photos (the repeat spread, the capture details, the face ratios) belongs
+  // with those readings and is kept too.
+  const kept = new Set<TwinGroupName>();
   for (const g of GROUPS) {
     if (!params.covers.includes(g)) {
       groups[g] = prev?.groups[g] ?? {
@@ -359,6 +373,7 @@ export function assembleTwin(input: AssembleInput): Twin {
       // A retry that read nothing must not wipe what was measured before; the run itself shows
       // the failure, and the existing readings keep their own date.
       groups[g] = before;
+      kept.add(g);
       for (const [id, m] of Object.entries(prev?.metrics ?? {})) {
         if (groupOf(id) === g) metrics[id] = m;
       }
@@ -371,10 +386,10 @@ export function assembleTwin(input: AssembleInput): Twin {
   }
 
   const noise = (nodes.noise?.output ?? {}) as { floors?: Record<string, NoiseFloorReading> };
-  const noiseFloors: Twin["noiseFloors"] = {
-    ...(params.covers.includes("skin") ? {} : prev?.noiseFloors),
-  };
-  for (const [id, f] of Object.entries(noise.floors ?? {})) {
+  const skinNew = params.covers.includes("skin") && !kept.has("skin");
+  const noiseFloors: Twin["noiseFloors"] = { ...(skinNew ? {} : prev?.noiseFloors) };
+  // Floors from this run belong to this run's skin readings; if those were not kept, neither are they.
+  for (const [id, f] of Object.entries(skinNew ? (noise.floors ?? {}) : {})) {
     noiseFloors[id] = {
       sessions: f.sessions,
       capturesPerSession: f.captures_per_session,
@@ -386,22 +401,24 @@ export function assembleTwin(input: AssembleInput): Twin {
     };
   }
 
-  const faceCovered = params.covers.includes("face");
-  const skinCovered = params.covers.includes("skin");
+  const faceNew = params.covers.includes("face") && !kept.has("face");
+  const skinCovered = skinNew;
+  // Repeats that actually succeeded, not the number planned.
+  const repeatsDone = ["skin-r1", "skin-r2"].filter((id) => done(nodes[id])).length;
   return Twin.parse({
     userId: input.userId,
     createdAt: prev?.createdAt ?? now,
     updatedAt: now,
     metrics,
     groups,
-    faceRatios: faceCovered ? (builds.face.ratios ?? {}) : (prev?.faceRatios ?? {}),
+    faceRatios: faceNew ? (builds.face.ratios ?? {}) : (prev?.faceRatios ?? {}),
     noiseFloors,
     captureMeta:
       skinCovered || prev === undefined
         ? {
             mode: params.mode,
             source: params.source,
-            repeatsCaptured: params.repeatsCaptured,
+            repeatsCaptured: repeatsDone,
             qualityChecksPassed: params.qualityChecksPassed,
           }
         : prev.captureMeta,
@@ -442,6 +459,8 @@ export function createTwinExecutors(deps: TwinExecutorDeps): Record<string, Node
 
   const noise: NodeExecutor = async (ctx) => {
     const captures: Metric[][] = [];
+    // The repeats only mean something beside the photo they repeat.
+    if (!done(ctx.upstream.skin)) return ok({ output: { floors: {}, captures: 0 } });
     for (const id of ["skin", "skin-r1", "skin-r2"]) {
       const node = ctx.upstream[id];
       if (!done(node)) continue;

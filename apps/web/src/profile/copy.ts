@@ -161,23 +161,19 @@ export function retryLabel(group: TwinGroupName, missing: readonly MissingReadin
   return retake ? `Retake for ${noun}` : `Try ${noun} again`;
 }
 
-export const NOISE_MISSING = "Needs 2 more captures to know your day-to-day variation.";
+/** What the repeat photos give (D34): how far a reading moves between photos seconds apart. */
+export const NOISE_MISSING = `Add ${String(CONFIG.twin.repeatCaptures.value)} repeat photos to see how much a reading moves between captures.`;
 
 /** Names a reading in a missing list: `hair_type` → "Hair type". */
+const MISSING_NAMES: Record<string, string> = {
+  skin: "Skin readings",
+  colour: "Colours",
+  skin_colour: "Skin colour",
+  proportions: "Face proportions",
+  skin_tone_band: "Fitzpatrick band",
+};
 export const missingName = (reading: string): string =>
-  reading === "skin" ||
-  reading === "colour" ||
-  reading === "proportions" ||
-  reading === "skin_tone_band"
-    ? (
-        {
-          skin: "Skin readings",
-          colour: "Colours",
-          proportions: "Face proportions",
-          skin_tone_band: "Fitzpatrick band",
-        } as const
-      )[reading]
-    : (SKIN_CONCERN[reading.replace(/^hd_/, "")] ?? words(reading));
+  MISSING_NAMES[reading] ?? SKIN_CONCERN[reading.replace(/^hd_/, "")] ?? words(reading);
 
 /**
  * The order readings are shown in: skin concerns as MIRA requests them, colour swatches skin to

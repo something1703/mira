@@ -23,6 +23,7 @@ import { FakeYouCam } from "@mira/youcam-client/testing";
 import { z } from "zod";
 import { DEMO_PRICES, demoExecutors, newDemoSession, seedDemoFake, startDemoRun } from "./demo";
 import { createEngine, type Engine } from "./engine";
+import { cleanupRun } from "./runner/cleanup";
 import { createTwinExecutors } from "./graphs/build-twin";
 import { planTwinBuild, type BuildError } from "./twin/build";
 import { HttpEngineClient, type EngineClient } from "./twin/engine-client";
@@ -113,7 +114,13 @@ export function buildApp(
     download: options.download ?? (replaying ? fixtureDownloader() : fetchDownloader),
     engineVersion: ENGINE_VERSION,
     executors: { ...demoExecutors, ...createTwinExecutors({ ports, engine: engines, synthetic }) },
-    caps: { session: env.MIRA_SESSION_UNIT_CAP },
+    caps: {
+      session: env.MIRA_SESSION_UNIT_CAP,
+      // Mock mode shares one server between many test runs, so the daily cap applies only if asked.
+      ...(!mock || process.env.MIRA_DEPLOYMENT_DAILY_UNIT_CAP
+        ? { deploymentDaily: env.MIRA_DEPLOYMENT_DAILY_UNIT_CAP }
+        : {}),
+    },
     log: (message, fields) => {
       logger.info(fields ?? {}, message);
     },
@@ -301,7 +308,7 @@ export function buildApp(
   const buildStatus = (e: BuildError): number =>
     e.code === "upload_foreign"
       ? 400
-      : e.code === "upload_missing"
+      : e.code === "upload_missing" || e.code === "repeat_duplicate"
         ? 422
         : e.code === "quote_failed"
           ? e.detail.code === "price_unavailable"
@@ -315,6 +322,12 @@ export function buildApp(
       const body = BuildBody.safeParse(req.body);
       if (!body.success)
         return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+      // Spending needs the price the person saw. A request with no confirmed total never starts.
+      if (start && body.data.confirmedTotal === undefined) {
+        return await reply
+          .status(400)
+          .send({ error: "confirmed_total_required", traceId: req.traceId });
+      }
       const planned = await planTwinBuild(engine, ports, body.data, start);
       if (!planned.ok) {
         return await reply
@@ -353,7 +366,9 @@ export function buildApp(
     const id = userParam(req);
     if (!id.success)
       return await reply.status(400).send({ error: "invalid_user", traceId: req.traceId });
-    const deleted = await deleteProfile(ports, id.data);
+    const deleted = await deleteProfile(ports, id.data, {
+      cleanupRun: async (runId) => (await cleanupRun(engine.deps, runId, 0)).tasksPending === 0,
+    });
     if (!deleted.ok)
       return await reply
         .status(409)

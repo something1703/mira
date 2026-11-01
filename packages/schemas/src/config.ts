@@ -114,6 +114,17 @@ export const CONFIG = {
     /** Poll backoff for features without webhooks. */
     pollInitialMs: setting(2_000, "Product choice; CASTING measured 16.5–28 s per try-on", false),
     pollMaxMs: setting(15_000, "Product choice", false),
+    /**
+     * How long a run's generated images stay after it ends, so a person can look and press Save.
+     * The photos they uploaded are deleted at once; only YouCam's results wait (D35).
+     */
+    reviewWindowMs: setting(
+      10 * 60_000,
+      "Product choice (D35); well inside the 2 h result URLs",
+      false,
+    ),
+    /** How long a claimed but unconfirmed submit is waited for before it is called unknown. */
+    submitLeaseMs: setting(2 * 60_000, "Product choice (D35): longer than one create call", false),
     pollGiveUpMs: setting(10 * 60_000, "Product choice; well inside the 24 h retention", false),
     /**
      * YouCam allows 250 requests per 300 s per key and per IP (docs/FACTS.md F11). The client

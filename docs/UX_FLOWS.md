@@ -72,7 +72,7 @@ Layout: a list of readings grouped as Skin, Colouring, Face, Hair. Each reading 
 | Building | StepRail with each analyser; Ring progress | Cancel (stops unstarted steps) |
 | Ready | All readings | Match my shade, Build a look, Check my progress |
 | Partial | Some analysers failed | Failed groups show "Not measured" + reason | Retry that group |
-| Noise floor missing | Repeat captures skipped | Proof shows "Needs 2 more captures to know your day-to-day variation" | Add captures |
+| Noise floor missing | Repeat captures skipped | The profile says "Add 2 repeat photos to see how much a reading moves between captures" (D34); day-to-day variation needs checks on different days | Add captures |
 | Deleted | After delete | Returns to Welcome, toast "Profile deleted" | — |
 
 ## 5. Shade

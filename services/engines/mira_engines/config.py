@@ -57,6 +57,18 @@ KMEANS_SEED: Final = Threshold(20261101, "Fixed seed for reproducible clustering
 # Look suggestions (docs/ENGINES.md §5)
 LIP_HUE_WINDOW_DEG: Final = Threshold(30.0, "docs/ENGINES.md §5", False, "°")
 BLUSH_HUE_WINDOW_DEG: Final = Threshold(20.0, "docs/ENGINES.md §5", False, "°")
+MIN_HUE_CHROMA: Final = Threshold(
+    8.0,
+    "Product choice (D35): below this a colour is near-grey and its hue angle is noise",
+    False,
+    "C*",
+)
+CONTRAST_TOLERANCE: Final = Threshold(
+    10.0,
+    "Product choice: how far a lip's lightness contrast may sit from the person's own",
+    False,
+    "L*",
+)
 
 # Noise floor and change (docs/ENGINES.md §8)
 CAPTURES_PER_SESSION: Final = Threshold(3, "docs/ENGINES.md §8 default k", True, "captures")

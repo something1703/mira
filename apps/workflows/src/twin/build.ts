@@ -3,11 +3,13 @@ import type { Ports } from "@mira/runtime";
 import type { Engine } from "../engine";
 import { buildQuote, type QuoteError } from "../quote";
 import { buildTwinGraph, type TwinCapture } from "../graphs/build-twin";
+import { sha256 } from "../lifecycle/canonical";
 import { uploadsPrefix } from "./profile";
 
 export type BuildError =
   | { code: "upload_foreign"; key: string }
   | { code: "upload_missing"; key: string }
+  | { code: "repeat_duplicate"; key: string }
   | { code: "quote_failed"; detail: QuoteError }
   | { code: "over_cap"; quote: Quote }
   | { code: "quote_changed"; quote: Quote }
@@ -50,6 +52,18 @@ export async function planTwinBuild(
     if ((await ports.blobs.get(key)) === undefined) {
       return { ok: false, error: { code: "upload_missing", key } };
     }
+  }
+  // A repeat that is the same picture as another has no spread to measure: the saved-result cache
+  // would answer both with one result and the profile would claim captures agree to the decimal.
+  const seen = new Map<string, string>();
+  for (const key of [input.capture.face, ...(input.capture.repeats ?? [])]) {
+    const blob = await ports.blobs.get(key);
+    const hash = sha256(blob?.bytes ?? new Uint8Array());
+    const first = seen.get(hash);
+    if (first !== undefined && (input.capture.repeats ?? []).includes(key)) {
+      return { ok: false, error: { code: "repeat_duplicate", key } };
+    }
+    seen.set(hash, key);
   }
   const graph = buildTwinGraph(input.capture);
   const quote = await buildQuote({

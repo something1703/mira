@@ -11,6 +11,56 @@ const node = (n: number, run = "run_aaaaaa") => ({
   feature: "sod",
 });
 
+describe("Ledger deployment cap (D35)", () => {
+  const session = (n: number, id: string) => ({
+    ...node(n, `run_${id}aa`),
+    sessionId: `ses_${id}aa`,
+  });
+  const make = () => {
+    const clock = new FakeClock();
+    const ledger = new Ledger(new MemoryStateStore(), clock, {
+      node: 50,
+      run: 100,
+      session: 100,
+      deploymentDaily: 60,
+    });
+    return { ledger, clock };
+  };
+
+  it("holds across fresh sessions: clearing cookies does not reset it", async () => {
+    const { ledger } = make();
+    expect((await ledger.reserve(session(1, "aaaa"), 40, undefined)).ok).toBe(true);
+    // A brand new session has its own 100-unit cap, but the deployment has 20 left today.
+    const second = await ledger.reserve(session(1, "bbbb"), 30, undefined);
+    expect(second).toMatchObject({
+      ok: false,
+      error: { code: "over_cap", scope: "deployment", cap: 60 },
+    });
+    // The refused session was not left holding units.
+    expect((await ledger.budget("ses_bbbbaa")).reserved).toBe(0);
+    expect((await ledger.reserve(session(2, "bbbb"), 20, undefined)).ok).toBe(true);
+  });
+
+  it("counts committed units for the day, returns released ones, and starts again tomorrow", async () => {
+    const { ledger, clock } = make();
+    await ledger.reserve(session(1, "aaaa"), 40, undefined);
+    await ledger.commit(session(1, "aaaa"));
+    await ledger.reserve(session(2, "aaaa"), 20, undefined);
+    await ledger.release(session(2, "aaaa"));
+    expect(await ledger.deploymentUsed()).toEqual({ reserved: 0, today: 40 });
+    expect((await ledger.reserve(session(3, "cccc"), 30, undefined)).ok).toBe(false);
+    await clock.advance(24 * 3_600_000);
+    expect((await ledger.reserve(session(3, "cccc"), 30, undefined)).ok).toBe(true);
+  });
+
+  it("is idempotent per node, like the session cap", async () => {
+    const { ledger } = make();
+    await ledger.reserve(session(1, "aaaa"), 40, undefined);
+    await ledger.reserve(session(1, "aaaa"), 40, undefined);
+    expect((await ledger.deploymentUsed()).reserved).toBe(40);
+  });
+});
+
 describe("Ledger", () => {
   const make = (caps = { node: 10, run: 100, session: 25 }) =>
     new Ledger(new MemoryStateStore(), new FakeClock(), caps);

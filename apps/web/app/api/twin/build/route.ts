@@ -16,7 +16,7 @@ const Body = z.object({
       .optional(),
   }),
   removed: z.array(z.string().min(1)).max(20).optional(),
-  confirmedTotal: z.number().int().nonnegative().optional(),
+  confirmedTotal: z.number().int().nonnegative(),
 });
 
 /** build: the person's ids come from the session cookie, never from the body. */

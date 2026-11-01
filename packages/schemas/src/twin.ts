@@ -39,15 +39,22 @@ export type TwinGroup = z.infer<typeof TwinGroup>;
  * variation between captures taken seconds apart, is known; `sD` needs three sessions on
  * different days (D16). Until then `mdc` is null and the UI does not call it a noise floor.
  */
-export const NoiseFloorEntry = z.object({
-  sessions: z.number().int().positive(),
-  capturesPerSession: z.number().int().min(2),
-  sW: z.number().nonnegative(),
-  sD: z.number().nonnegative().nullable(),
-  sDSource: z.enum(["estimated", "prior", "unknown"]),
-  se: z.number().nonnegative().nullable(),
-  mdc: z.number().nonnegative().nullable(),
-});
+export const NoiseFloorEntry = z
+  .object({
+    sessions: z.number().int().positive(),
+    capturesPerSession: z.number().int().min(2),
+    sW: z.number().nonnegative(),
+    sD: z.number().nonnegative().nullable(),
+    sDSource: z.enum(["estimated", "prior", "unknown"]),
+    se: z.number().nonnegative().nullable(),
+    mdc: z.number().nonnegative().nullable(),
+  })
+  // D16: with no day-to-day spread known there is no SE and no minimal detectable change, and a
+  // spread of zero (identical captures) is not a spread to compare against.
+  .refine((e) => e.sDSource !== "unknown" || (e.sD === null && e.se === null && e.mdc === null), {
+    message: "A noise floor with unknown day-to-day spread cannot carry an SE or MDC",
+  })
+  .refine((e) => e.mdc === null || e.mdc > 0, { message: "An MDC of zero is not a threshold" });
 export type NoiseFloorEntry = z.infer<typeof NoiseFloorEntry>;
 
 export const CaptureMeta = z.object({
@@ -155,6 +162,8 @@ export const DeletionRecord = z.object({
     uploads: z.number().int().nonnegative(),
     runs: z.number().int().nonnegative(),
     cachedResults: z.number().int().nonnegative(),
+    /** Unit accounting entries that named the person's runs. */
+    unitRecords: z.number().int().nonnegative().default(0),
   }),
 });
 export type DeletionRecord = z.infer<typeof DeletionRecord>;

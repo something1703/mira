@@ -7,6 +7,8 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
  * without a real one.
  */
 export const SESSION_COOKIE = "mira_session";
+/** 180 days. The profile cookie uses the same length, so the two never disagree. */
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 180;
 
 export interface Session {
   userId: string;
@@ -18,8 +20,12 @@ const MOCK_SECRET = "mira-mock-mode-session-secret-not-for-live-use";
 export function sessionSecret(env: Record<string, string | undefined> = process.env): string {
   const secret = env.MIRA_SESSION_SECRET;
   if (secret && secret.length >= 32) return secret;
-  if (env.MIRA_MODE === "live") {
-    throw new Error("MIRA_SESSION_SECRET (at least 32 characters) is required in live mode.");
+  // The mock secret is public, so anyone could forge a session with it. A production build never
+  // falls back to it, whatever MIRA_MODE says or forgets to say.
+  if (env.MIRA_MODE === "live" || env.NODE_ENV === "production") {
+    throw new Error(
+      "MIRA_SESSION_SECRET (at least 32 characters) is required in live mode and in production.",
+    );
   }
   return MOCK_SECRET;
 }

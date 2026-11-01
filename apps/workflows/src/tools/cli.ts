@@ -62,7 +62,9 @@ function setup(deps: CliDeps) {
       } as const;
     }
   }
-  const ports = deps.ports ?? createMockPorts({ dir: ".mira/live" });
+  // In memory, so nothing a CLI run handles (the photo, the cached answers) is left on disk, and a
+  // repeat run asks YouCam again instead of reporting a saved result as a pass.
+  const ports = deps.ports ?? createMockPorts();
   // The CLIs run on the in-process queue, which has no rate limit of its own, so the client's
   // limiter is what keeps them under YouCam's 250 requests per 300 s.
   const api: YouCamApi =
@@ -124,7 +126,8 @@ export async function recordMain(argv: readonly string[], deps: CliDeps = {}): P
   }
 
   const read = deps.readFile ?? ((p: string) => readFileSync(p));
-  const keyFor = (path: string) => `runs/record/${basename(path)}`;
+  // Under `uploads/` so the run-end cleanup deletes the photo, as it does for a person's.
+  const keyFor = (path: string) => `uploads/cli/${basename(path)}`;
   const files = [args.value.input, ...(args.value.ref ? [args.value.ref] : [])];
   for (const path of files) {
     const type = MIME[extname(path).toLowerCase()];
@@ -275,11 +278,11 @@ export async function smokeMain(argv: readonly string[], deps: CliDeps = {}): Pr
     out("Only .jpg, .jpeg and .png are accepted.");
     return 2;
   }
-  await ports.blobs.put(
-    "runs/smoke/input",
-    (deps.readFile ?? ((p: string) => readFileSync(p)))(input),
-    type,
-  );
+  // One copy per case: each run deletes its own photo when it ends.
+  const photo = (deps.readFile ?? ((p: string) => readFileSync(p)))(input);
+  for (const [i] of SMOKE_CASES.entries()) {
+    await ports.blobs.put(`uploads/cli/smoke-${String(i)}`, photo, type);
+  }
 
   const engine = createEngine({
     ports,
@@ -288,7 +291,7 @@ export async function smokeMain(argv: readonly string[], deps: CliDeps = {}): Pr
     download: deps.download ?? fetchDownloader,
   });
   const sessionId = newId("ses");
-  const graphs = SMOKE_CASES.map((c): GraphSpec => ({
+  const graphs = SMOKE_CASES.map((c, i): GraphSpec => ({
     type: "demo",
     nodes: [
       {
@@ -297,7 +300,7 @@ export async function smokeMain(argv: readonly string[], deps: CliDeps = {}): Pr
         label: "step.smoke",
         feature: c.feature,
         params: c.params,
-        inputs: { src: "blob:runs/smoke/input" },
+        inputs: { src: `blob:uploads/cli/smoke-${String(i)}` },
       },
     ],
   }));

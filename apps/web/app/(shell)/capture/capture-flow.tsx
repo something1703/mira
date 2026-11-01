@@ -14,6 +14,7 @@ import {
   stepComplete,
   stepOf,
   toCapture,
+  type Action,
   type HairAngle,
   type Photo,
   type Plan,
@@ -28,15 +29,38 @@ const HAIR: readonly HairAngle[] = ["front", "right", "left"];
 /** Capture (docs/UX_FLOWS.md §3): the steps in order, then the price, then the build. */
 export function CaptureFlow({ plan }: { plan: Plan }) {
   const router = useRouter();
-  const [state, dispatch] = useReducer(reduce, plan, initialState);
+  const [state, rawDispatch] = useReducer(reduce, plan, initialState);
+  // A new photo, a retake or Back can replace photos the person already uploaded. Those are no
+  // longer wanted, so they are deleted now rather than left to the held-photo sweep.
+  const dispatch = (action: Action) => {
+    const kept = new Set(heldKeys(reduce(state, action)));
+    for (const key of heldKeys(state)) if (!kept.has(key)) void discardPhoto(key);
+    rawDispatch(action);
+  };
   const [hd, setHd] = useState(true);
   const [pause, setPause] = useState(false);
+  const pauseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(
+    () => () => {
+      clearTimeout(pauseTimer.current);
+    },
+    [],
+  );
   const held = useRef<string[]>([]);
   useEffect(() => {
     held.current = heldKeys(state);
   });
 
   const step = stepOf(state);
+  // The button that was pressed is gone when the step changes, so focus would fall to the page.
+  // Moving it to the new step's heading tells a screen reader where it now is.
+  const moved = useRef(false);
+  const place = `${step ?? "quote"}-${String(state.repeats.length)}`;
+  useEffect(() => {
+    if (moved.current) heading.current?.focus();
+    moved.current = true;
+  }, [place]);
   const rail: Step[] = plan.steps.map((id, i) => ({
     id,
     label: STEP_RAIL_LABELS[id],
@@ -98,7 +122,7 @@ export function CaptureFlow({ plan }: { plan: Plan }) {
         // A few seconds between the photos, so the readings are independent captures of one session.
         if (state.repeats.length + 1 < 2) {
           setPause(true);
-          setTimeout(() => {
+          pauseTimer.current = setTimeout(() => {
             setPause(false);
           }, 2500);
         }
@@ -148,7 +172,7 @@ export function CaptureFlow({ plan }: { plan: Plan }) {
     <div className="capture">
       <StepRail label="Capture steps" steps={rail} />
       <header className="capture__head">
-        <h1 className="mira-display-l">
+        <h1 ref={heading} tabIndex={-1} className="mira-display-l">
           {step === "repeats"
             ? `${STEP_TITLES.repeats}: ${String(state.repeats.length + 1)} of 2`
             : STEP_TITLES[step]}

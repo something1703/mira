@@ -13,7 +13,7 @@ from typing import Literal
 from mira_engines.colour import Lab, de2000, hue_difference, lab_to_lch
 from mira_engines.config import CLOSE_DE, COVERAGE_RAISE, DIRECTION_EPS, MATCH_DE
 
-Direction = Literal["lighter", "darker", "warmer", "cooler"]
+Direction = Literal["lighter", "darker", "warmer", "cooler", "more_muted", "more_vivid"]
 MatchLabel = Literal["blends_closely", "close"] | Direction
 
 
@@ -39,8 +39,14 @@ def off_axis_label(skin: Lab, shade: Lab, d_lightness: float, d_hue: float) -> D
     The hue gap is converted to arc length in the a*b* plane (mean chroma × angle in radians), so
     it is comparable with ΔL*. A higher hue angle reads more yellow, i.e. warmer.
     """
-    mean_chroma = (lab_to_lch(skin)[1] + lab_to_lch(shade)[1]) / 2.0
-    hue_gap = abs(d_hue) * math.pi / 180.0 * mean_chroma
+    skin_chroma, shade_chroma = lab_to_lch(skin)[1], lab_to_lch(shade)[1]
+    hue_gap = abs(d_hue) * math.pi / 180.0 * ((skin_chroma + shade_chroma) / 2.0)
+    d_chroma = shade_chroma - skin_chroma
+    biggest = max(abs(d_lightness), hue_gap, abs(d_chroma))
+    # Saturation is the third axis of colour: a shade as light and as warm as skin but much
+    # stronger or weaker is neither "darker" nor "cooler", and saying so would be wrong.
+    if abs(d_chroma) == biggest and abs(d_chroma) > abs(d_lightness):
+        return "more_vivid" if d_chroma > 0 else "more_muted"
     if abs(d_lightness) >= hue_gap:
         return "lighter" if d_lightness > 0 else "darker"
     return "warmer" if d_hue > 0 else "cooler"
@@ -103,6 +109,16 @@ class FinishAndCoverage:
     t_zone_note: bool  # combination skin: say T-zone and U-zone differ
 
 
+_COVERAGE_CONCERNS = frozenset({"acne", "age_spot", "redness"})
+
+
+def _concern_name(key: str) -> str:
+    """`acne`, `hd_acne` and the profile's metric id `skin.hd_acne.whole` are the same concern."""
+    parts = key.strip().lower().split(".")
+    name = parts[1] if parts[0] == "skin" and len(parts) > 1 else parts[0]
+    return name.removeprefix("hd_")
+
+
 def finish_and_coverage(
     skin_type_whole: str | None, concern_raw_scores: dict[str, float]
 ) -> FinishAndCoverage:
@@ -122,7 +138,8 @@ def finish_and_coverage(
         finishes, reason = ("satin",), "combination"
     else:
         finishes, reason = ("satin",), "no_skin_type"
-    relevant = [v for k, v in concern_raw_scores.items() if k in {"acne", "age_spot", "redness"}]
+    scores = {_concern_name(k): v for k, v in concern_raw_scores.items()}
+    relevant = [v for k, v in scores.items() if k in _COVERAGE_CONCERNS]
     raise_it = bool(relevant) and min(relevant) < COVERAGE_RAISE.value
     return FinishAndCoverage(
         finishes=finishes,

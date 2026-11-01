@@ -16,10 +16,10 @@ from dataclasses import asdict
 from typing import Annotated, Any, Literal
 
 import numpy as np
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from PIL import Image, UnidentifiedImageError
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from mira_engines import ENGINE_VERSION, audit, colour, config, garment, look, phantom, shade, stats
 from mira_engines.faces import FaceDetectorUnavailable, detect_face_box
@@ -100,11 +100,42 @@ def health() -> dict[str, object]:
 # used, so a result can be reproduced.
 # ---------------------------------------------------------------------------
 
-LabIn = Annotated[tuple[float, float, float], Field(description="CIELAB, D65, 2° observer")]
+# CIELAB, D65, 2° observer. Real colours sit well inside these bounds; outside is a mistake.
+_L = Annotated[float, Field(ge=0, le=100)]
+_AB = Annotated[float, Field(ge=-200, le=200)]
+LabIn = Annotated[tuple[_L, _AB, _AB], Field(description="CIELAB, D65, 2° observer")]
+# YouCam raw scores run 1-100 (docs/YOUCAM_API.md §3).
+RawScore = Annotated[float, Field(ge=0, le=100)]
 
 
 class Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    """Requests are read as JSON in strict mode (D28): no coercion of `"0"` or `true` into a number,
+    no NaN or infinity, no field that is not declared."""
+
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+
+
+def strict_body[M: Strict](model: type[M]) -> Callable[[Request], Awaitable[M]]:
+    """A dependency that parses the request body as strict JSON, as TypeScript's Zod already did.
+
+    FastAPI's own body parsing validates a Python object, where strict mode rejects a JSON array for
+    a tuple. Reading the JSON text itself keeps strict mode and arrays together.
+    """
+
+    async def read(request: Request) -> M:
+        raw = await request.body()
+        try:
+            return model.model_validate_json(raw, strict=True)
+        except ValidationError as err:
+            # The input is left out of the answer: it may be a person's colour readings.
+            detail = err.errors(include_url=False, include_context=False, include_input=False)
+            raise HTTPException(422, jsonable(detail)) from err
+
+    return read
+
+
+def jsonable(errors: list[Any]) -> list[dict[str, Any]]:
+    return [{"loc": [str(p) for p in e["loc"]], "msg": e["msg"], "type": e["type"]} for e in errors]
 
 
 def envelope(result: object) -> dict[str, object]:
@@ -116,7 +147,7 @@ class HexList(Strict):
 
 
 @app.post("/colour/lab")
-def colour_lab(body: HexList) -> dict[str, object]:
+def colour_lab(body: Annotated[HexList, Depends(strict_body(HexList))]) -> dict[str, object]:
     out = []
     for value in body.hex:
         try:
@@ -142,7 +173,7 @@ class LabPairs(Strict):
 
 
 @app.post("/colour/de2000")
-def colour_de2000(body: LabPairs) -> dict[str, object]:
+def colour_de2000(body: Annotated[LabPairs, Depends(strict_body(LabPairs))]) -> dict[str, object]:
     first = np.array([p[0] for p in body.pairs])
     second = np.array([p[1] for p in body.pairs])
     return envelope(colour.de2000_vec(first, second).tolist())
@@ -163,7 +194,7 @@ class PrerankIn(Strict):
 
 
 @app.post("/shade/prerank")
-def shade_prerank(body: PrerankIn) -> dict[str, object]:
+def shade_prerank(body: Annotated[PrerankIn, Depends(strict_body(PrerankIn))]) -> dict[str, object]:
     ranked = shade.prerank(body.skin, [s.to_shade() for s in body.catalogue])
     return envelope(
         [
@@ -187,17 +218,19 @@ class ClosedLoopIn(Strict):
 
 
 @app.post("/shade/closed-loop")
-def shade_closed_loop(body: ClosedLoopIn) -> dict[str, object]:
+def shade_closed_loop(
+    body: Annotated[ClosedLoopIn, Depends(strict_body(ClosedLoopIn))],
+) -> dict[str, object]:
     return envelope(asdict(shade.closed_loop(body.skin, body.shade, body.render)))
 
 
 class FinishIn(Strict):
     skin_type_whole: str | None = None
-    concern_raw_scores: dict[str, float] = Field(default_factory=dict)
+    concern_raw_scores: dict[str, RawScore] = Field(default_factory=dict)
 
 
 @app.post("/shade/finish")
-def shade_finish(body: FinishIn) -> dict[str, object]:
+def shade_finish(body: Annotated[FinishIn, Depends(strict_body(FinishIn))]) -> dict[str, object]:
     return envelope(
         asdict(shade.finish_and_coverage(body.skin_type_whole, body.concern_raw_scores))
     )
@@ -213,7 +246,7 @@ class LookIn(Strict):
 
 
 @app.post("/look/suggest")
-def look_suggest(body: LookIn) -> dict[str, object]:
+def look_suggest(body: Annotated[LookIn, Depends(strict_body(LookIn))]) -> dict[str, object]:
     out = look.suggest(
         garment=body.garment,
         skin=body.skin,
@@ -226,10 +259,16 @@ def look_suggest(body: LookIn) -> dict[str, object]:
 
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024  # YouCam's own input limit (docs/YOUCAM_API.md §3)
+# A small file can hold an enormous picture (a solid 6000 x 6000 PNG is 152 KB). Decoding that costs
+# gigabytes, so the pixel count is capped as well as the bytes.
+MAX_IMAGE_PIXELS = 25_000_000
+MAX_B64_CHARS = MAX_IMAGE_BYTES * 4 // 3 + 8
 
 
 def decode_image(b64: str, mode: Literal["RGB", "RGBA"]) -> np.ndarray[Any, np.dtype[np.uint8]]:
     """Interim transport: base64 in the request body, until the blob port lands (Phase 3, D10)."""
+    if len(b64) > MAX_B64_CHARS:
+        raise HTTPException(413, "Image is larger than 10 MB")
     try:
         raw = base64.b64decode(b64, validate=True)
     except (binascii.Error, ValueError) as err:
@@ -238,7 +277,11 @@ def decode_image(b64: str, mode: Literal["RGB", "RGBA"]) -> np.ndarray[Any, np.d
         raise HTTPException(413, "Image is larger than 10 MB")
     try:
         with Image.open(io.BytesIO(raw)) as img:
+            if img.width * img.height > MAX_IMAGE_PIXELS:
+                raise HTTPException(413, "Image has too many pixels; use one under 25 megapixels")
             return np.asarray(img.convert(mode), dtype=np.uint8)
+    except Image.DecompressionBombError as err:
+        raise HTTPException(413, "Image has too many pixels; use one under 25 megapixels") from err
     except (UnidentifiedImageError, OSError) as err:
         raise HTTPException(422, "Image could not be read") from err
 
@@ -248,7 +291,7 @@ class ImageIn(Strict):
 
 
 @app.post("/garment/colour")
-def garment_colour(body: ImageIn) -> dict[str, object]:
+def garment_colour(body: Annotated[ImageIn, Depends(strict_body(ImageIn))]) -> dict[str, object]:
     try:
         out = garment.garment_colour(decode_image(body.image_b64, "RGBA"))
     except ValueError as err:
@@ -271,7 +314,9 @@ class AuditGarmentIn(Strict):
 
 
 @app.post("/audit/garment")
-def audit_garment(body: AuditGarmentIn) -> dict[str, object]:
+def audit_garment(
+    body: Annotated[AuditGarmentIn, Depends(strict_body(AuditGarmentIn))],
+) -> dict[str, object]:
     source = decode_image(body.source_b64, "RGB")
     render = decode_image(body.render_b64, "RGB")
     if body.face_box is not None:
@@ -296,7 +341,7 @@ class LipAuditIn(Strict):
 
 
 @app.post("/audit/lip")
-def audit_lip(body: LipAuditIn) -> dict[str, object]:
+def audit_lip(body: Annotated[LipAuditIn, Depends(strict_body(LipAuditIn))]) -> dict[str, object]:
     return envelope(asdict(audit.lip_audit(body.rendered, body.intended)))
 
 
@@ -306,7 +351,9 @@ class IdentityIn(Strict):
 
 
 @app.post("/audit/identity")
-def audit_identity(body: IdentityIn) -> dict[str, object]:
+def audit_identity(
+    body: Annotated[IdentityIn, Depends(strict_body(IdentityIn))],
+) -> dict[str, object]:
     try:
         return envelope(asdict(audit.identity_drift(body.source, body.final)))
     except ValueError as err:
@@ -314,12 +361,14 @@ def audit_identity(body: IdentityIn) -> dict[str, object]:
 
 
 class NoiseFloorIn(Strict):
-    sessions: list[list[float]] = Field(min_length=1, max_length=400)
+    sessions: list[list[RawScore]] = Field(min_length=1, max_length=400)
     prior_sd_day: float | None = Field(default=None, ge=0)
 
 
 @app.post("/stats/noise-floor")
-def stats_noise_floor(body: NoiseFloorIn) -> dict[str, object]:
+def stats_noise_floor(
+    body: Annotated[NoiseFloorIn, Depends(strict_body(NoiseFloorIn))],
+) -> dict[str, object]:
     try:
         return envelope(asdict(stats.noise_floor(body.sessions, body.prior_sd_day)))
     except ValueError as err:
@@ -327,26 +376,28 @@ def stats_noise_floor(body: NoiseFloorIn) -> dict[str, object]:
 
 
 class ChangeIn(Strict):
-    baseline: float
-    now: float
-    mdc: float | None = Field(default=None, ge=0)
+    baseline: RawScore
+    now: RawScore
+    # A minimal detectable change of zero would call any difference a clear change, so it is
+    # refused: callers pass null when it is not known.
+    mdc: float | None = Field(default=None, gt=0)
     claim_direction: Literal["up", "down"]
 
 
 @app.post("/stats/change")
-def stats_change(body: ChangeIn) -> dict[str, object]:
+def stats_change(body: Annotated[ChangeIn, Depends(strict_body(ChangeIn))]) -> dict[str, object]:
     return envelope(asdict(stats.change(body.baseline, body.now, body.mdc, body.claim_direction)))
 
 
 class PhantomIn(Strict):
     intensities: list[float] = Field(min_length=1, max_length=50)
-    scores: list[float] = Field(min_length=1, max_length=50)
-    mdc: float = Field(ge=0)
+    scores: list[RawScore] = Field(min_length=1, max_length=50)
+    mdc: float = Field(gt=0)
     invert_at: float | None = None
 
 
 @app.post("/phantom/fit")
-def phantom_fit(body: PhantomIn) -> dict[str, object]:
+def phantom_fit(body: Annotated[PhantomIn, Depends(strict_body(PhantomIn))]) -> dict[str, object]:
     try:
         fitted = phantom.fit(body.intensities, body.scores, body.mdc)
     except ValueError as err:

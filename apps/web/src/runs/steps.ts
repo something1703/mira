@@ -1,4 +1,5 @@
 import type { RunNode } from "@mira/schemas";
+import { reasonCopy } from "../profile/copy";
 import type { Step, StepState } from "@mira/ui";
 
 /** Plain words for the current step (docs/COPY.md §2, Progress). Unknown keys show the key. */
@@ -53,6 +54,6 @@ export function toSteps(nodes: readonly RunNode[]): Step[] {
       id: n.id,
       label: stepLabel(n.label),
       state: STATE[n.status],
-      ...(n.error ? { detail: n.error.code } : {}),
+      ...(n.error ? { detail: reasonCopy(n.error.code) } : {}),
     }));
 }

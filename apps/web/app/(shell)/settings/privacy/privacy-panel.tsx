@@ -5,6 +5,7 @@ import { groupOf, type TwinGroupName } from "@mira/schemas";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { HELD_HOURS } from "../../../../src/capture/copy";
 import { GROUP_TITLES, captionOf, orderMetrics } from "../../../../src/profile/copy";
 import { formatDate, formatMetric } from "../../../../src/profile/format";
 import type { Inventory } from "../../../../src/profile/inventory";
@@ -73,8 +74,8 @@ export function PrivacyPanel({ inventory }: { inventory: Inventory }) {
       <header>
         <h1 className="mira-display-l">Privacy and my data</h1>
         <p className="lead">
-          Your photos are deleted when each run ends. MIRA keeps numbers only, and every one is
-          listed here.
+          Your photos are deleted when each run ends, or after {HELD_HOURS} hours if they are
+          waiting for a later one. MIRA keeps numbers only, and every one is listed here.
         </p>
       </header>
 
@@ -143,7 +144,7 @@ export function PrivacyPanel({ inventory }: { inventory: Inventory }) {
                     <tr>
                       <th scope="col">Reading</th>
                       <th scope="col">Captures</th>
-                      <th scope="col">Spread</th>
+                      <th scope="col">Spread (points out of 100)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -195,7 +196,7 @@ export function PrivacyPanel({ inventory }: { inventory: Inventory }) {
                     {inventory.heldPhotos.map((p) => (
                       <li key={p.at + p.kind}>
                         {PHOTO_KINDS[p.kind] ?? "Photo"}, deleted automatically by{" "}
-                        {p.expiresAt.slice(11, 16)} UTC
+                        {formatDate(p.expiresAt)}, {p.expiresAt.slice(11, 16)} UTC
                       </li>
                     ))}
                   </ul>

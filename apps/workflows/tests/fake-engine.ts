@@ -24,8 +24,9 @@ export class FakeEngine implements EngineClient {
       hex: h,
       lab: [60, 12, 24],
       lch: { l: 60, c: 26.8, h: 63.4 },
-      ita: 41.2,
-      ita_band: "light",
+      // arctan((60 - 50) / 24) = 22.6 degrees: the "tan" band (docs/ENGINES.md §3).
+      ita: 22.6,
+      ita_band: "tan",
     }));
     return Promise.resolve(ok({ value, engineVersion: "engines-test" }));
   }

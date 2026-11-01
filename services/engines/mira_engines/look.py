@@ -10,7 +10,12 @@ from dataclasses import dataclass
 from typing import Literal
 
 from mira_engines.colour import Lab, lab_to_lch
-from mira_engines.config import BLUSH_HUE_WINDOW_DEG, LIP_HUE_WINDOW_DEG
+from mira_engines.config import (
+    BLUSH_HUE_WINDOW_DEG,
+    CONTRAST_TOLERANCE,
+    LIP_HUE_WINDOW_DEG,
+    MIN_HUE_CHROMA,
+)
 from mira_engines.shade import Shade
 
 LipReason = Literal[
@@ -19,6 +24,11 @@ LipReason = Literal[
     "no_hue_match_closest_to_natural_lip",
 ]
 BlushReason = Literal["hue_near_lip_lower_chroma", "none_in_window"]
+
+
+def has_hue(c: Lab) -> bool:
+    """A near-grey colour has no hue worth matching: its angle is noise."""
+    return lab_to_lch(c)[1] >= MIN_HUE_CHROMA.value
 
 
 def hue_gap(a: Lab, b: Lab) -> float:
@@ -71,7 +81,8 @@ def suggest(
     in_window = [
         c
         for c in lips
-        if hue_gap(c.lab, garment) <= window or hue_gap(c.lab, natural_lip) <= window
+        if (has_hue(garment) and hue_gap(c.lab, garment) <= window)
+        or hue_gap(c.lab, natural_lip) <= window
     ]
 
     def contrast_error(c: Shade) -> float:
@@ -82,12 +93,14 @@ def suggest(
     if in_window:
         chosen = min(in_window, key=lambda c: (contrast_error(c), c.id))
         reason = (
-            "hue_near_garment" if hue_gap(chosen.lab, garment) <= window else "hue_near_natural_lip"
+            "hue_near_garment"
+            if has_hue(garment) and hue_gap(chosen.lab, garment) <= window
+            else "hue_near_natural_lip"
         )
     else:
         chosen = min(lips, key=lambda c: (hue_gap(c.lab, natural_lip), c.id))
         reason = "no_hue_match_closest_to_natural_lip"
-    matched = contrast_error(chosen) <= 10.0
+    matched = contrast_error(chosen) <= CONTRAST_TOLERANCE.value
 
     lip_chroma = lab_to_lch(chosen.lab)[1]
     near = [

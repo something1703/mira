@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { makeTwin, seedTwin, sessionOf, setCap, uploadPhoto, WORKFLOWS } from "./fixtures";
+import {
+  buildFor,
+  makeTwin,
+  seedTwin,
+  sessionOf,
+  setCap,
+  uploadPhoto,
+  WORKFLOWS,
+} from "./fixtures";
 import { expectAccessible, snapshotForReview } from "./helpers";
 
 test.describe("Settings and privacy (UX_FLOWS §11)", () => {
@@ -135,10 +143,7 @@ test.describe("Settings and privacy (UX_FLOWS §11)", () => {
     await setCap(request, who, 400);
     await seedTwin(request, makeTwin(who.userId));
     const face = await uploadPhoto(page);
-    const build = await page.request.post("/api/twin/build", {
-      data: { capture: { face, mode: "hd", source: "upload", qualityChecksPassed: null } },
-    });
-    expect(build.status()).toBe(201);
+    expect((await buildFor(page, face)).status).toBe(201);
 
     await page.goto("/settings/privacy");
     await page.getByRole("button", { name: "Delete my profile" }).click();

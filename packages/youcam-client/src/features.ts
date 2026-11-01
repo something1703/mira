@@ -63,11 +63,20 @@ export interface Feature<P = unknown> {
   /** What the node needs uploaded: one photo, three photos, or a photo and a reference. */
   readonly inputs: "single" | "triple" | "single+ref";
   buildBody(params: P, inputs: FeatureInputs): Record<string, unknown>;
+  /**
+   * What MIRA keeps of a parsed result. Analysers answer with more than MIRA reads (`ui_score`,
+   * mask URLs, an age estimate); a run, its cache entry and the person's data export hold only
+   * what the profile uses, so "numbers only, every one of them listed" stays true.
+   */
+  retain?(result: unknown): unknown;
   /** Units for one run, read only from feature-cost SKUs; a failure means "do not submit". */
   price(params: P, skus: readonly Sku[]): Price;
 }
 
 const feature = <P>(f: Feature<P>): Feature<P> => f;
+
+const pick = (o: Record<string, unknown>, keys: readonly string[]): Record<string, unknown> =>
+  Object.fromEntries(keys.filter((k) => o[k] !== undefined).map((k) => [k, o[k]]));
 
 const HD_CONCERNS = [
   "hd_wrinkle",
@@ -223,6 +232,13 @@ export const FEATURES = {
     params: SkinAnalysisParams,
     result: SkinAnalysisResult,
     inputs: "single",
+    retain: (r) => ({
+      output: (r as SkinAnalysisResult).output.map((i) => ({
+        type: i.type,
+        ...(i.region === undefined ? {} : { region: i.region }),
+        ...(i.raw_score === undefined ? {} : { raw_score: i.raw_score }),
+      })),
+    }),
     buildBody: (p, i) => ({
       ...srcFields(need(i.src, "src")),
       dst_actions: p.concerns,
@@ -237,6 +253,7 @@ export const FEATURES = {
     params: z.object({ strictness: Strictness.optional() }),
     result: SkinToneResult,
     inputs: "single",
+    retain: (r) => ({ color: (r as SkinToneResult).color }),
     buildBody: (p, i) => ({
       ...srcFields(need(i.src, "src")),
       ...(p.strictness ? { face_angle_strictness_level: p.strictness } : {}),
@@ -251,6 +268,7 @@ export const FEATURES = {
     result: FitzpatrickResult,
     inputs: "single",
     // `version: "1.0"` is required by the bundle (docs/YOUCAM_API.md §2).
+    retain: (r) => ({ fitzpatrick_scale: (r as { fitzpatrick_scale: string }).fitzpatrick_scale }),
     buildBody: (_p, i) => ({ ...srcFields(need(i.src, "src")), version: "1.0" }),
     price: (_p, skus) => priceSingle("fitzpatrick-scale-analyzer", skus),
   }),
@@ -264,6 +282,7 @@ export const FEATURES = {
     }),
     result: FaceAttrResult,
     inputs: "single",
+    retain: (r) => ({ facialratio: (r as FaceAttrResult).facialratio ?? {} }),
     buildBody: (p, i) => ({
       ...srcFields(need(i.src, "src")),
       features: p.features,
@@ -278,6 +297,12 @@ export const FEATURES = {
     params: NoParams,
     result: HairTypeResult,
     inputs: "triple",
+    retain: (r) => ({
+      hair_type: pick((r as Record<string, Record<string, unknown>>).hair_type ?? {}, [
+        "mapping",
+        "term",
+      ]),
+    }),
     buildBody: (_p, i) => tripleBody(i),
     price: (_p, skus) => priceSingle("hair-type-detection", skus),
   }),
@@ -288,6 +313,12 @@ export const FEATURES = {
     params: NoParams,
     result: HairFrizzResult,
     inputs: "triple",
+    retain: (r) => ({
+      hair_frizziness: pick((r as Record<string, Record<string, unknown>>).hair_frizziness ?? {}, [
+        "mapping",
+        "term",
+      ]),
+    }),
     buildBody: (_p, i) => tripleBody(i),
     price: (_p, skus) => priceSingle("hair-frizziness-detection", skus),
   }),
@@ -298,6 +329,12 @@ export const FEATURES = {
     params: NoParams,
     result: HairDensityResult,
     inputs: "single",
+    retain: (r) => ({
+      hair_density: pick((r as Record<string, Record<string, unknown>>).hair_density ?? {}, [
+        "mapping",
+        "term",
+      ]),
+    }),
     buildBody: (_p, i) => srcFields(need(i.src, "src")),
     price: (_p, skus) => priceSingle("hair-density-detection", skus),
   }),
@@ -308,6 +345,9 @@ export const FEATURES = {
     params: NoParams,
     result: HairLengthResult,
     inputs: "single",
+    retain: (r) => ({
+      hair_length: pick((r as Record<string, Record<string, unknown>>).hair_length ?? {}, ["term"]),
+    }),
     buildBody: (_p, i) => srcFields(need(i.src, "src")),
     price: (_p, skus) => priceSingle("hair-length-detection", skus),
   }),

@@ -38,7 +38,9 @@ export async function saveOutputs(
   const keys: string[] = [];
   for (const node of nodes) {
     const blob = await d.blobs.get(node.resultRef ?? "");
-    if (!blob) continue;
+    // A preview that is already gone cannot be saved, and saying nothing would pass a partial
+    // look off as the whole one.
+    if (!blob) return err({ code: "images_deleted" });
     const key = `${savedPrefix(run.userId, lookId)}${node.id}.${EXT[blob.contentType] ?? "bin"}`;
     await d.blobs.put(key, blob.bytes, blob.contentType);
     keys.push(key);

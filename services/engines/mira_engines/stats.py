@@ -55,7 +55,9 @@ def noise_floor(sessions: list[list[float]], prior_sd_day: float | None = None) 
         s_d, source = None, "unknown"
 
     se = None if s_d is None else math.sqrt(s_d**2 + s_w2 / k)
-    mdc = None if se is None else MDC_Z.value * math.sqrt(2.0) * se
+    # Identical captures give a spread of zero: a sign of a repeated photo, not a perfect measure.
+    # With no spread to compare against there is no minimal detectable change to quote.
+    mdc = None if se is None or se <= 0.0 else MDC_Z.value * math.sqrt(2.0) * se
     return NoiseFloor(n, k, math.sqrt(s_w2), s_d, source, se, mdc)
 
 
@@ -86,7 +88,7 @@ def change(
     """
     delta = now - baseline
     words: ChangeWords
-    if mdc is None:
+    if mdc is None or mdc <= 0.0:
         words = "n/a"
     elif abs(delta) < mdc:
         words = "within"

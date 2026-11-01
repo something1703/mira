@@ -201,3 +201,18 @@ export async function uploadPhoto(page: Page, name = "face"): Promise<string> {
   expect(res.status(), `upload ${name}`).toBe(201);
   return ((await res.json()) as { key: string }).key;
 }
+
+/** Quotes and then builds, as the screen does: a build must carry the total the person saw. */
+export async function buildFor(
+  page: Page,
+  face: string,
+): Promise<{ status: number; runId?: string; total: number }> {
+  const capture = { face, mode: "hd", source: "upload", qualityChecksPassed: null };
+  const quote = await page.request.post("/api/twin/quote", { data: { capture } });
+  const total = ((await quote.json()) as { quote: { total: number } }).quote.total;
+  const build = await page.request.post("/api/twin/build", {
+    data: { capture, confirmedTotal: total },
+  });
+  const body = (await build.json()) as { runId?: string };
+  return { status: build.status(), ...(body.runId ? { runId: body.runId } : {}), total };
+}

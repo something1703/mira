@@ -35,5 +35,8 @@ describe("anonymous sessions (D14)", () => {
     expect(() => sessionSecret({ MIRA_MODE: "live", MIRA_SESSION_SECRET: "short" })).toThrow();
     expect(sessionSecret({ MIRA_MODE: "live", MIRA_SESSION_SECRET: SECRET })).toBe(SECRET);
     expect(sessionSecret({ MIRA_MODE: "mock" })).toMatch(/mock/);
+    // A production build that forgot MIRA_MODE must not sign sessions with the public mock secret.
+    expect(() => sessionSecret({ MIRA_MODE: "mock", NODE_ENV: "production" })).toThrow();
+    expect(sessionSecret({ NODE_ENV: "development" })).toMatch(/mock/);
   });
 });

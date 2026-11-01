@@ -229,12 +229,12 @@ describe("Build Twin run", () => {
     });
     expect(twin.metrics["colour.skin_ita"]).toMatchObject({
       kind: "number",
-      value: 41.2,
+      value: 22.6,
       unit: "°",
     });
     expect(twin.metrics["colour.skin_ita_band"]).toMatchObject({
       kind: "category",
-      value: "light",
+      value: "tan",
     });
     expect(twin.metrics["colour.eye_name"]).toMatchObject({ value: "brown" });
     expect(twin.metrics["colour.fitzpatrick_band"]).toMatchObject({ value: "III" });
@@ -408,5 +408,67 @@ describe("Build Twin run", () => {
     // Nothing a person looks like is in the stored profile either.
     const stored = JSON.stringify(await h.ports.state.get(twinPath(h.userId)));
     expect(stored).not.toMatch(/uploads\/|blob:|https?:/);
+  });
+
+  it("a skin colour that comes back unusable is a missing reading, not a measured group", async () => {
+    const { h } = setup();
+    scriptHappy(h);
+    h.fake.respondWith("skin-tone-analysis", {
+      results: { color: { skin_color: "not-a-hex", lip_color: "#A5504F" } },
+    });
+    await h.start(buildTwinGraph(await capture(h)));
+    await h.settle();
+    const twin = Twin.parse(await h.ports.state.get(twinPath(h.userId)));
+    expect(twin.groups.colouring.status).toBe("partial");
+    expect(twin.groups.colouring.missing).toContainEqual({
+      reading: "skin_colour",
+      reason: "not_returned",
+    });
+    expect(twin.metrics["colour.skin"]).toBeUndefined();
+    expect(twin.metrics["colour.lip"]).toBeDefined();
+  });
+
+  it("a rebuild whose skin failed keeps the old readings with their spread and capture details", async () => {
+    const { h } = setup();
+    scriptHappy(h);
+    const first = await capture(h, {
+      repeats: [await upload(h, "r1"), await upload(h, "r2")],
+    });
+    await h.start(buildTwinGraph(first));
+    await h.settle();
+    const before = Twin.parse(await h.ports.state.get(twinPath(h.userId)));
+    expect(Object.keys(before.noiseFloors).length).toBeGreaterThan(0);
+    expect(before.captureMeta).toMatchObject({ mode: "hd", source: "camera", repeatsCaptured: 2 });
+
+    // A second capture, standard detail from an upload, where every skin analysis fails.
+    h.fake.respondWith("skin-analysis", { failWith: "error_no_face" });
+    await h.clock.advance(60_000);
+    const second = await capture(h, {
+      mode: "sd",
+      source: "upload",
+      qualityChecksPassed: null,
+      repeats: [await upload(h, "r3")],
+    });
+    await h.start(buildTwinGraph(second));
+    await h.settle();
+    const after = Twin.parse(await h.ports.state.get(twinPath(h.userId)));
+    expect(after.metrics["skin.hd_pore.whole"]).toEqual(before.metrics["skin.hd_pore.whole"]);
+    expect(after.noiseFloors).toEqual(before.noiseFloors);
+    expect(after.captureMeta).toEqual(before.captureMeta);
+  });
+
+  it("counts the repeats that succeeded, not the ones planned", async () => {
+    const { h } = setup();
+    scriptHappy(h);
+    const cap = await capture(h, { repeats: [await upload(h, "r1"), await upload(h, "r2")] });
+    // The main photo and the first repeat succeed; the second repeat fails.
+    h.fake.script("skin-analysis", { latencyMs: 1_000, results: skinItems() });
+    h.fake.script("skin-analysis", { latencyMs: 1_000, results: skinItems(2) });
+    h.fake.script("skin-analysis", { failWith: "error_no_face" });
+    await h.start(buildTwinGraph(cap));
+    await h.settle();
+    const twin = Twin.parse(await h.ports.state.get(twinPath(h.userId)));
+    expect(twin.captureMeta.repeatsCaptured).toBe(1);
+    expect(Object.values(twin.noiseFloors)[0]?.capturesPerSession).toBe(2);
   });
 });

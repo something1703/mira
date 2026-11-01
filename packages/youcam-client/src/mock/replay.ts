@@ -33,7 +33,10 @@ export interface ReplayOptions {
  */
 export class ReplayYouCam implements YouCamApi {
   private readonly byKey = new Map<string, Fixture>();
-  private readonly tasks = new Map<string, { fixture: Fixture; createdAt: number }>();
+  private readonly tasks = new Map<
+    string,
+    { fixture: Fixture; createdAt: number; charged?: boolean }
+  >();
   private n = 1;
   units: number;
 
@@ -78,7 +81,11 @@ export class ReplayYouCam implements YouCamApi {
     if (out.status === "error") {
       return Promise.resolve(ok({ status: "error", error: mapTaskError(out.error, out.message) }));
     }
-    this.units -= t.fixture.unitsCharged;
+    // Charged once, however many times the task is polled.
+    if (!t.charged) {
+      t.charged = true;
+      this.units -= t.fixture.unitsCharged;
+    }
     return Promise.resolve(ok({ status: "success", results: out.results }));
   }
 

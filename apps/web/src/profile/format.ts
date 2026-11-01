@@ -32,7 +32,7 @@ export function formatMetric(m: Metric): Formatted {
 export function confidenceWords(m: Metric, floor: NoiseFloorEntry | undefined): string {
   if (m.kind !== "number" || m.unit !== "raw score") return "Measured once";
   if (floor === undefined) return "Measured once. Day-to-day variation is not known yet.";
-  return `Captures seconds apart differed by about ${floor.sW.toFixed(1)}. Day-to-day variation is not known yet.`;
+  return `Photos seconds apart moved this reading by about ${floor.sW.toFixed(1)} points out of 100. Day-to-day variation is not known yet.`;
 }
 
 /** `2026-11-01T09:00:05.000Z` → `1 Nov 2026`, in UTC so the server and browser agree. */

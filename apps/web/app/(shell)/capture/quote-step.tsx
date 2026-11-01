@@ -5,6 +5,7 @@ import { Quote } from "@mira/schemas";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { BuildCapture } from "../../../src/capture/flow";
+import { useOnline } from "../../../src/shell/online";
 
 /** What each priced step is, in words. A step YouCam does not run is not listed here. */
 const LINE_LABELS: Record<string, string> = {
@@ -47,6 +48,7 @@ export function QuoteStep({
   const [removed, setRemoved] = useState<string[]>([]);
   const [full, setFull] = useState<Quote | undefined>();
   const [note, setNote] = useState<string | undefined>();
+  const online = useOnline();
 
   const ask = useCallback(
     async (without: string[]) => {
@@ -161,6 +163,9 @@ export function QuoteStep({
         }))}
         {...(quote ? { unitsLeft: quote.sessionUnitsLeft } : {})}
         confirmLabel="Start measuring"
+        {...(online
+          ? {}
+          : { confirmBlockedReason: "You are offline. Reconnect to start measuring." })}
         onConfirm={() => {
           if (quote) void start(quote);
         }}

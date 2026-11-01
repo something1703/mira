@@ -3,6 +3,7 @@ import { newId, Run, RunNode, type Quote, type RunEvent } from "@mira/schemas";
 import { FakeYouCam } from "@mira/youcam-client/testing";
 import { createEngine, type Engine, type EngineOptions } from "../src/engine";
 import type { GraphSpec, NodeSpec } from "../src/runner/graph";
+import type { Downloader } from "../src/lifecycle/types";
 import type { StartRunInput } from "../src/runner/runner";
 
 export const PNG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -40,6 +41,8 @@ export interface HarnessOptions extends Partial<
   prices?: Record<string, number>;
   startingUnits?: number;
   fake?: FakeYouCam;
+  /** Replaces the downloader that copies result images, e.g. to make each render different. */
+  download?: Downloader;
   ports?: Ports;
   clock?: FakeClock;
 }
@@ -69,13 +72,15 @@ export function makeHarness(options: HarnessOptions = {}): Harness {
     ports,
     api: fake,
     engineVersion: "test-1",
-    download: (url) => {
-      downloads.push(url);
-      return Promise.resolve({
-        ok: true as const,
-        value: { bytes: PNG, contentType: "image/png" },
-      });
-    },
+    download:
+      options.download ??
+      ((url) => {
+        downloads.push(url);
+        return Promise.resolve({
+          ok: true as const,
+          value: { bytes: PNG, contentType: "image/png" },
+        });
+      }),
     ...(options.audit ? { audit: options.audit } : {}),
     ...(options.executors ? { executors: options.executors } : {}),
     ...(options.caps ? { caps: options.caps } : {}),
@@ -110,7 +115,7 @@ export function makeHarness(options: HarnessOptions = {}): Harness {
       if (!res.ok) throw new Error(`graph rejected: ${JSON.stringify(res.error)}`);
       return res.value.id;
     },
-    async settle(maxRounds = 400, stepMs = 1_000) {
+    async settle(maxRounds = 1_000, stepMs = 1_000) {
       for (let i = 0; i < maxRounds; i++) {
         await ports.queue.tick();
         if (ports.queue.snapshot().length === 0) return;

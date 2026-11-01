@@ -105,7 +105,11 @@ export function PlainStage({
 
   return (
     <div className="capture__plain">
-      <Ring mode="reading" value={0.2} label={label}>
+      <Ring
+        mode="capture"
+        label={label}
+        checks={{ lighting: false, distance: false, angle: false, steadiness: false }}
+      >
         <video ref={video} className="capture__video" muted playsInline aria-label="Camera view" />
       </Ring>
       <div className="mira-row">

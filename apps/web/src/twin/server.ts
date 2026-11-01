@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { currentSession } from "../budget";
 import { workflowsUrl } from "../runs/api";
-import type { Session } from "../session";
+import { SESSION_MAX_AGE_SECONDS, type Session } from "../session";
 
 /**
  * The browser never talks to mira-workflows. These route handlers do, on the person's behalf, with
@@ -49,6 +49,6 @@ export async function setProfileCookie(value: "exists" | "deleted"): Promise<voi
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 365,
+    maxAge: SESSION_MAX_AGE_SECONDS,
   });
 }

@@ -351,14 +351,14 @@ describe("errors", () => {
     expect(h.fake.callsTo("createTask")).toBe(0);
   });
 
-  it("a task that never finishes times out, releases its units and is deleted later", async () => {
+  it("a task that never finishes times out, keeps its units counted (it may still be charged) and is deleted later", async () => {
     const h = makeHarness();
     h.fake.script("skin-tone-analysis", { latencyMs: 20 * 60_000, results: SKIN_TONE });
     const runId = await single(h, "skin-tone-analysis");
     await h.settle(2_000, 5_000);
     const node = (await h.nodes(runId)).a;
     expect(node?.error?.code).toBe("youcam_timeout");
-    expect(await h.engine.ledger.budget(h.sessionId)).toMatchObject({ reserved: 0, committed: 0 });
+    expect(await h.engine.ledger.budget(h.sessionId)).toMatchObject({ reserved: 0, committed: 20 });
     expect((await h.run(runId)).status).toBe("failed");
   });
 
@@ -455,7 +455,7 @@ describe("graphs", () => {
         youcam("b", "sod", { inputs: { src: "node:a" }, dependsOn: ["a", "wait"] }),
       ],
     });
-    await h.settle(400, 1_000);
+    await h.settle(1_000, 1_000);
     const nodes = await h.nodes(runId);
     expect(nodes.b?.status).toBe("done");
     expect(h.fake.callsTo("registerFile")).toBe(2);

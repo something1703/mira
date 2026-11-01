@@ -36,7 +36,11 @@ def fit(intensities: list[float], scores: list[float], mdc: float) -> Phantom:
     x = np.asarray(intensities, dtype=np.float64)[order]
     y = np.asarray(scores, dtype=np.float64)[order]
     score_range = float(y.max() - y.min())
-    rho = 0.0 if score_range == 0.0 else float(spearmanr(x, y).statistic)
+    rho = 0.0 if score_range == 0.0 or x[0] == x[-1] else float(spearmanr(x, y).statistic)
+    # All intensities equal (or any other degenerate input) gives no correlation at all. That is not
+    # a usable phantom, and it must not leave NaN in a response.
+    if not np.isfinite(rho):
+        return Phantom(False, 0.0, score_range, "not_monotone", tuple(float(v) for v in x), ())
     increasing = rho >= 0
     fitted = isotonic_regression(y, increasing=increasing).x
     delta = tuple(float(v - fitted[0]) for v in fitted)

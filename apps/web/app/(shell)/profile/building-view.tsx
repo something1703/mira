@@ -21,36 +21,41 @@ export function BuildingView({ runId }: { runId: string }) {
   const [view, setView] = useState<RunView | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [cancelFailed, setCancelFailed] = useState(false);
 
   useEffect(() => {
     const life = { stopped: false };
     const gone = () => life.stopped;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let misses = 0;
     const tick = async () => {
       try {
         const res = await fetch(`/api/runs/${runId}`, { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error(
-            res.status === 404
-              ? "This measuring run could not be found."
-              : "The measuring run could not be read.",
-          );
+        if (res.status === 404) {
+          setProblem("This measuring run could not be found.");
+          return;
         }
-        const parsed = RunView.parse(await res.json());
+        const parsed = res.ok ? RunView.safeParse(await res.json()) : undefined;
+        if (!parsed?.success) throw new Error("unreadable");
         if (life.stopped) return;
-        setView(parsed);
+        misses = 0;
+        setView(parsed.data);
         setProblem(null);
-        const over = FINISHED.has(parsed.run.status);
-        if (over && parsed.run.status !== "failed" && parsed.run.status !== "cancelled") {
+        const over = FINISHED.has(parsed.data.run.status);
+        if (over && parsed.data.run.status !== "failed" && parsed.data.run.status !== "cancelled") {
           // Confirm the profile exists (this also refreshes the Welcome screen's state), then show it.
           await fetch("/api/twin", { cache: "no-store" });
           if (!gone()) router.replace("/profile");
           return;
         }
         if (!over) timer = setTimeout(() => void tick(), 700);
-      } catch (error) {
-        if (!gone())
-          setProblem(error instanceof Error ? error.message : "The run could not be read.");
+      } catch {
+        if (gone()) return;
+        // One dropped request is not the end of a run: look again, and only after several misses in
+        // a row say that it cannot be read. The run itself carries on without this page.
+        misses += 1;
+        if (misses >= 5) setProblem("The measuring run could not be read.");
+        else timer = setTimeout(() => void tick(), Math.min(5_000, 700 * 2 ** misses));
       }
     };
     void tick();
@@ -116,7 +121,7 @@ export function BuildingView({ runId }: { runId: string }) {
         Each step finishes on its own. Your photos are deleted when the run ends.
       </p>
       <div className="runview__grid">
-        <Ring mode="run" label="Measuring progress" steps={steps} />
+        <Ring mode="run" label="Measuring progress" steps={steps} announce={false} />
         <div className="mira-panel">
           <StepRail label="Steps in this run" steps={steps} />
           <div className="mira-row">
@@ -125,11 +130,24 @@ export function BuildingView({ runId }: { runId: string }) {
               disabled={cancelling}
               onClick={() => {
                 setCancelling(true);
-                void fetch(`/api/runs/${runId}/cancel`, { method: "POST" });
+                setCancelFailed(false);
+                fetch(`/api/runs/${runId}/cancel`, { method: "POST" })
+                  .then((res) => {
+                    if (!res.ok) throw new Error("cancel refused");
+                  })
+                  .catch(() => {
+                    setCancelling(false);
+                    setCancelFailed(true);
+                  });
               }}
             >
               {cancelling ? "Stopping" : "Cancel"}
             </Button>
+            {cancelFailed ? (
+              <p role="status" className="mira-small">
+                The run could not be stopped just now. Steps already started will finish.
+              </p>
+            ) : null}
           </div>
         </div>
       </div>

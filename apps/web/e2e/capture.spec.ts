@@ -7,17 +7,23 @@ const allow = async (page: Page) => {
   await page.getByRole("button", { name: "Allow camera" }).click();
 };
 const takePhoto = async (page: Page, size?: { width: number; height: number }) => {
-  await page.waitForFunction(() => window.__ymk.listenerCount("faceDetectionCaptured") > 0);
+  await page.waitForFunction(
+    () => "__ymk" in window && window.__ymk.listenerCount("faceDetectionCaptured") > 0,
+  );
   await page.evaluate((s) => window.__ymk.capture(s), size);
 };
 const good = async (page: Page) => {
-  await page.waitForFunction(() => window.__ymk.listenerCount("faceQualityChanged") > 0);
+  await page.waitForFunction(
+    () => "__ymk" in window && window.__ymk.listenerCount("faceQualityChanged") > 0,
+  );
   await page.evaluate(() => {
     window.__ymk.good();
   });
 };
 const quality = async (page: Page, q: object) => {
-  await page.waitForFunction(() => window.__ymk.listenerCount("faceQualityChanged") > 0);
+  await page.waitForFunction(
+    () => "__ymk" in window && window.__ymk.listenerCount("faceQualityChanged") > 0,
+  );
   await page.evaluate((payload) => {
     window.__ymk.emit("faceQualityChanged", payload);
   }, q);
@@ -175,6 +181,48 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
     await page.getByRole("button", { name: "Retake" }).click();
     await expect.poll(() => pendingPhotos(page, request)).toBe(0);
     await expect(page.locator(".mira-ring")).toBeVisible();
+  });
+
+  test("cancelling while a photo is in review deletes it", async ({ page, request }) => {
+    await page.goto("/capture");
+    await allow(page);
+    await takePhoto(page);
+    await expect(page.getByRole("button", { name: "Use this photo" })).toBeVisible();
+    expect(await pendingPhotos(page, request)).toBe(1);
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page).toHaveURL("/");
+    await expect.poll(() => pendingPhotos(page, request)).toBe(0);
+  });
+
+  test("a photo that is replaced is deleted, not left waiting", async ({ page, request }) => {
+    await page.goto("/capture");
+    await allow(page);
+    await takePhoto(page);
+    await page.getByRole("button", { name: "Use this photo" }).click();
+    await expect(heading(page, /Two more photos/)).toBeVisible();
+    await page.getByRole("button", { name: "Back" }).click();
+    await expect(heading(page, "Your face")).toBeVisible();
+    await allow(page);
+    await takePhoto(page);
+    await page.getByRole("button", { name: "Use this photo" }).click();
+    await expect(heading(page, /Two more photos/)).toBeVisible();
+    // Only the new face is held: the old one was replaced and deleted.
+    await expect.poll(() => pendingPhotos(page, request)).toBe(1);
+  });
+
+  test("a build with no confirmed total is refused", async ({ page }) => {
+    await page.goto("/");
+    const res = await page.request.post("/api/twin/build", {
+      data: {
+        capture: {
+          face: "uploads/x/y.jpg",
+          mode: "hd",
+          source: "upload",
+          qualityChecksPassed: null,
+        },
+      },
+    });
+    expect(res.status()).toBe(400);
   });
 
   test("a photo below HD size is accepted for standard detail", async ({ page }) => {

@@ -8,18 +8,30 @@ import {
   Budget as BudgetSchema,
 } from "@mira/schemas";
 import { LedgerEntry as LedgerEntrySchema } from "@mira/schemas";
+import { z } from "zod";
 import { listDocs, updateDoc, type Clock, type StateStore } from "@mira/runtime";
 
 export interface Caps {
   node: number;
   run: number;
   session: number;
+  /** Units the whole deployment may spend per UTC day. Absent means no deployment cap. */
+  deploymentDaily?: number | undefined;
 }
+
+/** Everyone's spending, for the cap a person cannot reset by starting a new session. */
+const Deployment = z.object({
+  reserved: z.number().int().nonnegative().default(0),
+  open: z.record(z.string(), z.number()).default({}),
+  days: z.record(z.string(), z.number()).default({}),
+});
+type Deployment = z.infer<typeof Deployment>;
+const DEPLOYMENT_PATH = "budgets-deployment/all";
 
 export type LedgerError =
   | {
       code: "over_cap";
-      scope: "node" | "run" | "session";
+      scope: "node" | "run" | "session" | "deployment";
       cap: number;
       wanted: number;
       used: number;
@@ -95,7 +107,15 @@ export class Ledger {
       };
     });
     if (out.failure) return err(out.failure);
-    if (!out.alreadyOpen) await this.write("reserve", node, wanted);
+    if (!out.alreadyOpen) {
+      const over = await this.reserveDeployment(node, wanted);
+      if (over) {
+        // Put the session's units back: this reserve never took effect.
+        await this.close("release", node, false);
+        return err(over);
+      }
+      await this.write("reserve", node, wanted);
+    }
     return ok(wanted);
   }
 
@@ -109,7 +129,55 @@ export class Ledger {
     return await this.close("release", node);
   }
 
-  private async close(kind: "commit" | "release", node: NodeRef): Promise<number> {
+  private today(): string {
+    return new Date(this.clock.now()).toISOString().slice(0, 10);
+  }
+
+  /** The deployment-wide daily cap, checked and written together. Null means within it. */
+  private async reserveDeployment(node: NodeRef, wanted: number): Promise<LedgerError | null> {
+    const cap = this.caps.deploymentDaily;
+    if (cap === undefined) return null;
+    const day = this.today();
+    const out: { failure: LedgerError | null } = { failure: null };
+    await updateDoc(this.state, DEPLOYMENT_PATH, Deployment, (cur) => {
+      const d = cur ?? Deployment.parse({});
+      if (key(node) in d.open) return d;
+      const used = d.reserved + (d.days[day] ?? 0);
+      if (used + wanted > cap) {
+        out.failure = { code: "over_cap", scope: "deployment", cap, wanted, used };
+        return d;
+      }
+      return { ...d, reserved: d.reserved + wanted, open: { ...d.open, [key(node)]: wanted } };
+    });
+    return out.failure;
+  }
+
+  private async closeDeployment(kind: "commit" | "release", node: NodeRef): Promise<void> {
+    if (this.caps.deploymentDaily === undefined) return;
+    const day = this.today();
+    await updateDoc(this.state, DEPLOYMENT_PATH, Deployment, (cur) => {
+      const d = cur ?? Deployment.parse({});
+      const open = d.open[key(node)];
+      if (open === undefined) return d;
+      const { [key(node)]: _closed, ...rest } = d.open;
+      return {
+        reserved: d.reserved - open,
+        open: rest,
+        days: kind === "commit" ? { ...d.days, [day]: (d.days[day] ?? 0) + open } : d.days,
+      };
+    });
+  }
+
+  async deploymentUsed(): Promise<{ reserved: number; today: number }> {
+    const raw = Deployment.parse((await this.state.get(DEPLOYMENT_PATH)) ?? {});
+    return { reserved: raw.reserved, today: raw.days[this.today()] ?? 0 };
+  }
+
+  private async close(
+    kind: "commit" | "release",
+    node: NodeRef,
+    deployment = true,
+  ): Promise<number> {
     let units = 0;
     await updateDoc(this.state, budgetPath(node.sessionId), BudgetSchema, (cur) => {
       const b = cur ?? BudgetSchema.parse({});
@@ -131,7 +199,8 @@ export class Ledger {
         open: rest,
       };
     });
-    if (units > 0) await this.write(kind, node, units);
+    if (deployment) await this.closeDeployment(kind, node);
+    if (units > 0 && deployment) await this.write(kind, node, units);
     return units;
   }
 

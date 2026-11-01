@@ -1,4 +1,8 @@
+import { CONFIG } from "@mira/schemas";
 import type { UploadFailure } from "./upload";
+
+/** How long a photo that waits for a later run is held, from the one setting that enforces it. */
+export const HELD_HOURS = CONFIG.twin.heldPhotoMinutes.value / 60;
 import type { StepId } from "./flow";
 
 /** The words of the capture screens (docs/COPY.md, docs/UX_FLOWS.md §3). */
@@ -30,9 +34,9 @@ export const STEP_GUIDE: Record<StepId, string> = {
 
 export const STEP_WHY: Partial<Record<StepId, string>> = {
   repeats:
-    "Optional. Without them, progress checks cannot tell a real change from day-to-day variation.",
-  body: "Optional. Used later to try clothes on. Held for up to two hours, then deleted.",
-  hand: "Optional. Used later to try on jewellery. Held for up to two hours, then deleted.",
+    "Optional. They show how much a reading moves between photos taken seconds apart. Day-to-day variation needs checks on different days.",
+  body: `Optional. Used later to try clothes on. Held for up to ${String(HELD_HOURS)} hours, then deleted.`,
+  hand: `Optional. Used later to try on jewellery. Held for up to ${String(HELD_HOURS)} hours, then deleted.`,
   hair: "Optional. Measures hair type, density, length and frizziness.",
 };
 

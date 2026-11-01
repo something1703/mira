@@ -1,5 +1,6 @@
 import {
   newId,
+  CONFIG,
   Run,
   RunNode,
   WorkItem,
@@ -14,7 +15,7 @@ import {
 import { getDoc, listDocs, updateDoc, type Delivery } from "@mira/runtime";
 import { isTerminal, NodeLifecycle } from "../lifecycle/node-lifecycle";
 import { RUN_EVENTS_TOPIC, type LifecycleDeps } from "../lifecycle/types";
-import { cleanupRun } from "./cleanup";
+import { cleanupRun, deleteUploads } from "./cleanup";
 import { saveOutputs } from "./save";
 import { validateGraph, type GraphError, type GraphSpec } from "./graph";
 
@@ -156,7 +157,8 @@ export class Runner {
     if (!run) return;
     const nodes = await listDocs(this.d.state, `runs/${runId}/nodes`, RunNode);
     for (const { value: node } of nodes) {
-      if (node.status === "queued") await this.setStatus(run, node, "cancelled");
+      // Only a node still queued is cancelled; one whose start is already in flight finishes.
+      if (node.status === "queued") await this.moveStatus(run, node, "queued", "cancelled");
     }
     await this.advance(runId);
   }
@@ -242,12 +244,14 @@ export class Runner {
 
   private async schedule(run: Run, node: RunNode): Promise<void> {
     const queue = node.kind === "youcam" ? "youcam-submit" : "engine-jobs";
+    // Claim the node first: marking it running after the enqueue could overwrite a node that a fast
+    // worker had already finished, and would let a second `advance` schedule it twice.
+    if (!(await this.moveStatus(run, node, "queued", "running", false))) return;
     const res = await this.d.queue.enqueue(queue, {
       payload: { op: "start", runId: run.id, nodeId: node.id },
       dedupeKey: `start:${run.id}:${node.id}:0`,
     });
-    // Marking running here stops a second `advance` from considering it ready again.
-    if (res.accepted) await this.setStatus(run, node, "running", false);
+    if (!res.accepted) await this.moveStatus(run, node, "running", "queued", false);
   }
 
   private async runLocal(runId: string, node: RunNode): Promise<void> {
@@ -299,6 +303,28 @@ export class Runner {
     await this.advance(runId);
   }
 
+  /** Changes a node's status only if it still has the one the caller saw. False if it moved. */
+  private async moveStatus(
+    run: Run,
+    node: RunNode,
+    from: RunNode["status"],
+    to: RunNode["status"],
+    _announce = true,
+  ): Promise<boolean> {
+    const out = { moved: false };
+    await updateDoc(this.d.state, nodePath(run.id, node.id), RunNode, (cur) => {
+      const current = cur ?? node;
+      if (current.status !== from) return current;
+      out.moved = true;
+      return {
+        ...current,
+        status: to,
+        ...(isTerminal(to) ? { endedAt: iso(this.d.clock.now()) } : {}),
+      };
+    });
+    return out.moved;
+  }
+
   private async setStatus(
     run: Run,
     node: RunNode,
@@ -344,8 +370,13 @@ export class Runner {
     });
     if (!claim.won) return;
     await this.emit(finished, undefined, "run_finished");
+    // The person's own photos go now. A run that made preview images keeps them, and the YouCam
+    // tasks behind them, for a short review window so a look can be saved; then everything goes.
+    const makesImages = nodes.some((n) => n.resultRef !== undefined);
+    if (makesImages) await deleteUploads(this.d, nodes);
     await this.d.queue.enqueue("engine-jobs", {
       payload: { op: "cleanup", runId: run.id, attempt: 0 },
+      ...(makesImages ? { delayMs: CONFIG.youcam.reviewWindowMs.value } : {}),
       dedupeKey: `cleanup:${run.id}:0`,
     });
   }

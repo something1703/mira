@@ -103,5 +103,7 @@ class RunNode(BaseModel):
     attempts: Annotated[Optional[int], Field(ge=0, le=9007199254740991)] = 0
     optional: Optional[bool] = False
     tolerant: Optional[bool] = False
+    submitting: Optional[AwareDatetime] = None
+    submittedAt: Optional[AwareDatetime] = None
     startedAt: Optional[AwareDatetime] = None
     endedAt: Optional[AwareDatetime] = None

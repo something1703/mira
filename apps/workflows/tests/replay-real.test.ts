@@ -76,7 +76,8 @@ describe("replaying the real recording", () => {
       recorded: true,
     });
     if (!started.ok) throw new Error("start");
-    for (let i = 0; i < 80; i++) {
+    // The run keeps its preview for a review window before cleanup, so wait past it.
+    for (let i = 0; i < 800; i++) {
       await ports.queue.tick();
       if (ports.queue.snapshot().length === 0) break;
       await clock.advance(1_000);

@@ -122,6 +122,13 @@ export const RunNode = z.object({
    * instead of nothing (docs/UX_FLOWS.md §4).
    */
   tolerant: z.boolean().default(false),
+  /**
+   * Set just before the task is created and cleared once its id is stored. A node found with this
+   * and no task id may already be running at YouCam, so it is never submitted again (AGENTS.md §2.3).
+   */
+  submitting: z.iso.datetime().optional(),
+  /** When YouCam accepted the task; the give-up clock starts here, not at the first attempt. */
+  submittedAt: z.iso.datetime().optional(),
   startedAt: z.iso.datetime().optional(),
   endedAt: z.iso.datetime().optional(),
 });

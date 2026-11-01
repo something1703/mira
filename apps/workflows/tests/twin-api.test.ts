@@ -125,8 +125,21 @@ function make() {
     },
     ...extra,
   });
-  const post = async (url: string, payload: unknown) =>
-    await ctx.app.inject({ method: "POST", url, payload: payload as object });
+  const post = async (url: string, payload: unknown) => {
+    const data = payload as { confirmedTotal?: number };
+    // A build needs the total the person saw. Tests that are not about that ask for it first.
+    if (url === "/internal/twin/build" && data.confirmedTotal === undefined) {
+      const quoted = await ctx.app.inject({
+        method: "POST",
+        url: "/internal/twin/quote",
+        payload: payload as object,
+      });
+      const total = quoted.json<{ quote?: { total: number } }>().quote?.total;
+      // A request the quote itself refuses still reaches the build, to be refused there.
+      data.confirmedTotal = total ?? 0;
+    }
+    return await ctx.app.inject({ method: "POST", url, payload: payload as object });
+  };
   return { ctx, ports, clock, engine, userId, sessionId, upload, key, body, post, settle };
 }
 
@@ -338,6 +351,12 @@ describe("Twin privacy", () => {
     expect(await t.ports.blobs.list(`saved/${t.userId}/`)).toEqual([]);
     expect(await t.ports.state.list("runs")).toEqual([]);
     expect(await t.ports.state.list("cache")).toEqual([]);
+    // Unit accounting entries and the task index named the person's runs: gone with them.
+    expect(await t.ports.state.list("ledger")).toEqual([]);
+    expect(await t.ports.state.list("tasks")).toEqual([]);
+    expect(del.json<{ removed: { unitRecords: number } }>().removed.unitRecords).toBeGreaterThan(0);
+    // The session's running total stays, so deleting a profile cannot reset a cap.
+    expect((await t.ctx.engine.ledger.budget(t.sessionId)).committed).toBeGreaterThan(0);
     const inv = (await t.ctx.app.inject({ url: `/internal/twin/${t.userId}/inventory` })).json<{
       twin: unknown;
       deletions: { removed: object }[];
@@ -455,5 +474,47 @@ describe("held photos", () => {
     expect(del.json<{ removed: { uploads: number } }>().removed.uploads).toBe(1);
     expect(await t.ports.state.list(`uploads-index/${t.userId}`)).toEqual([]);
     expect(await t.ports.blobs.list("uploads/")).toEqual([]);
+  });
+});
+
+describe("a build needs the price the person saw", () => {
+  it("is refused without a confirmed total, and starts nothing", async () => {
+    const t = make();
+    const raw = await t.body();
+    const res = await t.ctx.app.inject({
+      method: "POST",
+      url: "/internal/twin/build",
+      payload: raw,
+    });
+    expect([res.statusCode, res.json<{ error: string }>().error]).toEqual([
+      400,
+      "confirmed_total_required",
+    ]);
+    expect(await t.ports.state.list("runs")).toEqual([]);
+  });
+});
+
+describe("repeat photos must be different photos", () => {
+  it("refuses a repeat that is the face photo again, or each other", async () => {
+    const t = make();
+    const face = await t.key();
+    const same = await t.post("/internal/twin/quote", await t.body({}, { face, repeats: [face] }));
+    expect([same.statusCode, same.json<{ error: string }>().error]).toEqual([
+      422,
+      "repeat_duplicate",
+    ]);
+
+    // Different uploads of identical bytes are the same picture.
+    const bytes = jpeg(1200, 1600, 77);
+    const a = (await t.upload(bytes)).json<{ key: string }>().key;
+    const b = (await t.upload(bytes)).json<{ key: string }>().key;
+    const copy = await t.post("/internal/twin/quote", await t.body({}, { face: a, repeats: [b] }));
+    expect(copy.json<{ error: string }>().error).toBe("repeat_duplicate");
+
+    const fine = await t.post(
+      "/internal/twin/quote",
+      await t.body({}, { repeats: [await t.key(), await t.key()] }),
+    );
+    expect(fine.statusCode).toBe(200);
   });
 });

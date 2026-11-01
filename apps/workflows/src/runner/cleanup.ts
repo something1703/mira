@@ -14,6 +14,27 @@ const RETRY_DELAY_MS = 30_000;
  * failure can never leave a person's photo behind in our storage. A look the person saved was
  * copied to `saved/{userId}/{lookId}/` first (see save.ts), outside this prefix, so it survives.
  */
+/**
+ * Captures the person uploaded for a run live under `uploads/` and are used by that run only (a
+ * retry uploads again), so they go when it ends. Other prefixes are not ours to delete.
+ */
+export async function deleteUploads(
+  d: Pick<LifecycleDeps, "blobs" | "state">,
+  nodes: readonly RunNode[],
+): Promise<number> {
+  const uploads = new Set<string>();
+  for (const node of nodes) {
+    for (const spec of Object.values(node.inputs)) {
+      if (spec.startsWith(UPLOAD_INPUT)) uploads.add(spec.slice("blob:".length));
+    }
+  }
+  for (const key of uploads) {
+    await d.blobs.delete(key);
+    await forgetUpload(d, key);
+  }
+  return uploads.size;
+}
+
 export async function cleanupRun(
   d: LifecycleDeps,
   runId: string,
@@ -28,19 +49,7 @@ export async function cleanupRun(
     await d.blobs.delete(key);
     blobsDeleted += 1;
   }
-  // Captures the person uploaded for this run live under `uploads/` and are used by this run only
-  // (a retry uploads again), so they go with it. Other prefixes are not ours to delete.
-  const uploads = new Set<string>();
-  for (const node of nodes) {
-    for (const spec of Object.values(node.inputs)) {
-      if (spec.startsWith(UPLOAD_INPUT)) uploads.add(spec.slice("blob:".length));
-    }
-  }
-  for (const key of uploads) {
-    await d.blobs.delete(key);
-    await forgetUpload(d, key);
-    blobsDeleted += 1;
-  }
+  blobsDeleted += await deleteUploads(d, nodes);
 
   let tasksDeleted = 0;
   let tasksPending = 0;

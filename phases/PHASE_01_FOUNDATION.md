@@ -25,7 +25,7 @@
   *Accept:* `pnpm dev:mock` starts every service and the web app shows a placeholder page with the lockup.
 - [x] Config loader (`packages/schemas/src/env.ts`): validates env with Zod at start-up; in `mock` mode no secret is required.
   *Accept:* starting live mode without `YOUCAM_API_KEY` fails fast with a readable message.
-- [x] Trace ID middleware for every service; propagated via `x-mira-trace` header and Pub/Sub attributes.
+- [ ] Trace ID middleware for every service; propagated via `x-mira-trace` header and Pub/Sub attributes. _(done in the Fastify and engines services and on run events; the web app does not yet create or forward the header, and Pub/Sub is not built)_
 - [x] Claim linter: stems and scope rules from `docs/COPY.md` §3 (disclaimer allowlisted; prompts and refusal templates excluded); runs on UI copy files, the README and the Devpost description.
   *Accept:* a test file containing "clinically proven" fails `pnpm lint`.
 

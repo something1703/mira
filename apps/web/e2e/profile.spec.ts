@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  buildFor,
   HAIR_METRICS,
   SKIN_METRICS,
   makeTwin,
@@ -42,7 +43,9 @@ test.describe("Measured profile (UX_FLOWS §4)", () => {
     const pores = page.locator(".mira-reading-block", { hasText: "Visible pores" });
     await expect(pores).toContainText("41.5");
     await expect(pores).toContainText("out of 100");
-    await expect(pores).toContainText("Captures seconds apart differed by about 1.4");
+    await expect(pores).toContainText(
+      "Photos seconds apart moved this reading by about 1.4 points out of 100",
+    );
     await expect(
       page.locator(".mira-reading-block", { hasText: "Under-eye darkness, left eye" }),
     ).toBeVisible();
@@ -88,7 +91,7 @@ test.describe("Measured profile (UX_FLOWS §4)", () => {
     await seedTwin(request, makeTwin(who.userId));
     await page.goto("/profile");
     await expect(
-      page.getByText("Needs 2 more captures to know your day-to-day variation."),
+      page.getByText("Add 2 repeat photos to see how much a reading moves between captures."),
     ).toBeVisible();
     await expect(page.getByRole("link", { name: "Add captures" })).toHaveAttribute(
       "href",
@@ -223,10 +226,7 @@ test.describe("Measured profile (UX_FLOWS §4)", () => {
     const who = await sessionOf(context, page);
     await setCap(request, who, 400);
     const face = await uploadPhoto(page);
-    const build = await page.request.post("/api/twin/build", {
-      data: { capture: { face, mode: "hd", source: "upload", qualityChecksPassed: null } },
-    });
-    const { runId } = (await build.json()) as { runId: string };
+    const { runId = "" } = await buildFor(page, face);
 
     const other = await browser.newContext();
     const otherPage = await other.newPage();

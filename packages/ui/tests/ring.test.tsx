@@ -1,6 +1,35 @@
 import { render, screen } from "@testing-library/react";
 import { Ring, ringState } from "../src";
 
+describe("Ring semantics", () => {
+  const none = { lighting: false, distance: false, angle: false, steadiness: false };
+
+  it("a capture Ring that holds the live camera is a group, so what is inside stays reachable", () => {
+    render(
+      <Ring mode="capture" label="Face photo" checks={none}>
+        <button type="button">Camera control</button>
+      </Ring>,
+    );
+    expect(screen.getByRole("group", { name: "Face photo" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Camera control" })).toBeInTheDocument();
+  });
+
+  it("a progress Ring is a progressbar with its percentage", () => {
+    render(<Ring mode="reading" progress value={0.4} label="Uploading" />);
+    const bar = screen.getByRole("progressbar", { name: "Uploading" });
+    expect(bar).toHaveAttribute("aria-valuenow", "40");
+    expect(bar).toHaveAttribute("aria-valuemax", "100");
+  });
+
+  it("a run Ring can leave announcing to the StepRail beside it", () => {
+    const steps = [{ id: "a", label: "Measuring", state: "done" as const }];
+    const { rerender } = render(<Ring mode="run" label="Run" steps={steps} />);
+    expect(screen.getByText("Measuring: Done")).toBeInTheDocument();
+    rerender(<Ring mode="run" label="Run" steps={steps} announce={false} />);
+    expect(screen.queryByText("Measuring: Done")).toBeNull();
+  });
+});
+
 describe("Ring", () => {
   it("capture mode: ticks reflect the four checks and the caption names the failing one", () => {
     const { container } = render(
