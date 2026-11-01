@@ -1,5 +1,5 @@
 import { FakeClock, createMockPorts } from "@mira/runtime";
-import type { ProofRecord} from "@mira/schemas";
+import type { ProofRecord } from "@mira/schemas";
 import { EfficacyOutcome, Twin, newId } from "@mira/schemas";
 import { describe, expect, it } from "vitest";
 import { buildApp } from "../src/app";

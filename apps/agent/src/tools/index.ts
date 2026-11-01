@@ -372,10 +372,11 @@ export async function runTool(
     // holds (D38 (5), D39): the plan hands over to that screen instead of guessing either.
     case "plan_compose_look":
       return { ok: true, result: need(state, "photo", "/look") };
-    // Proof (Phase 9) owns these workflows; until it lands the plan tools say so.
+    // A progress check is made of photos taken on different days, which only the Proof screen can
+    // take and quote (D40): the plan hands over to it.
     case "plan_start_proof":
     case "plan_proof_check_in":
-      return { ok: true, result: need(state, "module_unavailable", "/") };
+      return { ok: true, result: need(state, "photo", "/proof") };
     case "start_run": {
       const { planId } = input.data as z.infer<typeof StartRunInput>;
       return {

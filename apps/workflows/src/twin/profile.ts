@@ -188,6 +188,8 @@ export async function deleteProfile(
   const savedImages = await store.blobs.deletePrefix(savedPrefix(userId));
   const uploads = await store.blobs.deletePrefix(uploadsPrefix(userId));
   await store.state.deleteTree(`uploads-index/${userId}`);
+  // Garments the person added for looks: a name and a colour each, and their pictures are uploads.
+  await store.state.deleteTree(`garments/${userId}`);
   await store.state.deleteTree(twinPath(userId));
 
   const record = DeletionRecord.parse({

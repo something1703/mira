@@ -237,14 +237,14 @@ describe("plans and the confirmation guard", () => {
     expect(res.needs[0]).toMatchObject({ need: "photo", screen: "/look" });
   });
 
-  it("says a module is not built yet instead of inventing a quote", async () => {
+  it("hands a progress check over to the Proof screen: it needs photos on different days", async () => {
     const t = toolEnv([
       { step: { tools: [{ name: "plan_start_proof", input: { product: "serum" } }] } },
-      say("Check my progress works from its own screen for now."),
+      say("Check my progress works from its own screen. Add your photos there."),
     ]);
     const res = await runAsk(request("check my serum"), t.env);
     expect(res.plans).toEqual([]);
-    expect(res.needs[0]?.need).toBe("module_unavailable");
+    expect(res.needs[0]).toMatchObject({ need: "photo", screen: "/proof" });
   });
 
   it("plans from a pasted product page", async () => {

@@ -115,6 +115,9 @@ export function buildApp(
   const snapshot = loadFixtures().skus;
   const fake = new FakeYouCam({
     clock: ports.clock,
+    // The synthetic balance is not money: a long test run must not exhaust it. The session and
+    // deployment caps are what limit spending.
+    startingUnits: 1_000_000,
     ...(snapshot.length > 0 ? { skus: snapshot } : { prices: DEMO_PRICES }),
   });
   seedDemoFake(fake);

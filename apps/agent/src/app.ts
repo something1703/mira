@@ -3,11 +3,14 @@ import { createService, type CreateServiceOptions, type ServiceContext } from "@
 import { AskRequest, SessionId, UserId } from "@mira/schemas";
 import { z } from "zod";
 import { fetchImage, fetchPage, type ImageResult, type PageResult } from "./extract/safe-fetch";
+import { readClaim } from "./extract/claim";
 import { readGarmentPage } from "./extract/garment";
+import { cleanName } from "./extract/shade-range";
 import { extractShadeRange, type ShadeReader } from "./extract/shade-range";
 import { runAsk } from "./loop";
 import { MockDiscovery, McpDiscovery, type LookDiscovery } from "./mcp/youcam";
 import { narrateRun } from "./narrate";
+import { loadPage } from "./tools/page";
 import { MemoryPlanStore, type PlanStore } from "./plans";
 import { placeholderPng } from "@mira/fixtures/placeholder";
 import { selectProvider } from "./providers/select";
@@ -193,6 +196,27 @@ export function buildApp(
       return await reply.status(400).send({ error: "invalid_query", traceId: req.traceId });
     const found = await discovery.backgrounds(q.data.venue);
     return { items: found.ok ? found.items : [] };
+  });
+
+  /**
+   * Reads the claim a skincare product page makes (docs/PHASE_09): one of the concerns Skin
+   * Analysis measures and the days it says it takes, in the page's own words. A page with no
+   * measurable claim answers "none", and the person chooses what to track.
+   */
+  app.post("/internal/extract/claim", async (req, reply) => {
+    const body = z.object({ url: z.string().min(1).max(2_000) }).safeParse(req.body);
+    if (!body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    const page = await loadPage(body.data.url, tools.page);
+    if (!page.ok) {
+      return await reply
+        .status(page.reason === "fetch_failed" ? 502 : 422)
+        .send({ error: page.reason, traceId: req.traceId });
+    }
+    const title = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(page.html)?.[1];
+    const name = title === undefined ? "" : cleanName(title.replace(/\s+[|–—-]\s+[^|–—]*$/, ""));
+    const read = await readClaim(page.html, provider);
+    return { ...read, product: name === "" ? undefined : name };
   });
 
   return ctx;

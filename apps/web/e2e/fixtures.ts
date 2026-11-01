@@ -1,4 +1,6 @@
 import {
+  ProofRecord,
+  type Verdict,
   LookResult,
   Run,
   RunNode,
@@ -468,4 +470,139 @@ export async function serveCraftedLook(
           body: Buffer.from(placeholderPng({ hex: "#C79A78" })),
         }),
   );
+}
+
+// ---- Proof: crafted records ----
+
+const DAY = 86_400_000;
+const iso = (ms: number) => new Date(ms).toISOString();
+
+export interface ProofOptions {
+  status?: ProofRecord["status"];
+  /** Days ago each baseline session happened (default 20, 18, 16). */
+  baselineDaysAgo?: number[];
+  /** Days ago the person started using the product. */
+  startedDaysAgo?: number;
+  windowDays?: number;
+  mdc?: number | null;
+  /** Check-ins: days ago, mean score, and the verdict they landed in. */
+  checkIns?: {
+    daysAgo: number;
+    scores: [number, number, number];
+    verdict: Verdict["state"];
+    words: Verdict["words"];
+  }[];
+  phantom?: "usable" | "unusable";
+  confound?: boolean;
+  reviewed?: boolean;
+}
+
+const mean = (s: readonly number[]) => s.reduce((n, x) => n + x, 0) / s.length;
+
+/** A proof in the state the test needs, built through the real schema. */
+export function makeProof(userId: string, id: string, o: ProofOptions = {}): ProofRecord {
+  const now = Date.now();
+  const base = o.baselineDaysAgo ?? [20, 18, 16];
+  const baseScores: [number, number, number][] = [
+    [58.1, 59.4, 57.6],
+    [60.2, 58.8, 59.9],
+    [57.9, 59.1, 58.7],
+  ];
+  const sessions: ProofRecord["sessions"] = base.map((d, i) => {
+    const scores = baseScores[i % 3] ?? baseScores[0] ?? [58, 58, 58];
+    return {
+      at: iso(now - d * DAY),
+      scores: [...scores],
+      mean: mean(scores),
+      runId: `run_baseline${String(i)}abc`,
+      kind: "baseline" as const,
+    };
+  });
+  const baselineMean = mean(sessions.slice(0, 3).map((s) => s.mean));
+  const verdicts: Verdict[] = [];
+  for (const [i, c] of (o.checkIns ?? []).entries()) {
+    const m = mean(c.scores);
+    sessions.push({
+      at: iso(now - c.daysAgo * DAY),
+      scores: [...c.scores],
+      mean: m,
+      runId: `run_checkin${String(i)}abc`,
+      kind: "check_in",
+    });
+    const startedAgo = o.startedDaysAgo ?? 14;
+    verdicts.push({
+      at: iso(now - c.daysAgo * DAY),
+      day: Math.max(0, Math.round(startedAgo - c.daysAgo)),
+      windowDays: o.windowDays ?? 28,
+      baseline: baselineMean,
+      now: m,
+      delta: m - baselineMean,
+      mdc: o.mdc === undefined ? 3.3 : o.mdc,
+      words: c.words,
+      phrase:
+        c.words === "clear"
+          ? "a clear change"
+          : c.words === "small"
+            ? "a small change above your day-to-day variation"
+            : c.words === "opposite"
+              ? "changed, but not in the direction the product claims"
+              : c.words === "n/a"
+                ? "not enough sessions yet to know your day-to-day variation"
+                : "within your day-to-day variation",
+      state: c.verdict,
+    });
+  }
+  const mdc = o.mdc === undefined ? 3.3 : o.mdc;
+  const complete = sessions.filter((s) => s.kind === "baseline").length >= 3;
+  return ProofRecord.parse({
+    id,
+    userId,
+    product: { name: "Sample pore serum", url: "https://shop.example/serum" },
+    claim: {
+      concern: "pore",
+      windowDays: o.windowDays ?? 28,
+      text: "Pores look visibly smaller in 4 weeks.",
+      source: "page",
+    },
+    status: o.status ?? (complete ? "ready" : "baseline"),
+    createdAt: iso(now - 21 * DAY),
+    ...(o.startedDaysAgo === undefined ? {} : { startedAt: iso(now - o.startedDaysAgo * DAY) }),
+    sessions,
+    ...(complete
+      ? {
+          noiseFloor: {
+            sessions: 3,
+            capturesPerSession: 3,
+            sW: 0.9,
+            sD: mdc === null ? null : 0.8,
+            sDSource: mdc === null ? "unknown" : "estimated",
+            se: mdc === null ? null : 1.2,
+            mdc,
+          },
+        }
+      : {}),
+    ...(o.phantom
+      ? {
+          phantom: {
+            usable: o.phantom === "usable",
+            rho: o.phantom === "usable" ? -1 : 0.2,
+            scoreRange: 12,
+            reason: o.phantom === "usable" ? "ok" : "not_monotone",
+            intensities: [0, 0.25, 0.5, 0.75, 1],
+            fittedDelta: [0, -3, -6, -9, -12],
+            scores: [60, 57, 54, 51, 48],
+            mdc: 3.3,
+            fittedAt: iso(now - 15 * DAY),
+          },
+        }
+      : {}),
+    verdicts,
+    confound: o.confound ? { flagged: true, at: iso(now - 3 * DAY) } : { flagged: false },
+    ...(o.reviewed ? { reviewPublishedAt: iso(now - DAY) } : {}),
+  });
+}
+
+export async function seedProof(request: APIRequestContext, proof: ProofRecord): Promise<void> {
+  const res = await request.post(`${WORKFLOWS}/internal/dev/proof`, { data: proof });
+  expect(res.status(), "seed proof").toBe(201);
 }

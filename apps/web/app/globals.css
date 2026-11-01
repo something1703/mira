@@ -808,3 +808,119 @@ a {
   color: var(--mira-ink);
   border-radius: var(--mira-radius-control);
 }
+
+/* ---------- Proof ---------- */
+.proof {
+  display: grid;
+  gap: var(--mira-space-5);
+  max-width: 56rem;
+}
+.proof h1 {
+  margin: 0 0 var(--mira-space-2);
+}
+.proof__list {
+  display: grid;
+  gap: var(--mira-space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.proof__card,
+.proof__section,
+.proof__warning {
+  display: grid;
+  gap: var(--mira-space-3);
+  justify-items: start;
+  padding: var(--mira-space-4);
+  border: 1px solid var(--mira-rule);
+  border-radius: var(--mira-radius-panel);
+}
+.proof__card h2,
+.proof__section h2 {
+  margin: 0;
+}
+.proof__warning {
+  border-color: var(--mira-ink-2);
+}
+.proof__form,
+.proof__capture {
+  display: grid;
+  gap: var(--mira-space-3);
+  justify-items: start;
+}
+.proof__quote {
+  margin: 0;
+  padding-left: var(--mira-space-4);
+  border-left: 2px solid var(--mira-rule);
+  color: var(--mira-ink-2);
+}
+.proof__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--mira-space-3);
+  margin: 0;
+  width: 100%;
+}
+.proof__facts dt {
+  color: var(--mira-ink-2);
+  font-size: 0.875rem;
+}
+.proof__facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.proof__chart {
+  margin: 0;
+}
+.proof__svg {
+  width: 100%;
+  height: auto;
+  max-height: 22rem;
+}
+.proof__band {
+  fill: var(--mira-accent-wash);
+}
+.proof__baseline {
+  stroke: var(--mira-ink-2);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.proof__grid {
+  stroke: var(--mira-rule);
+  stroke-width: 1;
+}
+.proof__rule {
+  stroke: var(--mira-ink-2);
+  stroke-width: 1.5;
+}
+.proof__rule--claim {
+  stroke-dasharray: 6 4;
+}
+.proof__line {
+  stroke: var(--mira-accent);
+  stroke-width: 2;
+}
+.proof__whisker {
+  stroke: var(--mira-ink-2);
+  stroke-width: 1.5;
+}
+.proof__dot {
+  fill: var(--mira-accent);
+  stroke: var(--mira-raised);
+  stroke-width: 2;
+}
+.proof__dot--baseline {
+  fill: var(--mira-ink-2);
+}
+.proof__tick,
+.proof__label {
+  fill: var(--mira-ink-2);
+  font-size: 12px;
+}
+
+/* Room below the last control, so a fixed indicator or a thumb never sits on top of it. */
+.proof,
+.look,
+.event {
+  padding-bottom: var(--mira-space-8, 4rem);
+}

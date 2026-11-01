@@ -340,3 +340,16 @@ describe("quote and build", () => {
     ]);
   });
 });
+
+describe("deleting the profile", () => {
+  it("removes the person's garments and their pictures", async () => {
+    const t = make();
+    await t.seedTwin();
+    const g = await t.sample("gar_sample02");
+    expect(await t.ports.state.get(`garments/${t.userId}/${g.id}`)).toBeDefined();
+    const res = await t.ctx.app.inject({ method: "DELETE", url: `/internal/twin/${t.userId}` });
+    expect(res.statusCode).toBeLessThan(300);
+    expect(await t.ports.state.get(`garments/${t.userId}/${g.id}`)).toBeUndefined();
+    expect(await t.ports.blobs.get(g.image)).toBeUndefined();
+  });
+});

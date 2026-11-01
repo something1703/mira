@@ -45,8 +45,9 @@ test.describe("Welcome (UX_FLOWS §1)", () => {
   });
 
   test("links to screens that later phases build land on an explained screen", async ({ page }) => {
-    await page.goto("/?profile=returning");
-    await page.getByRole("link", { name: "Check my progress" }).click();
+    // Every module is built now; the recorded run viewer is the one link that still is not.
+    await page.goto("/");
+    await page.getByRole("link", { name: "See a recorded run" }).click();
     await expect(
       page.getByRole("heading", { name: "This screen is not available yet." }),
     ).toBeVisible();

@@ -27,6 +27,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Link href="/shade">Shade</Link>
             <Link href="/look">Look</Link>
             <Link href="/event">Event</Link>
+            <Link href="/proof">Proof</Link>
             <Link href="/settings/privacy">Privacy</Link>
           </nav>
           <div className="shell__tools">
