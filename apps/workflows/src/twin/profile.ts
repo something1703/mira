@@ -10,6 +10,7 @@ import {
   type Result,
 } from "@mira/schemas";
 import { getDoc, listDocs, type Ports } from "@mira/runtime";
+import { demandPath, prefsPath } from "../brand/data";
 import { savedPrefix } from "../runner/save";
 import { UploadRecord, uploadIndexPath, type UploadKind } from "./uploads";
 
@@ -190,6 +191,9 @@ export async function deleteProfile(
   await store.state.deleteTree(`uploads-index/${userId}`);
   // Garments the person added for looks: a name and a colour each, and their pictures are uploads.
   await store.state.deleteTree(`garments/${userId}`);
+  // What the person contributed to brand summaries, and their choice to.
+  await store.state.delete(demandPath(userId));
+  await store.state.delete(prefsPath(userId));
   await store.state.deleteTree(twinPath(userId));
 
   const record = DeletionRecord.parse({

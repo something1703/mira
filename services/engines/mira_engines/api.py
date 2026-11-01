@@ -21,7 +21,18 @@ from fastapi.responses import JSONResponse
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from mira_engines import ENGINE_VERSION, audit, colour, config, garment, look, phantom, shade, stats
+from mira_engines import (
+    ENGINE_VERSION,
+    audit,
+    brand,
+    colour,
+    config,
+    garment,
+    look,
+    phantom,
+    shade,
+    stats,
+)
 from mira_engines.faces import FaceDetectorUnavailable, detect_face_box
 
 TRACE_HEADER = "x-mira-trace"
@@ -406,3 +417,18 @@ def phantom_fit(body: Annotated[PhantomIn, Depends(strict_body(PhantomIn))]) -> 
     if body.invert_at is not None:
         result["inverted_intensity"] = phantom.invert(fitted, body.invert_at)
     return envelope(result)
+
+
+class GapIn(Strict):
+    # Anonymised skin colours and a brand's shades, CIELAB. Bounded so one request cannot ask for
+    # an enormous pairwise table: 5,000 colours against 400 shades is two million ΔE values.
+    points: list[LabIn] = Field(min_length=1, max_length=5_000)
+    shades: list[LabIn] = Field(min_length=1, max_length=400)
+
+
+@app.post("/brand/gap-map")
+def brand_gap_map(body: Annotated[GapIn, Depends(strict_body(GapIn))]) -> dict[str, object]:
+    try:
+        return envelope(asdict(brand.gap_map(list(body.points), list(body.shades))))
+    except ValueError as err:
+        raise HTTPException(422, str(err)) from err

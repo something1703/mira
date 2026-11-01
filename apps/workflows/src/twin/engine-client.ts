@@ -126,6 +126,14 @@ export const PhantomReading = z.object({
 });
 export type PhantomReading = z.infer<typeof PhantomReading>;
 
+export const GapMapReading = z.object({
+  total: z.number().int(),
+  unserved: z.number().int(),
+  unserved_share: z.number(),
+  near_de: z.number(),
+  bins: z.array(z.record(z.string(), z.number())),
+});
+
 export interface FaceBox {
   x: number;
   y: number;
@@ -191,6 +199,11 @@ export interface EngineClient {
     source: readonly number[],
     final: readonly number[],
   ): Promise<Result<Enveloped<IdentityReading>, EngineFailure>>;
+  /** Which skin colours a set of shades does not serve (docs/DESIGN_SYSTEM.md §10). */
+  gapMap(
+    points: readonly LabTuple[],
+    shades: readonly LabTuple[],
+  ): Promise<Result<Enveloped<z.infer<typeof GapMapReading>>, EngineFailure>>;
   /** Change from the baseline against the minimal detectable change (docs/ENGINES.md §8). */
   change(input: {
     baseline: number;
@@ -266,6 +279,10 @@ export class HttpEngineClient implements EngineClient {
       { skin_type_whole: skinTypeWhole, concern_raw_scores: concernRawScores },
       FinishReading,
     );
+  }
+
+  gapMap(points: readonly LabTuple[], shades: readonly LabTuple[]) {
+    return this.post("/brand/gap-map", { points, shades }, GapMapReading);
   }
 
   change(i: Parameters<EngineClient["change"]>[0]) {

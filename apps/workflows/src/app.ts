@@ -9,13 +9,16 @@ import {
 } from "@mira/runtime";
 import {
   Run,
+  BrandCatalogue,
   Claim,
   EfficacyOutcome,
+  LookEventRow,
+  ShadeDemandRow,
+  ShadeRange,
   LookResult,
   ProofId,
   ProofRecord,
   RunNode,
-  ShadeRange,
   SessionId,
   Twin,
   TwinGroupName,
@@ -31,6 +34,9 @@ import {
   loadCatalogues,
   loadFixtures,
   loadSampleGarments,
+  recordedDemand,
+  recordedLooks,
+  recordedOutcomes,
 } from "@mira/fixtures";
 import { FakeYouCam } from "@mira/youcam-client/testing";
 import { z } from "zod";
@@ -40,6 +46,9 @@ import { createLookExecutors } from "./graphs/compose-look";
 import { createShadeExecutors } from "./graphs/match-shade";
 import { createGarmentExecutors, loadGarment, makeSampleGarment } from "./look/garments";
 import { createProofExecutors } from "./graphs/proof-check-in";
+import { attachView, efficacyView, gapView } from "./brand/aggregate";
+import { LIMITS, catalogueFromCsv, catalogueFromRanges } from "./brand/catalogue";
+import { Prefs, getPrefs, markLookSaved, readRows, setPrefs } from "./brand/data";
 import { baselineComplete, nextDue } from "./proof/logic";
 import { planPhantom, planSession, planVisual, type ProofError } from "./proof/plan";
 import { changeProof, listProofs, loadProof, proofPath, putProof } from "./proof/store";
@@ -271,6 +280,8 @@ export function buildApp(
       const status = saved.error.code === "run_not_found" ? 404 : 409;
       return await reply.status(status).send({ error: saved.error.code, traceId: req.traceId });
     }
+    const savedRun = await getDoc(ports.state, `runs/${runId}`, Run);
+    if (savedRun?.type === "compose_look") await markLookSaved(ports, savedRun.userId, runId);
     return await reply.status(201).send(saved.value);
   });
 
@@ -854,6 +865,101 @@ export function buildApp(
       reviewPublishedAt: now.toISOString(),
     }));
     return await reply.status(201).send({ published: outcome });
+  });
+
+  // ---- Brand: the range, the cohort-limited views, and the person's choice to contribute ----
+  const BRAND = { id: "sample-brand", name: "Sample brand" } as const;
+  const brandPath = `brand/catalogue/${BRAND.id}`;
+  const kMin = env.MIRA_K_ANON_MIN;
+  app.get("/internal/prefs/:userId", async (req, reply) => {
+    const id = UserId.safeParse((req.params as { userId: string }).userId);
+    if (!id.success)
+      return await reply.status(400).send({ error: "invalid_user", traceId: req.traceId });
+    return await getPrefs(ports, id.data);
+  });
+  app.put("/internal/prefs/:userId", async (req, reply) => {
+    const id = UserId.safeParse((req.params as { userId: string }).userId);
+    const body = Prefs.safeParse(req.body);
+    if (!id.success || !body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    await setPrefs(ports, id.data, body.data);
+    return body.data;
+  });
+  app.get("/internal/brand/summary", async (req, reply) => {
+    // The console reads aggregates for a brand. Brand sign-in is not built, so outside mock mode it
+    // is closed rather than open to anyone who can reach it (D41).
+    if (!mock)
+      return await reply.status(403).send({ error: "console_closed", traceId: req.traceId });
+    const catalogue = await getDoc(ports.state, brandPath, BrandCatalogue);
+    const real = {
+      demand: await readRows(ports, "shade_demand", ShadeDemandRow),
+      outcomes: await readRows(ports, "efficacy_outcomes", EfficacyOutcome),
+      looks: await readRows(ports, "look_events", LookEventRow),
+    };
+    // Below the cohort rule there is nothing real to show, so mock mode shows recorded data and
+    // says so, per view. Real rows are never mixed with recorded ones.
+    const recordedParts = {
+      gap: real.demand.length < kMin,
+      efficacy: real.outcomes.length < kMin,
+      attach: real.looks.length < kMin,
+    };
+    const recorded = Object.values(recordedParts).some(Boolean);
+    const demand = recordedParts.gap ? recordedDemand() : real.demand;
+    const outcomes = recordedParts.efficacy ? recordedOutcomes() : real.outcomes;
+    const looks = recordedParts.attach ? recordedLooks() : real.looks;
+    if (!catalogue) return { catalogue: null, recorded, recordedParts, k: kMin };
+    const gap = await gapView(engines, demand, catalogue, kMin);
+    if (!gap.ok)
+      return await reply.status(502).send({ error: "engine_failed", traceId: req.traceId });
+    return {
+      catalogue,
+      recorded,
+      recordedParts,
+      k: kMin,
+      gap: gap.view,
+      efficacy: efficacyView(outcomes, kMin),
+      attach: attachView(looks, kMin),
+    };
+  });
+  app.post("/internal/brand/catalogue/csv", async (req, reply) => {
+    if (!mock)
+      return await reply.status(403).send({ error: "console_closed", traceId: req.traceId });
+    const body = z.object({ csv: z.string().min(1).max(LIMITS.bytes) }).safeParse(req.body);
+    if (!body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    const made = catalogueFromCsv(body.data.csv, BRAND, new Date(ports.clock.now()).toISOString());
+    if (!made.ok)
+      return await reply
+        .status(422)
+        .send({ error: "invalid_csv", problems: made.problems.slice(0, 20) });
+    await ports.state.set(brandPath, made.catalogue);
+    return await reply.status(201).send({ catalogue: made.catalogue });
+  });
+  app.post("/internal/brand/catalogue/ranges", async (req, reply) => {
+    if (!mock)
+      return await reply.status(403).send({ error: "console_closed", traceId: req.traceId });
+    const body = z
+      .object({
+        ranges: z.array(ShadeRange).min(1).max(LIMITS.products),
+        source: z.enum(["links", "sample"]),
+      })
+      .safeParse(req.body);
+    if (!body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    const made = catalogueFromRanges(
+      body.data.ranges,
+      BRAND,
+      new Date(ports.clock.now()).toISOString(),
+      body.data.source,
+    );
+    await ports.state.set(brandPath, made);
+    return await reply.status(201).send({ catalogue: made });
+  });
+  app.delete("/internal/brand/catalogue", async (req, reply) => {
+    if (!mock)
+      return await reply.status(403).send({ error: "console_closed", traceId: req.traceId });
+    await ports.state.delete(brandPath);
+    return await reply.status(204).send();
   });
 
   // ---- the Twin: quote, build, read, download, delete ----

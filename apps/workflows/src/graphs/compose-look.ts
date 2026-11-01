@@ -10,6 +10,7 @@ import {
   type RunNode,
 } from "@mira/schemas";
 import { getDoc, type Ports } from "@mira/runtime";
+import { contributeLook } from "../brand/data";
 import { placeholderHex, sceneFaceBox, scenePng } from "@mira/fixtures/placeholder";
 import { z } from "zod";
 import type { GraphSpec, NodeSpec } from "../runner/graph";
@@ -318,7 +319,7 @@ const b64 = (bytes: Uint8Array) => Buffer.from(bytes).toString("base64");
 
 export function createLookExecutors(deps: {
   engine: EngineClient;
-  ports: Pick<Ports, "state" | "blobs">;
+  ports: Pick<Ports, "state" | "blobs" | "clock">;
   /** Mock mode: the pictures are synthetic scenes, so the audits compare scenes (D25, D39). */
   synthetic: boolean;
 }): Record<string, NodeExecutor> {
@@ -569,7 +570,29 @@ export function createLookExecutors(deps: {
     if (!withheld && result.plate === undefined) {
       return Promise.resolve(err({ code: "nothing_made", retryable: false }));
     }
-    return Promise.resolve(ok({ output: result }));
+    return (async () => {
+      // A row for the brand side, only if the person agreed, and never from a drawn scene.
+      if (!deps.synthetic) {
+        const kinds = new Set(
+          result.steps
+            .filter((x) => x.verdict !== "failed" && x.verdict !== "skipped")
+            .map((x) => x.id),
+        );
+        await contributeLook(deps.ports, ctx.run.userId, ctx.run.id, {
+          categories: [
+            "apparel",
+            ...(kinds.has("shoes") ? ["footwear"] : []),
+            ...(kinds.has("bag") ? ["bag"] : []),
+            ...(kinds.has("makeup") ? ["beauty"] : []),
+            ...(kinds.has("hair") ? ["hair"] : []),
+            ...(kinds.has("venue") ? ["venue"] : []),
+          ],
+          brandIds: [],
+          saved: false,
+        });
+      }
+      return ok({ output: result });
+    })();
   };
 
   return {

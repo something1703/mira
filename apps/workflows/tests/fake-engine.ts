@@ -121,6 +121,36 @@ export class FakeEngine implements EngineClient {
   };
   readonly proofCalls: string[] = [];
 
+  /** Brand: the gap map the engines answer with next. */
+  gap:
+    | {
+        total: number;
+        unserved: number;
+        unserved_share: number;
+        near_de: number;
+        bins: Record<string, number>[];
+      }
+    | undefined;
+
+  gapMap(points: readonly LabTuple[], _shades: readonly LabTuple[]) {
+    this.proofCalls.push("gap");
+    if (this.failLook) return Promise.resolve(err(this.failLook));
+    const value = this.gap ?? {
+      total: points.length,
+      unserved: 0,
+      unserved_share: 0,
+      near_de: 3.5,
+      bins: [],
+    };
+    return Promise.resolve(
+      ok({
+        value,
+        engineVersion: "engines-test",
+        config: { GAP_NEAR_DE: { value: 3.5, calibrated: false } },
+      }),
+    );
+  }
+
   change(i: Parameters<EngineClient["change"]>[0]) {
     this.proofCalls.push("change");
     if (this.failLook) return Promise.resolve(err(this.failLook));

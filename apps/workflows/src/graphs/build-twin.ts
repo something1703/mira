@@ -11,6 +11,7 @@ import {
   type TwinGroup,
 } from "@mira/schemas";
 import { z } from "zod";
+import { contributeDemand } from "../brand/data";
 import { getDoc, type Ports } from "@mira/runtime";
 import { featureOf, type FeatureSlug } from "@mira/youcam-client";
 import { err, ok } from "@mira/schemas";
@@ -508,6 +509,8 @@ export function createTwinExecutors(deps: TwinExecutorDeps): Record<string, Node
     );
     if (!measuredNow) return err({ code: "nothing_measured", retryable: false });
     await deps.ports.state.set(twinPath(ctx.run.userId), twin);
+    // A row for the brand side, only if the person agreed, and never from invented numbers.
+    if (!twin.synthetic) await contributeDemand(deps.ports, twin);
     return ok({ output: { groups: twin.groups, metrics: Object.keys(twin.metrics).length } });
   };
 

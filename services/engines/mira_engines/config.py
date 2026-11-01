@@ -21,6 +21,12 @@ class Threshold:
 # Shade matching (docs/ENGINES.md §4)
 MATCH_DE: Final = Threshold(2.0, "docs/ENGINES.md §4.1 starting value; Phase 6 F8", False, "ΔE00")
 CLOSE_DE: Final = Threshold(3.5, "docs/ENGINES.md §4.1 starting value; Phase 6 F8", False, "ΔE00")
+# Brand: the Shade Gap Map (docs/DESIGN_SYSTEM.md §10)
+GAP_NEAR_DE: Final = Threshold(
+    3.5, "A shopper is served when a shade is within CLOSE_DE (docs/ENGINES.md §4.1)", False, "ΔE00"
+)
+GAP_HUE_BINS: Final = Threshold(12, "Product choice: 30° of hue a bin", False, "bins")
+GAP_L_BINS: Final = Threshold(8, "Product choice: 12.5 of L* a bin", False, "bins")
 SHADE_RENDER_TOP_N: Final = Threshold(3, "docs/ENGINES.md §4.1 default", False, "shades")
 SHADE_RENDER_TOP_N_MAX: Final = Threshold(5, "docs/ENGINES.md §4.1 max", False, "shades")
 DIRECTION_EPS: Final = Threshold(

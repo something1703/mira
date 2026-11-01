@@ -142,3 +142,4 @@ export function loadSampleGarments(dir: string = LOOK_DIR): SampleGarment[] {
   };
   return file.garments;
 }
+export * from "./brand";
