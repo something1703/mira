@@ -63,6 +63,18 @@ Useful pages in mock mode: `/` and `/consent`, `/dev/components` (every componen
 
 D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam feature. D12 chain on the previous result URL. D13 verify webhooks and always poll as fallback. D14 anonymous signed sessions (built). D15 agent text uses placeholders for product and shade names (Phase 7). D16 Build Twin gives a same-session estimate, not a noise floor. D19 a gallery instead of Storybook, plain CSS instead of Tailwind. D20 two contrast fixes. D21 Atkinson keeps tabular figures. D22 and D27 design reviews. D23 images are never cached across runs. D24 the webhook forwards, workflows stays the only writer. D25 mock mode never calls synthetic results a recording. D26 prices only from feature-cost, fail closed. D28 generated Python models and how engines must read JSON (strict). D29 the client-side rate limiter. D30 saved looks are copied to `saved/`. D31 Build Twin: eight HD concerns, one face photo, optional separately quoted repeats. D32 body and hand photos are held at most two hours, visibly. D33 a failed retry never wipes a profile; delete waits for running runs. D34 confidence words say only what is known.
 
+## Phase 9 plan (not started)
+
+Settled while reading the spec, so the next session does not re-derive it:
+
+- `raw_score` is 1 to 100 and **higher means healthier-looking** (docs/YOUCAM_API.md §3). A claim to reduce a visible concern therefore means the score goes **up**: every Proof claim has `claim_direction: "up"` for the engines' `/stats/change`. Claims are mapped only to concerns whose polarity is known: pore, wrinkle, texture, acne, oiliness, redness (HD names, whole-face). Not radiance, firmness or moisture.
+- Engines are ready: `/stats/noise-floor` (needs a prior until 3 sessions: `PRIOR_SD_DAY` is empty by design), `/stats/change`, `/phantom/fit`. Client methods for change and phantom are not yet on `EngineClient`.
+- A session is 3 captures of one concern (one `skin-analysis` call each, 12 units at the 1 to 4 concern tier); baseline is 3 sessions on different days (108 units); a phantom is 5 `skin-simulation` runs (4 units each) plus 5 analyses (12 each) = 80 units, cached per person. The anonymous session cookie lives 180 days, so multi-day proofs fit.
+- The visualisation needs a day-0 photo, and photos are deleted at run end: keep the first photo only if the person opts in (saved storage under the proof id, deleted with the profile); otherwise render on the check-in photo and say so.
+- "Reminders" are derived: a proof knows when its next check-in is due; the screen shows it and offers an .ics file the person downloads. No scheduler is needed in mock mode; Cloud Scheduler is deploy work.
+- The measured review writes only `product_id, concern, delta, mdc, words, fitzpatrick_band, skin_type, week` to `efficacy_outcomes`, after an explicit yes.
+- The experiments (noise-floor pilot over days, phantom on 2 faces) need people and days: write protocols and leave results "Not run".
+
 ## Phase 8 map
 
 - **Workflows:** `src/graphs/compose-look.ts` (graph, audits, gates, `look-assemble`), `src/look/{garments,ingest,plan,synthetic}.ts`. HTTP: `/internal/look/{catalogue,garments/sample,garments/quote,garments/ingest,suggest,quote,build}`, `/internal/looks/:userId/:lookId/image`. The images and save routes refuse a withheld node.

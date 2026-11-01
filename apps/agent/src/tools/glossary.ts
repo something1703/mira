@@ -5,7 +5,7 @@ const ENTRIES: readonly { prefix: string; definition: string; how: string }[] = 
   {
     prefix: "skin.",
     definition:
-      "How visible one thing the scan measured is in one region of your face, on a scale where a higher reading means it is more visible.",
+      "How one thing the scan measured looks in one region of your face. YouCam's raw score runs from low to high, and a higher reading means it looks healthier (less visible). Compare it only with a reading measured the same way.",
     how: "YouCam's HD skin analysis of your face photo. The same reading is compared only with another measured the same way.",
   },
   {
