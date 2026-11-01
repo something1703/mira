@@ -6,6 +6,7 @@ import {
   type Audit,
   type NodeError,
   type RunEvent,
+  TRACE_ATTRIBUTE,
 } from "@mira/schemas";
 import { getDoc, updateDoc } from "@mira/runtime";
 import {
@@ -549,7 +550,8 @@ export class NodeLifecycle {
       at: iso(this.d.clock.now()),
       traceId: run.traceId,
     };
-    await this.d.events.publish(RUN_EVENTS_TOPIC, event);
+    // The trace travels as a message attribute too, as Pub/Sub carries it live (AGENTS.md §7).
+    await this.d.events.publish(RUN_EVENTS_TOPIC, event, { [TRACE_ATTRIBUTE]: run.traceId });
   }
 }
 

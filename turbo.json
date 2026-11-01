@@ -15,7 +15,8 @@
       "outputs": []
     },
     "test:e2e": {
-      "cache": false
+      "cache": false,
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "CI"]
     },
     "lint": {
       "outputs": []

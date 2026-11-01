@@ -82,6 +82,10 @@ export function buildApp(
       logger.info(fields ?? {}, message);
     },
   });
+  // Pick up runs that were in flight when the process last stopped (file-backed state, D10).
+  void engine.runner.recover().then((r) => {
+    if (r.runs + r.cleanups > 0) logger.info(r, "recovered runs after restart");
+  });
   if (options.pump) {
     ports.queue.start(250);
     app.addHook("onClose", () => {

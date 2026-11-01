@@ -1,5 +1,5 @@
 import { InProcessQueue, FakeClock, createMockPorts, updateDoc } from "@mira/runtime";
-import { RunNode, type Audit } from "@mira/schemas";
+import { Run, RunNode, type Audit } from "@mira/schemas";
 import { describe, expect, it } from "vitest";
 import { cleanupRun } from "../src/runner/cleanup";
 import { PNG, makeHarness, youcam } from "./harness";
@@ -661,4 +661,59 @@ describe("cleanup", () => {
 it("a FakeClock and mock ports are enough to run with no credentials", () => {
   const clock = new FakeClock();
   expect(createMockPorts({ clock }).clock).toBe(clock);
+});
+
+describe("restart recovery", () => {
+  it("a restarted process finishes a run that was waiting on YouCam, without resubmitting", async () => {
+    const h = makeHarness();
+    h.fake.script("skin-tone-analysis", { results: SKIN_TONE, latencyMs: 4_000 });
+    const runId = await single(h, "skin-tone-analysis");
+    await h.ports.queue.tick();
+    expect((await h.nodes(runId)).a?.status).toBe("waiting");
+
+    // The process stops: its queue is gone, its state is not.
+    const queue = new InProcessQueue({ clock: h.clock });
+    const reborn = makeHarness({ ports: { ...h.ports, queue }, fake: h.fake, clock: h.clock });
+    expect(await reborn.engine.runner.recover()).toEqual({ runs: 1, nodes: 1, cleanups: 0 });
+    await reborn.settle();
+
+    expect((await h.run(runId)).status).toBe("succeeded");
+    expect(h.fake.callsTo("createTask")).toBe(1);
+    expect((await h.run(runId)).cleanedAt).toBeDefined();
+  });
+
+  it("re-queues cleanup for a finished run that was never cleaned", async () => {
+    const h = makeHarness();
+    h.fake.script("skin-tone-analysis", { results: SKIN_TONE, latencyMs: 1_000 });
+    const runId = await single(h, "skin-tone-analysis");
+    await h.settle();
+    // Simulate a stop between "finished" and "cleaned": the run is done but its cleanup never ran.
+    await updateDoc(h.ports.state, `runs/${runId}`, Run, (r) => {
+      if (!r) throw new Error("setup");
+      const { cleanedAt: _gone, ...rest } = r;
+      return rest;
+    });
+    await h.ports.blobs.put(`runs/${runId}/a/output.png`, PNG, "image/png");
+
+    const queue = new InProcessQueue({ clock: h.clock });
+    const reborn = makeHarness({ ports: { ...h.ports, queue }, fake: h.fake, clock: h.clock });
+    expect(await reborn.engine.runner.recover()).toEqual({ runs: 0, nodes: 0, cleanups: 1 });
+    await reborn.settle();
+    expect((await h.run(runId)).cleanedAt).toBeDefined();
+    expect(await h.ports.blobs.list(`runs/${runId}/`)).toEqual([]);
+  });
+
+  it("events carry the run's trace id as a message attribute", async () => {
+    const h = makeHarness();
+    const attrs: Record<string, string>[] = [];
+    h.ports.events.subscribe("run-events", (_e, a) => {
+      attrs.push({ ...a });
+    });
+    h.fake.script("skin-tone-analysis", { results: SKIN_TONE, latencyMs: 1_000 });
+    const runId = await single(h, "skin-tone-analysis");
+    await h.settle();
+    const trace = (await h.run(runId)).traceId;
+    expect(attrs.length).toBeGreaterThan(3);
+    expect(attrs.every((a) => a.miraTrace === trace)).toBe(true);
+  });
 });

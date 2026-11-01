@@ -9,6 +9,7 @@ import {
   type RunEvent,
   err,
   ok,
+  TRACE_ATTRIBUTE,
 } from "@mira/schemas";
 import { getDoc, listDocs, updateDoc, type Delivery } from "@mira/runtime";
 import { isTerminal, NodeLifecycle } from "../lifecycle/node-lifecycle";
@@ -147,6 +148,38 @@ export class Runner {
       if (node.status === "queued") await this.setStatus(run, node, "cancelled");
     }
     await this.advance(runId);
+  }
+
+  /**
+   * After a restart the in-process queue is empty, but state survived (D10). Re-deliver every node
+   * that was in flight: a node with a stored task id only polls, never resubmits (AGENTS.md §2.3),
+   * and a reserve is idempotent per node. Finished runs that were never cleaned get their cleanup.
+   */
+  async recover(): Promise<{ runs: number; nodes: number; cleanups: number }> {
+    const runs = await listDocs(this.d.state, "runs", Run);
+    const out = { runs: 0, nodes: 0, cleanups: 0 };
+    const stamp = String(this.d.clock.now());
+    for (const { value: run } of runs) {
+      if (run.status === "running") {
+        out.runs += 1;
+        for (const node of await this.nodes(run.id)) {
+          if (node.status !== "running" && node.status !== "waiting") continue;
+          out.nodes += 1;
+          await this.d.queue.enqueue(node.kind === "youcam" ? "youcam-submit" : "engine-jobs", {
+            payload: { op: "start", runId: run.id, nodeId: node.id },
+            dedupeKey: `recover:${run.id}:${node.id}:${stamp}`,
+          });
+        }
+        await this.advance(run.id);
+      } else if (run.cleanedAt === undefined) {
+        out.cleanups += 1;
+        await this.d.queue.enqueue("engine-jobs", {
+          payload: { op: "cleanup", runId: run.id, attempt: 0 },
+          dedupeKey: `recover-cleanup:${run.id}:${stamp}`,
+        });
+      }
+    }
+    return out;
   }
 
   /** The queue's single entry point: parses the work item and runs it. */
@@ -307,12 +340,16 @@ export class Runner {
   }
 
   private async emit(run: Run, nodeId: string | undefined, type: RunEvent["type"]): Promise<void> {
-    await this.d.events.publish(RUN_EVENTS_TOPIC, {
-      runId: run.id,
-      ...(nodeId === undefined ? {} : { nodeId }),
-      type,
-      at: iso(this.d.clock.now()),
-      traceId: run.traceId,
-    } satisfies RunEvent);
+    await this.d.events.publish(
+      RUN_EVENTS_TOPIC,
+      {
+        runId: run.id,
+        ...(nodeId === undefined ? {} : { nodeId }),
+        type,
+        at: iso(this.d.clock.now()),
+        traceId: run.traceId,
+      } satisfies RunEvent,
+      { [TRACE_ATTRIBUTE]: run.traceId },
+    );
   }
 }

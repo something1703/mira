@@ -14,7 +14,7 @@
 | `packages/schemas/src/claim-linter.ts` | Claim linter with the banned list from `docs/COPY.md` |
 | `infra/` | Terraform for every GCP resource below |
 | `.github/workflows/ci.yml` | `pnpm check` on every push |
-| `scripts/dev-mock.sh` | Starts all services with `MIRA_MODE=mock` (file-backed state, no emulator; D10) |
+| `pnpm dev:mock` (Turborepo) | Starts all services with `MIRA_MODE=mock` (file-backed state in `.mira/`, no emulator; D10) |
 
 ## Tasks
 
