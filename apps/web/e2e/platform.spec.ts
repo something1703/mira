@@ -36,7 +36,8 @@ test.describe("session budget banner (UX_FLOWS §0)", () => {
     await page.goto("/");
     await expect(page.getByText(/Units left in this session/)).toHaveCount(0);
 
-    const started = await page.request.post("/dev/api/runs");
+    // Its own placeholder photo: this run must not warm the cache other tests start cold.
+    const started = await page.request.post(`/dev/api/runs?tag=budget-${String(Date.now())}`);
     expect(started.status()).toBe(201);
     const { runId } = (await started.json()) as { runId: string };
     await expect

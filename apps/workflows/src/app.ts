@@ -176,7 +176,13 @@ export function buildApp(
       return await reply.status(404).send({ error: "not_found", traceId: req.traceId });
     // The person's own session, so the demo spends from (and shows) their budget.
     const who = z.object({ userId: UserId, sessionId: SessionId }).safeParse(req.body ?? {});
-    const started = await startDemoRun(engine, ports, who.success ? who.data : fallbackSession);
+    const tag = z.object({ tag: z.string().regex(/^[a-z0-9-]{1,32}$/) }).safeParse(req.body ?? {});
+    const started = await startDemoRun(
+      engine,
+      ports,
+      who.success ? { userId: who.data.userId, sessionId: who.data.sessionId } : fallbackSession,
+      tag.success ? tag.data.tag : undefined,
+    );
     if (!started.ok)
       return await reply
         .status(422)

@@ -77,6 +77,51 @@ describe("mira-workflows (mock mode)", () => {
     ).toEqual(["face", "fitzpatrick", "tone"]);
   });
 
+  it("the demo spends from the caller's session, and the budget endpoint reports it", async () => {
+    const { ctx, settle } = make();
+    const who = { userId: "usr_person0001", sessionId: "ses_person0001" };
+    const before = await ctx.app.inject({ url: `/internal/budgets/${who.sessionId}` });
+    expect(before.json()).toEqual({ cap: 200, reserved: 0, committed: 0, left: 200 });
+    const res = await ctx.app.inject({ method: "POST", url: "/internal/runs/demo", payload: who });
+    expect(res.statusCode).toBe(201);
+    await settle();
+    const after = await ctx.app.inject({ url: `/internal/budgets/${who.sessionId}` });
+    expect(after.json()).toEqual({ cap: 200, reserved: 0, committed: 40, left: 160 });
+    expect((await ctx.app.inject({ url: "/internal/budgets/not-a-session" })).statusCode).toBe(400);
+  });
+
+  it("a tagged demo has its own cache keys, so it never warms the untagged one", async () => {
+    const { ctx, settle } = make();
+    const tagged = await ctx.app.inject({
+      method: "POST",
+      url: "/internal/runs/demo",
+      payload: { tag: "budget-1" },
+    });
+    expect(tagged.json<{ quote: { total: number } }>().quote.total).toBe(40);
+    await settle();
+    expect((await startDemo(ctx.app)).quote.total).toBe(40);
+    const again = await ctx.app.inject({
+      method: "POST",
+      url: "/internal/runs/demo",
+      payload: { tag: "budget-1" },
+    });
+    expect(again.json<{ quote: { total: number } }>().quote.total).toBe(0);
+    const bad = await ctx.app.inject({
+      method: "POST",
+      url: "/internal/runs/demo",
+      payload: { tag: "../x" },
+    });
+    expect(bad.json<{ quote: { total: number } }>().quote.total).toBe(40); // ignored, falls back to the default photo
+  });
+
+  it("the session cap comes from MIRA_SESSION_UNIT_CAP", async () => {
+    const ports = createMockPorts({ clock: new FakeClock() });
+    const ctx = buildApp({ MIRA_SESSION_UNIT_CAP: "45" }, { ports });
+    expect(
+      (await ctx.app.inject({ url: "/internal/budgets/ses_person0002" })).json(),
+    ).toMatchObject({ cap: 45, left: 45 });
+  });
+
   it("404s an unknown run", async () => {
     const { ctx } = make();
     expect((await ctx.app.inject({ url: "/internal/runs/run_nonexistent1" })).statusCode).toBe(404);

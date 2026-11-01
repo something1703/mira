@@ -103,11 +103,34 @@ export const newDemoSession = (): DemoSession => ({
   sessionId: newId("ses"),
 });
 
+/**
+ * The demo graph reading a placeholder photo. A `tag` gives a different placeholder, so it has its
+ * own cache keys: tests that share one server use it to stay independent of each other.
+ */
+export function demoGraph(tag?: string): { graph: GraphSpec; key: string; photo: Uint8Array } {
+  if (tag === undefined) return { graph: DEMO_GRAPH, key: DEMO_PHOTO_KEY, photo: DEMO_PHOTO };
+  const key = `runs/demo/placeholder-${tag}.jpg`;
+  return {
+    key,
+    photo: new TextEncoder().encode(`MIRA synthetic placeholder photo (not a person) ${tag}`),
+    graph: {
+      ...DEMO_GRAPH,
+      nodes: DEMO_GRAPH.nodes.map((n) => (n.inputs ? { ...n, inputs: { src: `blob:${key}` } } : n)),
+    },
+  };
+}
+
 /** Quotes and starts the demo graph. Every call is a fresh run of the same graph. */
-export async function startDemoRun(engine: Engine, ports: Ports, session: DemoSession) {
-  await ports.blobs.put(DEMO_PHOTO_KEY, DEMO_PHOTO, "image/jpeg");
+export async function startDemoRun(
+  engine: Engine,
+  ports: Ports,
+  session: DemoSession,
+  tag?: string,
+) {
+  const { graph, key, photo } = demoGraph(tag);
+  await ports.blobs.put(key, photo, "image/jpeg");
   const quote = await buildQuote({
-    graph: DEMO_GRAPH,
+    graph,
     sessionId: session.sessionId,
     costs: engine.costs,
     ledger: engine.ledger,
@@ -117,7 +140,7 @@ export async function startDemoRun(engine: Engine, ports: Ports, session: DemoSe
   if (!quote.ok) return quote;
   const q: Quote = quote.value;
   const started = await engine.runner.startRun({
-    graph: DEMO_GRAPH,
+    graph,
     userId: session.userId,
     sessionId: session.sessionId,
     planId: newId("plan"),

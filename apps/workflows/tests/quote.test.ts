@@ -32,7 +32,7 @@ describe("buildQuote", () => {
     const res = await run(h, graph);
     expect(res).toMatchObject({
       ok: true,
-      value: { total: 22, overCap: false, sessionUnitsLeft: 300 },
+      value: { total: 22, overCap: false, sessionUnitsLeft: 200 },
     });
     if (!res.ok) throw new Error("unreachable");
     expect(res.value.lines.map((l) => [l.nodeId, l.units, l.cached])).toEqual([
