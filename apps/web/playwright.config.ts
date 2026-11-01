@@ -37,7 +37,8 @@ export default defineConfig({
       url: `http://localhost:${WORKFLOWS_PORT}/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
-      env: { MIRA_MODE: "mock", PORT: String(WORKFLOWS_PORT) },
+      // A small session cap so one demo run (40 units) brings the "units left" banner up.
+      env: { MIRA_MODE: "mock", PORT: String(WORKFLOWS_PORT), MIRA_SESSION_UNIT_CAP: "45" },
     },
   ],
 });

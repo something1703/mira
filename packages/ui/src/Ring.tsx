@@ -64,6 +64,10 @@ export interface CaptureRing {
   instruction?: string;
   /** Why capture is blocked (permission, unsupported). Replaces the instruction. */
   blockedReason?: string;
+  /** All checks held: the photo is being taken. */
+  capturing?: boolean;
+  /** Whole seconds left before the photo is taken, shown while capturing. */
+  countdown?: number;
 }
 
 export interface RunRing {
@@ -75,6 +79,23 @@ export interface ReadingRing {
   mode: "reading";
   /** Position along the scale, 0–1. */
   value: number;
+}
+
+/**
+ * The seven states in docs/DESIGN_SYSTEM.md §6. Capture mode covers idle, checking, ready,
+ * capturing and blocked; run mode is measuring; reading mode is done.
+ */
+export type RingState =
+  "idle" | "checking" | "ready" | "capturing" | "measuring" | "done" | "blocked";
+
+export function ringState(props: CaptureRing | RunRing | ReadingRing): RingState {
+  if (props.mode === "run") return "measuring";
+  if (props.mode === "reading") return "done";
+  if (props.blockedReason) return "blocked";
+  if (props.capturing) return "capturing";
+  const passed = Object.values(props.checks).filter(Boolean).length;
+  if (passed === 4) return "ready";
+  return passed > 0 || props.instruction ? "checking" : "idle";
 }
 
 export type RingProps = (CaptureRing | RunRing | ReadingRing) & {
@@ -103,10 +124,20 @@ export function Ring(props: RingProps) {
 
   let readingDeg: number | null = null;
   let text: string | undefined;
+  const state = ringState(props);
   if (props.mode === "capture") {
     const allPass = Object.values(props.checks).every(Boolean);
-    readingDeg = allPass ? READING_BASE_DEG : null;
-    text = props.blockedReason ?? (allPass ? "Ready to capture" : props.instruction);
+    readingDeg = allPass || props.capturing ? READING_BASE_DEG : null;
+    text =
+      state === "blocked"
+        ? props.blockedReason
+        : state === "capturing"
+          ? props.countdown !== undefined && props.countdown > 0
+            ? `Hold still. Taking the photo in ${String(props.countdown)}`
+            : "Hold still"
+          : allPass
+            ? "Ready to capture"
+            : props.instruction;
   } else if (props.mode === "reading") {
     readingDeg = ARC_TOP + (ARC_BOTTOM - ARC_TOP) * Math.min(1, Math.max(0, props.value));
   }
@@ -129,7 +160,7 @@ export function Ring(props: RingProps) {
       : { role: "img" as const, "aria-label": label };
 
   return (
-    <figure className={cx("mira-ring-wrap", className)}>
+    <figure className={cx("mira-ring-wrap", className)} data-state={state}>
       <div className="mira-ring" {...aria}>
         <div className="mira-ring__mirror">{children}</div>
         <svg viewBox="0 0 400 400" aria-hidden="true" focusable="false">
@@ -140,7 +171,10 @@ export function Ring(props: RingProps) {
                 <Tick
                   key={k}
                   deg={CHECK_DEG[k]}
-                  className={cx("mira-ring__tick", props.checks[k] ? "is-done" : "is-queued")}
+                  className={cx(
+                    "mira-ring__tick",
+                    props.checks[k] || props.capturing ? "is-done" : "is-queued",
+                  )}
                 />
               ))}
               {DECOR_DEG.map((d) => (

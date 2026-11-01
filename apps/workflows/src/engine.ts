@@ -33,7 +33,8 @@ export function createEngine(options: EngineOptions): Engine {
   const caps: Caps = {
     node: options.caps?.node ?? CONFIG.budget.nodeCap.value,
     run: options.caps?.run ?? CONFIG.budget.runCap.value,
-    session: options.caps?.session ?? CONFIG.budget.sessionCap.value,
+    // The session cap is a deploy setting (MIRA_SESSION_UNIT_CAP); 200 matches its default.
+    session: options.caps?.session ?? 200,
   };
   const ledger = new Ledger(ports.state, ports.clock, caps);
   const costs = new FeatureCostCache(api, ports.clock);

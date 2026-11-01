@@ -59,31 +59,58 @@ export default function ComponentGallery() {
           Ring
         </h2>
         <div className="gallery__grid">
-          <Ring
-            mode="capture"
-            label="Capture checks: none passed"
-            checks={{ lighting: false, distance: false, angle: false, steadiness: false }}
-            instruction="Face a window or a lamp so your face is evenly lit."
-          />
-          <Ring
-            mode="capture"
-            label="Capture checks: 2 of 4 passed"
-            checks={{ lighting: true, distance: false, angle: true, steadiness: false }}
-            instruction="Move a little closer"
-          />
-          <Ring
-            mode="capture"
-            label="All four capture checks passed"
-            checks={{ lighting: true, distance: true, angle: true, steadiness: true }}
-          />
-          <Ring
-            mode="capture"
-            label="Capture blocked"
-            checks={{ lighting: false, distance: false, angle: false, steadiness: false }}
-            blockedReason="Camera access is off. Turn it on in your browser settings, or upload a photo."
-          />
-          <Ring mode="run" label="Building your sangeet look" steps={STEPS} />
-          <Ring mode="reading" label="A reading on the scale" value={0.7} />
+          <div>
+            <h3>Idle</h3>
+            <Ring
+              mode="capture"
+              label="The Ring at rest"
+              checks={{ lighting: false, distance: false, angle: false, steadiness: false }}
+            />
+          </div>
+          <div>
+            <h3>Checking</h3>
+            <Ring
+              mode="capture"
+              label="Capture checks: 2 of 4 passed"
+              checks={{ lighting: true, distance: false, angle: true, steadiness: false }}
+              instruction="Move a little closer"
+            />
+          </div>
+          <div>
+            <h3>Ready</h3>
+            <Ring
+              mode="capture"
+              label="All four capture checks passed"
+              checks={{ lighting: true, distance: true, angle: true, steadiness: true }}
+            />
+          </div>
+          <div>
+            <h3>Capturing</h3>
+            <Ring
+              mode="capture"
+              label="Taking the photo"
+              checks={{ lighting: true, distance: true, angle: true, steadiness: true }}
+              capturing
+              countdown={2}
+            />
+          </div>
+          <div>
+            <h3>Measuring</h3>
+            <Ring mode="run" label="Building your sangeet look" steps={STEPS} />
+          </div>
+          <div>
+            <h3>Done</h3>
+            <Ring mode="reading" label="A reading on the scale" value={0.7} />
+          </div>
+          <div>
+            <h3>Blocked</h3>
+            <Ring
+              mode="capture"
+              label="Capture blocked"
+              checks={{ lighting: false, distance: false, angle: false, steadiness: false }}
+              blockedReason="Camera access is off. Turn it on in your browser settings, or upload a photo."
+            />
+          </div>
         </div>
       </section>
 

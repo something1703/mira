@@ -22,7 +22,10 @@ export const metadata: Metadata = {
   title: { default: "MIRA — look, measured", template: "%s · MIRA" },
   description:
     "MIRA measures you once with YouCam, then matches foundation, composes complete looks and checks every preview before you see it.",
-  icons: { icon: "/brand/favicon.svg" },
+  icons: {
+    icon: "/brand/favicon.svg",
+    apple: [{ url: "/icons/icon-180.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {

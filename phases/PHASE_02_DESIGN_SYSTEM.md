@@ -33,11 +33,11 @@
 - [x] `StepRail`: queued, running, done, cached, failed, skipped; live region announcements.
 - [x] `QuoteSheet`: quoting, ready, over cap, confirmed; per-step units table.
 - [x] `Verdict`: detected, not yet, unavailable.
-- [x] **`Ring`** (signature): SVG built from the logo geometry; modes capture (4 quality ticks), run (n node ticks), reading (accent sweep 600 ms); `role="progressbar"` in run mode; reduced-motion variant.
+- [x] **`Ring`** (signature) _(all seven DESIGN_SYSTEM §6 states, D27)_: SVG built from the logo geometry; modes capture (4 quality ticks), run (n node ticks), reading (accent sweep 600 ms); `role="progressbar"` in run mode; reduced-motion variant.
   *Accept:* stories show every mode; axe passes; sweep disabled under reduced motion.
 
 ### Screens
-- [x] App shell with header lockup, theme switch, global banners (recorded run, offline, budget), Ask MIRA panel open/close (empty content).
+- [x] App shell with header lockup, theme switch, global banners (recorded run, offline, budget), Ask MIRA panel open/close (empty content). _(Budget banner reads the session budget (D14, D27); its "See what uses units" action waits for a units page. The "Background run finished" toast in UX_FLOWS §0 needs runs started from screens, Phase 5 on.)_
 - [x] Welcome (first visit, returning, profile deleted).
 - [x] Consent (default, ticked, declined).
 

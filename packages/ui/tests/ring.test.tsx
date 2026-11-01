@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { Ring } from "../src";
+import { Ring, ringState } from "../src";
 
 describe("Ring", () => {
   it("capture mode: ticks reflect the four checks and the caption names the failing one", () => {
@@ -78,5 +78,45 @@ describe("Ring", () => {
     expect(at(0)).toBe("-40deg");
     expect(at(1 / 3)).toBe("0deg");
     expect(at(1)).toBe("80deg");
+  });
+});
+
+describe("Ring states (DESIGN_SYSTEM §6)", () => {
+  const none = { lighting: false, distance: false, angle: false, steadiness: false };
+  const all = { lighting: true, distance: true, angle: true, steadiness: true };
+
+  it.each([
+    ["idle", { mode: "capture", checks: none }],
+    [
+      "checking",
+      { mode: "capture", checks: { ...none, lighting: true }, instruction: "Move a little closer" },
+    ],
+    ["ready", { mode: "capture", checks: all }],
+    ["capturing", { mode: "capture", checks: all, capturing: true, countdown: 2 }],
+    ["blocked", { mode: "capture", checks: all, blockedReason: "Camera access is off." }],
+    ["measuring", { mode: "run", steps: [{ id: "a", label: "A", state: "running" }] }],
+    ["done", { mode: "reading", value: 0.5 }],
+  ] as const)("%s", (state, props) => {
+    const { container } = render(
+      <Ring {...(props as Parameters<typeof Ring>[0])} label={`Ring ${state}`} />,
+    );
+    expect(ringState(props as Parameters<typeof ringState>[0])).toBe(state);
+    expect(container.querySelector("figure")).toHaveAttribute("data-state", state);
+  });
+
+  it("capturing lights every tick and counts down, then says hold still", () => {
+    const { container, rerender } = render(
+      <Ring mode="capture" label="Capturing" checks={none} capturing countdown={2} />,
+    );
+    expect(container.querySelectorAll(".mira-ring__tick.is-done")).toHaveLength(4);
+    expect(screen.getByText("Hold still. Taking the photo in 2")).toBeInTheDocument();
+    rerender(<Ring mode="capture" label="Capturing" checks={none} capturing countdown={0} />);
+    expect(screen.getByText("Hold still")).toBeInTheDocument();
+  });
+
+  it("idle shows no caption and no reading tick", () => {
+    const { container } = render(<Ring mode="capture" label="At rest" checks={none} />);
+    expect(container.querySelector("figcaption")).toBeNull();
+    expect(container.querySelector(".mira-ring__reading")).toBeNull();
   });
 });

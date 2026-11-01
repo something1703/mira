@@ -6,7 +6,7 @@ import {
   type ServiceContext,
   type EventBus,
 } from "@mira/runtime";
-import { Run, RunNode, WorkItem } from "@mira/schemas";
+import { Run, RunNode, SessionId, UserId, WorkItem } from "@mira/schemas";
 import { getDoc, listDocs } from "@mira/runtime";
 import { HttpYouCamApi, ReplayYouCam, type YouCamApi } from "@mira/youcam-client";
 import { fixtureDownloader, hasRecordings, loadFixtures } from "@mira/fixtures";
@@ -78,6 +78,7 @@ export function buildApp(
     download: options.download ?? (replaying ? fixtureDownloader() : fetchDownloader),
     engineVersion: ENGINE_VERSION,
     executors: demoExecutors,
+    caps: { session: env.MIRA_SESSION_UNIT_CAP },
     log: (message, fields) => {
       logger.info(fields ?? {}, message);
     },
@@ -152,12 +153,30 @@ export function buildApp(
     return { ok: true };
   });
 
+  // ---- the session's unit budget, for the shell's banner (docs/UX_FLOWS.md §0) ----
+  app.get("/internal/budgets/:sessionId", async (req, reply) => {
+    const id = SessionId.safeParse((req.params as { sessionId: string }).sessionId);
+    if (!id.success) {
+      return await reply.status(400).send({ error: "invalid_session", traceId: req.traceId });
+    }
+    const b = await engine.ledger.budget(id.data);
+    const cap = env.MIRA_SESSION_UNIT_CAP;
+    return {
+      cap,
+      reserved: b.reserved,
+      committed: b.committed,
+      left: Math.max(0, cap - b.reserved - b.committed),
+    };
+  });
+
   // ---- the demo graph (mock only: it uses a synthetic YouCam) ----
-  const demo = newDemoSession();
+  const fallbackSession = newDemoSession();
   app.post("/internal/runs/demo", async (req, reply) => {
     if (!mock || replaying)
       return await reply.status(404).send({ error: "not_found", traceId: req.traceId });
-    const started = await startDemoRun(engine, ports, demo);
+    // The person's own session, so the demo spends from (and shows) their budget.
+    const who = z.object({ userId: UserId, sessionId: SessionId }).safeParse(req.body ?? {});
+    const started = await startDemoRun(engine, ports, who.success ? who.data : fallbackSession);
     if (!started.ok)
       return await reply
         .status(422)

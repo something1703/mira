@@ -27,12 +27,11 @@ export const CONFIG = {
     lowShare: setting(0.2, "docs/UX_FLOWS.md §0", true),
     /**
      * Unit caps (docs/UX_FLOWS.md §0, "Session budget reached"). Starting values chosen so one
-     * look with a 10-second video (about 30 units) fits several times in a session; tune with the
-     * demo allowance.
+     * look with a 10-second video (about 30 units) fits several times in a session. The session
+     * cap is a deploy setting, `MIRA_SESSION_UNIT_CAP` (packages/schemas/src/env.ts).
      */
     nodeCap: setting(40, "Product choice; the costliest step is a 10 s video", false),
     runCap: setting(120, "Product choice", false),
-    sessionCap: setting(300, "Product choice; tune to the demo allowance", false),
     /** The live balance is re-read at most this often. */
     balanceCacheSeconds: setting(
       15,

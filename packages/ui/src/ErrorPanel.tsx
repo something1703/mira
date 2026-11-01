@@ -9,11 +9,20 @@ export interface ErrorPanelProps {
   /** What to do next. */
   next?: string;
   traceId?: string;
+  /** What to call the identifier: a run's trace ID, or the server's error reference. */
+  referenceLabel?: string;
   /** Retry and an alternative, e.g. "Go home". */
   actions?: ReactNode;
 }
 
-export function ErrorPanel({ title, why, next, traceId, actions }: ErrorPanelProps) {
+export function ErrorPanel({
+  title,
+  why,
+  next,
+  traceId,
+  referenceLabel = "Trace ID",
+  actions,
+}: ErrorPanelProps) {
   return (
     <div role="alert" className="mira-error">
       <DriftIcon />
@@ -21,7 +30,11 @@ export function ErrorPanel({ title, why, next, traceId, actions }: ErrorPanelPro
         <p className="mira-title">{title}</p>
         {why ? <p className="mira-error__text">{why}</p> : null}
         {next ? <p className="mira-error__text">{next}</p> : null}
-        {traceId ? <p className="mira-caption mira-error__trace">Trace ID: {traceId}</p> : null}
+        {traceId ? (
+          <p className="mira-caption mira-error__trace">
+            {referenceLabel}: {traceId}
+          </p>
+        ) : null}
         {actions ? <div className="mira-row">{actions}</div> : null}
       </div>
     </div>

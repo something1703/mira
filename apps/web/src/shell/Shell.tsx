@@ -2,6 +2,7 @@ import { Lockup } from "@mira/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AskMiraPanel } from "./AskMiraPanel";
+import { BudgetBanner } from "./BudgetBanner";
 import { SessionBanners } from "./SessionBanners";
 import { ThemeSwitch } from "./ThemeSwitch";
 
@@ -27,6 +28,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </header>
         <div className="shell__banners">
           <SessionBanners mock={mock} recorded={recorded} />
+          <BudgetBanner />
         </div>
         <main id="main" tabIndex={-1} className="shell__main">
           {children}

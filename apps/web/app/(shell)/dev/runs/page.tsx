@@ -1,15 +1,20 @@
 import { Button, EmptyState } from "@mira/ui";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { currentSession } from "../../../../src/budget";
 import { workflowsUrl } from "../../../../src/runs/api";
 
 export const metadata: Metadata = { title: "Run viewer" };
 
 async function startDemo() {
   "use server";
+  // The person's own session, so the demo spends from (and shows) their unit budget.
+  const session = await currentSession();
   const res = await fetch(`${workflowsUrl()}/internal/runs/demo`, {
     method: "POST",
     cache: "no-store",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(session ?? {}),
   });
   if (!res.ok) throw new Error(`The demo run could not start (${String(res.status)}).`);
   const { runId } = (await res.json()) as { runId: string };
