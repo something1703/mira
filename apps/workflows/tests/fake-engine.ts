@@ -5,6 +5,11 @@ import type {
   EngineClient,
   EngineFailure,
   FinishReading,
+  GarmentAuditReading,
+  GarmentColourReading,
+  IdentityReading,
+  LipAuditReading,
+  LookSuggestReading,
   LabTuple,
   NoiseFloorReading,
   PrerankReading,
@@ -25,6 +30,79 @@ export class FakeEngine implements EngineClient {
   /** What the shade endpoints answer next; tests set these to script a case. */
   prerank:
     ((skin: LabTuple, catalogue: { id: string; lab: LabTuple }[]) => PrerankReading[]) | undefined;
+  /** What the look endpoints answer next. */
+  garmentAudit: GarmentAuditReading = { label: "verified", de: 2.4, direction: null, reason: "ok" };
+  lipAudit: LipAuditReading = { label: "verified", de: 1.1 };
+  identity: IdentityReading = { drift: 0.02, passed: true };
+  garment: GarmentColourReading = {
+    lab: [45, 40, 20],
+    share: 0.8,
+    multicolour: false,
+    audit_labs: [[45, 40, 20]],
+    pixels: 5000,
+  };
+  suggestion: LookSuggestReading | undefined;
+  failLook: EngineFailure | undefined;
+  readonly lookCalls: string[] = [];
+
+  lookSuggest(i: Parameters<EngineClient["lookSuggest"]>[0]) {
+    this.lookCalls.push("suggest");
+    if (this.failLook) return Promise.resolve(err(this.failLook));
+    const lip = i.lips[0];
+    const blush = i.blushes[0];
+    const value: LookSuggestReading = this.suggestion ?? {
+      personal_contrast: 24,
+      lip: lip ? { shade: lip, reason: "hue_near_garment", contrast_matched: true } : null,
+      blush: {
+        shade: blush ?? null,
+        reason: blush ? "hue_near_lip_lower_chroma" : "none_in_window",
+      },
+    };
+    return Promise.resolve(ok({ value, engineVersion: "engines-test" }));
+  }
+
+  garmentColour(_imageB64: string) {
+    this.lookCalls.push("garment");
+    if (this.failLook) return Promise.resolve(err(this.failLook));
+    return Promise.resolve(ok({ value: this.garment, engineVersion: "engines-test" }));
+  }
+
+  auditGarment(_i: Parameters<EngineClient["auditGarment"]>[0]) {
+    this.lookCalls.push("audit-garment");
+    if (this.failLook) return Promise.resolve(err(this.failLook));
+    return Promise.resolve(
+      ok({
+        value: this.garmentAudit,
+        engineVersion: "engines-test",
+        config: { GARMENT_VERIFY_DE: { value: 6, calibrated: false } },
+      }),
+    );
+  }
+
+  auditLip(_r: LabTuple, _i: LabTuple) {
+    this.lookCalls.push("audit-lip");
+    if (this.failLook) return Promise.resolve(err(this.failLook));
+    return Promise.resolve(
+      ok({
+        value: this.lipAudit,
+        engineVersion: "engines-test",
+        config: { LIP_VERIFY_DE: { value: 3, calibrated: false } },
+      }),
+    );
+  }
+
+  auditIdentity(_s: readonly number[], _f: readonly number[]) {
+    this.lookCalls.push("audit-identity");
+    if (this.failLook) return Promise.resolve(err(this.failLook));
+    return Promise.resolve(
+      ok({
+        value: this.identity,
+        engineVersion: "engines-test",
+        config: { IDENTITY_DRIFT_MAX: { value: 0.08, calibrated: false } },
+      }),
+    );
+  }
+
   closedLoopFor: ((render: LabTuple) => ClosedLoopReading) | undefined;
   finishReading: FinishReading = {
     finishes: ["satin"],

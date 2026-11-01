@@ -252,6 +252,13 @@ const CASES: Case[] = [
     inputs: { src: { url: "https://s" }, ref: { url: "https://r" } },
   },
   {
+    name: "bag, ids",
+    bundle: "ai_bag",
+    slug: "bag",
+    params: { gender: "female" },
+    inputs: { src, ref },
+  },
+  {
     name: "hair colour, preset",
     bundle: "ai_hair_color",
     slug: "hair-color",
@@ -358,6 +365,9 @@ describe("builders satisfy the saved OpenAPI request schemas", () => {
         ref_file_id: "y",
         garment_category: "dress",
       }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      check("ai_bag", "bag", { src_file_id: "x", ref_file_id: "y", gender: "other" }).length,
     ).toBeGreaterThan(0);
   });
 });

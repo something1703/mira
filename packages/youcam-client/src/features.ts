@@ -206,6 +206,9 @@ export const ClothesParams = z.object({
   filterMultiPerson: z.enum(["off", "normal", "strict"]).optional(),
 });
 
+/** Bag try-on needs the wearer's gender (female or male); it is the YouCam API's own field. */
+export const BagParams = z.object({ gender: z.enum(["female", "male"]) });
+
 export const BackgroundParams = z.union([
   z.object({ type: z.literal("prompt"), prompt: z.string().min(1).max(1500) }),
   z.object({ type: z.literal("template"), templateId: z.string().min(1) }),
@@ -387,6 +390,20 @@ export const FEATURES = {
     }),
     // V4's cost is not in the bundle; it is read from feature-cost (docs/FACTS.md F6).
     price: (_p, skus) => priceSingle("cloth-v4", skus),
+  }),
+  bag: feature({
+    slug: "bag",
+    version: "v2.0",
+    webhooks: "undocumented",
+    params: BagParams,
+    result: UrlResult,
+    inputs: "single+ref",
+    buildBody: (p, i) => ({
+      ...srcFields(need(i.src, "src")),
+      ...refFields(need(i.ref, "ref")),
+      gender: p.gender,
+    }),
+    price: (_p, skus) => priceSingle("bag", skus),
   }),
   "hair-color": feature({
     slug: "hair-color",

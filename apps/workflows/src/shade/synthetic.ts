@@ -1,6 +1,7 @@
 import { placeholderPng } from "@mira/fixtures";
 import type { FakeYouCam } from "@mira/youcam-client/testing";
 import type { Downloader } from "../lifecycle/types";
+import { LIP_SHARE, lipHex, mix as mixHex } from "../look/synthetic";
 import { SYNTHETIC_TONE } from "../twin/synthetic";
 
 /**
@@ -29,15 +30,20 @@ export function seedShadeFake(fake: FakeYouCam): void {
   fake.respondWith("makeup-vto", { latencyMs: 8_000 }).respondWith("skin-tone-analysis", {
     latencyMs: 4_000,
     resultsFor: (body, resultOf) => {
-      const rendered = foundationHex(resultOf(body.src_file_url));
-      return rendered === undefined
-        ? SYNTHETIC_TONE
-        : {
-            color: {
-              ...SYNTHETIC_TONE.color,
-              skin_color: mix(SYNTHETIC_TONE.color.skin_color, rendered, 0.5),
-            },
-          };
+      const asked = resultOf(body.src_file_url);
+      const rendered = foundationHex(asked);
+      const lip = lipHex(asked);
+      return {
+        color: {
+          ...SYNTHETIC_TONE.color,
+          ...(rendered === undefined
+            ? {}
+            : { skin_color: mix(SYNTHETIC_TONE.color.skin_color, rendered, 0.5) }),
+          ...(lip === undefined
+            ? {}
+            : { lip_color: mixHex(SYNTHETIC_TONE.color.lip_color, lip, LIP_SHARE) }),
+        },
+      };
     },
   });
 }

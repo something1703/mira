@@ -50,7 +50,7 @@ interface Task {
 
 export class FakeYouCam implements YouCamApi {
   readonly calls: { op: string; detail?: string }[] = [];
-  readonly files = new Map<string, { uploaded: boolean; bytes?: number }>();
+  readonly files = new Map<string, { uploaded: boolean; bytes?: number; data?: Uint8Array }>();
   readonly tasks = new Map<string, Task>();
   readonly deleted = new Set<string>();
   units: number;
@@ -163,6 +163,8 @@ export class FakeYouCam implements YouCamApi {
     if (f) {
       f.uploaded = true;
       f.bytes = bytes.byteLength;
+      // Kept so a test double can tell what a reference picture stood for.
+      f.data = bytes;
     }
     return Promise.resolve(ok(undefined));
   }

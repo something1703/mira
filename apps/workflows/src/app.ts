@@ -9,6 +9,7 @@ import {
 } from "@mira/runtime";
 import {
   Run,
+  LookResult,
   RunNode,
   ShadeRange,
   SessionId,
@@ -20,12 +21,23 @@ import {
 } from "@mira/schemas";
 import { getDoc, listDocs } from "@mira/runtime";
 import { ReplayYouCam, type YouCamApi } from "@mira/youcam-client";
-import { fixtureDownloader, hasRecordings, loadCatalogues, loadFixtures } from "@mira/fixtures";
+import {
+  fixtureDownloader,
+  hasRecordings,
+  loadCatalogues,
+  loadFixtures,
+  loadSampleGarments,
+} from "@mira/fixtures";
 import { FakeYouCam } from "@mira/youcam-client/testing";
 import { z } from "zod";
 import { DEMO_PRICES, demoExecutors, newDemoSession, seedDemoFake, startDemoRun } from "./demo";
 import { createEngine, type Engine } from "./engine";
+import { createLookExecutors } from "./graphs/compose-look";
 import { createShadeExecutors } from "./graphs/match-shade";
+import { createGarmentExecutors, loadGarment, makeSampleGarment } from "./look/garments";
+import { planIngest, type IngestError } from "./look/ingest";
+import { planLook, suggestLook, type LookError } from "./look/plan";
+import { lookDownloader, seedLookFake } from "./look/synthetic";
 import { planShadeMatch, type ShadeBuildError } from "./shade/build";
 import { planShade } from "./shade/plan";
 import { seedShadeFake, syntheticDownloader } from "./shade/synthetic";
@@ -98,6 +110,7 @@ export function buildApp(
   seedDemoFake(fake);
   seedTwinFake(fake);
   seedShadeFake(fake);
+  seedLookFake(fake);
   // With real recordings on disk (MIRA_FIXTURES=recorded) mock mode replays them; with none it
   // says so and shows the synthetic demo instead. It never pretends the demo is a recording.
   const replaying = mock && process.env.MIRA_FIXTURES === "recorded" && hasRecordings();
@@ -130,13 +143,15 @@ export function buildApp(
         ? fixtureDownloader()
         : mock && options.api === undefined
           ? // Synthetic renders have no real image to fetch: they get the placeholder picture.
-            syntheticDownloader(fake, fetchDownloader)
+            lookDownloader(fake, syntheticDownloader(fake, fetchDownloader))
           : fetchDownloader),
     engineVersion: ENGINE_VERSION,
     executors: {
       ...demoExecutors,
       ...createTwinExecutors({ ports, engine: engines, synthetic }),
       ...createShadeExecutors({ engine: engines }),
+      ...createLookExecutors({ engine: engines, ports, synthetic }),
+      ...createGarmentExecutors({ engine: engines, ports }),
     },
     caps: {
       session: env.MIRA_SESSION_UNIT_CAP,
@@ -231,6 +246,11 @@ export function buildApp(
       .safeParse(req.body);
     if (!body.success)
       return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    for (const nodeId of body.data.nodeIds) {
+      if (await withheld(runId, nodeId)) {
+        return await reply.status(409).send({ error: "image_withheld", traceId: req.traceId });
+      }
+    }
     const saved = await engine.runner.save(runId, body.data.nodeIds);
     if (!saved.ok) {
       const status = saved.error.code === "run_not_found" ? 404 : 409;
@@ -380,9 +400,18 @@ export function buildApp(
       });
     });
   }
+  // A picture the identity check withheld is never served, and cannot be saved (docs/ENGINES.md §7.3).
+  const withheld = async (runId: string, nodeId: string): Promise<boolean> => {
+    const assembled = await getDoc(ports.state, `runs/${runId}/nodes/assemble`, RunNode);
+    const result = LookResult.safeParse(assembled?.output);
+    return result.success && result.data.withheld.includes(nodeId);
+  };
   // A preview image while the run's review window is open (it is deleted when the window closes).
   app.get("/internal/runs/:runId/images/:nodeId", async (req, reply) => {
     const { runId, nodeId } = req.params as { runId: string; nodeId: string };
+    if (await withheld(runId, nodeId)) {
+      return await reply.status(404).send({ error: "image_withheld", traceId: req.traceId });
+    }
     const node = await getDoc(ports.state, `runs/${runId}/nodes/${nodeId}`, RunNode);
     const blob = node?.resultRef === undefined ? undefined : await ports.blobs.get(node.resultRef);
     if (!blob) return await reply.status(404).send({ error: "image_gone", traceId: req.traceId });
@@ -391,6 +420,147 @@ export function buildApp(
       .header("cache-control", "no-store")
       .send(Buffer.from(blob.bytes));
   });
+
+  // ---- Look: garments, the suggestion, quote and build ----
+  app.get("/internal/look/catalogue", () => ({ garments: mock ? loadSampleGarments() : [] }));
+  const garmentStatus = (e: IngestError): number =>
+    e.code === "upload_foreign"
+      ? 400
+      : e.code === "upload_missing" || e.code === "kind_category_mismatch"
+        ? 422
+        : e.code === "quote_failed"
+          ? e.detail.code === "price_unavailable"
+            ? 502
+            : 422
+          : e.code === "graph_rejected"
+            ? 500
+            : 409;
+  app.post("/internal/look/garments/sample", async (req, reply) => {
+    const body = z
+      .object({ userId: UserId, sampleId: z.string().min(1).max(80) })
+      .safeParse(req.body);
+    if (!body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    // Sample garments are drawn shapes in invented colours: they exist in mock mode only.
+    if (!mock) return await reply.status(404).send({ error: "no_samples", traceId: req.traceId });
+    const garment = await makeSampleGarment(ports, engines, body.data.userId, body.data.sampleId);
+    if (!garment)
+      return await reply.status(404).send({ error: "unknown_sample", traceId: req.traceId });
+    return await reply.status(201).send({ garment });
+  });
+  const IngestBody = z.object({
+    userId: UserId,
+    sessionId: SessionId,
+    photo: blobKey,
+    name: z.string().min(1).max(120),
+    kind: z.enum(["outfit", "shoes", "bag"]),
+    category: z.enum(["upper_body", "lower_body", "full_body", "outer", "auto", "shoes"]),
+    source: z.discriminatedUnion("kind", [
+      z.object({ kind: z.literal("link"), url: z.string().max(2_000) }),
+      z.object({ kind: z.literal("upload") }),
+    ]),
+    confirmedTotal: z.number().int().nonnegative().optional(),
+  });
+  for (const start of [false, true]) {
+    app.post(
+      start ? "/internal/look/garments/ingest" : "/internal/look/garments/quote",
+      async (req, reply) => {
+        const body = IngestBody.safeParse(req.body);
+        if (!body.success)
+          return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+        if (start && body.data.confirmedTotal === undefined) {
+          return await reply
+            .status(400)
+            .send({ error: "confirmed_total_required", traceId: req.traceId });
+        }
+        const planned = await planIngest(engine, ports, { ...body.data, sample: synthetic }, start);
+        if (!planned.ok) {
+          return await reply
+            .status(garmentStatus(planned.error))
+            .send({ ...planned.error, error: planned.error.code, traceId: req.traceId });
+        }
+        return await reply.status(start ? 201 : 200).send({ ...planned.value, synthetic });
+      },
+    );
+  }
+  const lookStatus = (e: LookError): number =>
+    e.code === "upload_foreign"
+      ? 400
+      : e.code === "upload_missing" ||
+          e.code === "garment_missing" ||
+          e.code === "garment_wrong_kind"
+        ? 422
+        : e.code === "no_profile" || e.code === "no_colouring" || e.code === "no_lip_catalogue"
+          ? 409
+          : e.code === "engine_failed"
+            ? 502
+            : e.code === "quote_failed"
+              ? e.detail.code === "price_unavailable"
+                ? 502
+                : 422
+              : e.code === "graph_rejected"
+                ? 500
+                : 409;
+  app.post("/internal/look/suggest", async (req, reply) => {
+    const body = z
+      .object({ userId: UserId, outfitId: z.string().min(1).max(80) })
+      .safeParse(req.body);
+    if (!body.success)
+      return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+    const outfit = await loadGarment(ports, body.data.userId, body.data.outfitId);
+    if (!outfit)
+      return await reply.status(422).send({ error: "garment_missing", traceId: req.traceId });
+    const s = await suggestLook(ports, engines, body.data.userId, outfit);
+    if (!s.ok) {
+      return await reply
+        .status(lookStatus(s.error))
+        .send({ ...s.error, error: s.error.code, traceId: req.traceId });
+    }
+    const { lipLab: _unused, ...suggestion } = s.value;
+    return { suggestion, synthetic };
+  });
+  const LookBody = z.object({
+    userId: UserId,
+    sessionId: SessionId,
+    photo: blobKey,
+    outfitId: z.string().min(1).max(80),
+    shoesId: z.string().min(1).max(80).optional(),
+    bagId: z.string().min(1).max(80).optional(),
+    bagGender: z.enum(["female", "male"]).optional(),
+    makeup: z.boolean().optional(),
+    hairHex: z
+      .string()
+      .regex(/^#[0-9A-F]{6}$/)
+      .optional(),
+    venue: z
+      .discriminatedUnion("type", [
+        z.object({ type: z.literal("prompt"), prompt: z.string().min(1).max(1_500) }),
+        z.object({ type: z.literal("template"), templateId: z.string().min(1).max(120) }),
+      ])
+      .optional(),
+    video: z.boolean().optional(),
+    removedSteps: z.array(z.string().min(1).max(20)).max(10).optional(),
+    confirmedTotal: z.number().int().nonnegative().optional(),
+  });
+  for (const start of [false, true]) {
+    app.post(start ? "/internal/look/build" : "/internal/look/quote", async (req, reply) => {
+      const body = LookBody.safeParse(req.body);
+      if (!body.success)
+        return await reply.status(400).send({ error: "invalid_body", traceId: req.traceId });
+      if (start && body.data.confirmedTotal === undefined) {
+        return await reply
+          .status(400)
+          .send({ error: "confirmed_total_required", traceId: req.traceId });
+      }
+      const planned = await planLook(engine, ports, engines, body.data, start);
+      if (!planned.ok) {
+        return await reply
+          .status(lookStatus(planned.error))
+          .send({ ...planned.error, error: planned.error.code, traceId: req.traceId });
+      }
+      return await reply.status(start ? 201 : 200).send({ ...planned.value, synthetic });
+    });
+  }
 
   // ---- the Twin: quote, build, read, download, delete ----
   const BuildBody = z.object({

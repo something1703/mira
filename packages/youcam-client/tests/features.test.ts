@@ -236,6 +236,7 @@ describe("webhook flag matches the saved bundles", () => {
     "bg-replace": "ai_photo_background_change",
     "image-to-video/youcam": "ai_video_generator",
     sod: "ai_background_removal",
+    bag: "ai_bag",
   };
 
   it("every registered feature has a bundle in this table", () => {

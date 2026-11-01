@@ -84,6 +84,23 @@ export const CONFIG = {
       false,
     ),
   },
+  look: {
+    /** Request strengths for a look's lip and blush (0-100). Starting values, not calibrated. */
+    lipColourIntensity: setting(70, "Product choice; Phase 8 chain-quality experiment", false),
+    blushColourIntensity: setting(40, "Product choice; Phase 8 chain-quality experiment", false),
+    /**
+     * Thresholds used for labels only when an engine reply does not echo them (it does). They
+     * equal the engines' own values (services/engines/mira_engines/config.py).
+     */
+    garmentVerifyDeFallback: setting(6, "docs/ENGINES.md §7.1", false),
+    lipVerifyDeFallback: setting(3, "docs/ENGINES.md §7.2", false),
+    identityMaxFallback: setting(0.08, "docs/ENGINES.md §7.3", false),
+    /** Longest chain shown by default until the chain-quality experiment decides (F-row). */
+    defaultChainLength: setting(7, "Phase 8 chain-quality experiment pending", false),
+    /** Video lengths and resolutions offered. */
+    videoDurationSec: setting(5 as 5 | 10, "Cheapest length (docs/YOUCAM_API.md §3)", false),
+    videoResolution: setting("480" as "480" | "720" | "1080", "Cheapest resolution", false),
+  },
   twin: {
     /**
      * HD skin concerns read when building a profile. Skin Analysis is priced in tiers by concern

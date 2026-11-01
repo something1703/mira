@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { ShadeRange } from "@mira/schemas";
+import { LookCatalogue, ShadeRange } from "@mira/schemas";
 import { COST_SNAPSHOT_FILE, Fixture, type Sku } from "@mira/youcam-client";
 import { z } from "zod";
 
@@ -119,3 +119,26 @@ export function loadCataloguePage(name: string, dir: string = CATALOGUES_DIR): s
   return existsSync(path) ? readFileSync(path, "utf8") : undefined;
 }
 export * from "./placeholder";
+
+export const LOOK_DIR = join(CATALOGUES_DIR, "look");
+
+/** Sample lip and blush shades for look suggestions (invented; mock mode and tests). */
+export function loadLookCatalogue(dir: string = LOOK_DIR): LookCatalogue {
+  return LookCatalogue.parse(JSON.parse(readFileSync(join(dir, "lips.json"), "utf8")));
+}
+
+export interface SampleGarment {
+  id: string;
+  name: string;
+  kind: "outfit" | "shoes" | "bag";
+  category: "upper_body" | "lower_body" | "full_body" | "outer" | "auto" | "shoes";
+  hex: string;
+}
+
+/** Sample garments to browse in mock mode (invented). Live mode has none: nothing is made up. */
+export function loadSampleGarments(dir: string = LOOK_DIR): SampleGarment[] {
+  const file = JSON.parse(readFileSync(join(dir, "garments.json"), "utf8")) as {
+    garments: SampleGarment[];
+  };
+  return file.garments;
+}

@@ -12,3 +12,4 @@ export * from "./trace";
 export * from "./claim-linter";
 export * from "./agent-tools";
 export * from "./format";
+export * from "./look";

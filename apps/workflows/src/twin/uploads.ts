@@ -70,6 +70,8 @@ export const UploadKind = z.enum([
   "hair_front",
   "hair_right",
   "hair_left",
+  /** A garment picture for a look: a product photo, kept like a held photo (D39). */
+  "garment",
 ]);
 export type UploadKind = z.infer<typeof UploadKind>;
 
