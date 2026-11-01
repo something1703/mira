@@ -21,8 +21,8 @@ Maximum tool-call depth per turn: 6. Context window per turn: system prompt, las
 
 | Job | Env var | Typical choice |
 | --- | --- | --- |
-| Main loop | `MIRA_MODEL_MAIN` | Claude Sonnet on Vertex if enabled in your region; otherwise Gemini Pro |
-| Extraction (claims, shades, garment attributes from text) | `MIRA_MODEL_SMALL` | Claude Haiku or Gemini Flash |
+| Main loop | `MIRA_MODEL_MAIN` | `gemini-3-flash-preview` on Vertex (D17); escalate to `gemini-3.5-flash` if the evals fall below 95% |
+| Extraction (claims, shades, garment attributes from text) | `MIRA_MODEL_SMALL` | `gemini-3-flash-preview` |
 | Catalogue batch extraction | `MIRA_MODEL_SMALL` via Vertex batch prediction | Confirm batch support for the chosen model |
 | Fallback | `MIRA_MODEL_PROVIDER=anthropic-direct` | Only if Vertex quota or region blocks |
 

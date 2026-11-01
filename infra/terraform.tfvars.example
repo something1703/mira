@@ -1,2 +1,9 @@
 project_id = "your-gcp-project-id"
 region     = "asia-south1"
+
+# Optional budget alert (emails billing admins; does not cap spend).
+# billing_account_id = "XXXXXX-XXXXXX-XXXXXX"
+# monthly_budget_usd = 20
+
+# Optional: keep the web app warm for the judging window (about $13/month).
+# warm_services = ["web"]

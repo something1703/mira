@@ -34,3 +34,11 @@ printf '%s' "$YOUCAM_API_KEY" | gcloud secrets versions add youcam-api-key --dat
 ```
 
 Images: `gcloud builds submit --config infra/cloudbuild.yaml`. The first `apply` expects a `bootstrap` tag to exist; push one with the same build and `--substitutions=SHORT_SHA=bootstrap`.
+
+## Cost
+
+Everything scales to zero, so an idle deploy costs about $1 a month (stored images). Cloud Run bills only while a request is running, and the largest charge is the language model, about 0.6¢ per assistant turn with Gemini 3 Flash. See decisions D17 and D18 for why the services stay separate and why the model is Flash.
+
+- `billing_account_id` creates a budget alert (emails at 50%, 90% and 100% of actual spend and 100% of forecast; it does not cap spend).
+- `warm_services = ["web"]` keeps one idle instance for the judging window, about $13 a month.
+- Cloud Build uses the default machine, whose first 2,500 minutes a month are free.

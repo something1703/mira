@@ -4,8 +4,9 @@ substitutions:
   _REGION: asia-south1
   _REPO: mira
 
+# Default machine (e2-standard-2): its first 2,500 minutes a month are free. Faster machines are
+# billed per minute from the first one, and a deploy is rare enough that speed is not worth it.
 options:
-  machineType: E2_HIGHCPU_8
   logging: CLOUD_LOGGING_ONLY
 
 steps:

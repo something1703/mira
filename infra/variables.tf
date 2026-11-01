@@ -30,3 +30,25 @@ variable "youcam_queue_rps" {
   type        = object({ submit = number, poll = number })
   default     = { submit = 0.2, poll = 0.35 }
 }
+
+variable "warm_services" {
+  description = <<-EOT
+    Services kept warm with one idle instance so nobody waits on a cold start. Leave empty while
+    building (idle cost 0). For judging, ["web"] costs about $13/month; add "workflows" only if the
+    first run after idle feels slow. Idle instances bill at the reduced idle rate, never full CPU.
+  EOT
+  type        = list(string)
+  default     = []
+}
+
+variable "billing_account_id" {
+  description = "Billing account ID (e.g. 019877-AF3D95-373629). When set, creates a budget alert; null skips it."
+  type        = string
+  default     = null
+}
+
+variable "monthly_budget_usd" {
+  description = "Monthly budget for the alert. Alerts email billing admins at 50%, 90% and 100% of actual spend and at 100% of forecast; they do not stop spending."
+  type        = number
+  default     = 20
+}

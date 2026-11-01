@@ -18,4 +18,8 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
+
+  # Budgets are billed-account resources; they need a quota project to call the Budget API.
+  user_project_override = true
+  billing_project       = var.project_id
 }

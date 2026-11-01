@@ -17,7 +17,7 @@ resource "google_cloud_run_v2_service" "svc" {
     timeout         = "300s"
 
     scaling {
-      min_instance_count = 0
+      min_instance_count = contains(var.warm_services, each.key) ? 1 : 0
       max_instance_count = var.max_instances
     }
 
