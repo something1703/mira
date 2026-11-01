@@ -65,6 +65,10 @@ Useful pages in mock mode: `/` and `/consent`, `/dev/components` (every componen
 
 D10 ports and adapters (built, mock side). D11 hand-written Zod per YouCam feature. D12 chain on the previous result URL. D13 verify webhooks and always poll as fallback. D14 anonymous signed sessions (built). D15 agent text uses placeholders for product and shade names (Phase 7). D16 Build Twin gives a same-session estimate, not a noise floor. D19 a gallery instead of Storybook, plain CSS instead of Tailwind. D20 two contrast fixes. D21 Atkinson keeps tabular figures. D22 and D27 design reviews. D23 images are never cached across runs. D24 the webhook forwards, workflows stays the only writer. D25 mock mode never calls synthetic results a recording. D26 prices only from feature-cost, fail closed. D28 generated Python models and how engines must read JSON (strict). D29 the client-side rate limiter. D30 saved looks are copied to `saved/`. D31 Build Twin: eight HD concerns, one face photo, optional separately quoted repeats. D32 body and hand photos are held at most two hours, visibly. D33 a failed retry never wipes a profile; delete waits for running runs. D34 confidence words say only what is known.
 
+## Launch status
+
+Draft Devpost text: `docs/DEVPOST.md` (passes the claim linter; says plainly that everything is mock-mode). The Devpost deadline in `docs/DEMO_AND_SUBMISSION.md` is 2 November 2026, 10:15 pm IST. Not done and needing the user: cost approval and deploy, the demo video on a real phone, screenshots, a public repo or share with contact_event@PerfectCorp.com, rotating the pasted YouCam key, the live and experiment runs, submitting.
+
 ## Phase 10 map
 
 - **MCP:** `packages/mira-mcp/src/{app,tools,tokens,engines}.ts`; `MIRA_MCP_TOKENS` is `token:name:units`. In-memory caps, so one instance. Skill in `skills/measured-shade-match/`.
