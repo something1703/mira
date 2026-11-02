@@ -54,6 +54,17 @@ TORSO_HALF_WIDTH_FACES: Final = Threshold(1.2, "docs/ENGINES.md §7.1 step 2", F
 TORSO_TOP_FACES: Final = Threshold(0.4, "docs/ENGINES.md §7.1 step 2", False, "faces")
 TORSO_BOTTOM_FACES: Final = Threshold(2.0, "docs/ENGINES.md §7.1 step 2", False, "faces")
 
+# Face framing for analysis (docs/YOUCAM_API.md §3: the face must be wider than 60% of the image;
+# YouCam's photo guide suggests 60-80%). A live test on head-and-shoulders photos failed with
+# error_src_face_too_small for 3 of 5 people (docs/TESTS.md).
+FACE_MIN_SHARE: Final = Threshold(
+    0.62, "YouCam rule is > 0.60 of width; small margin", True, "share"
+)
+FACE_TARGET_SHARE: Final = Threshold(0.70, "Middle of YouCam's suggested 0.60-0.80", False, "share")
+FACE_CROP_ASPECT: Final = Threshold(
+    0.75, "Portrait 3:4, as YouCam recommends portrait", False, "w/h"
+)
+
 # Garment colour (docs/ENGINES.md §6)
 GARMENT_ALPHA_MIN: Final = Threshold(0.9, "docs/ENGINES.md §6 step 2", False, "alpha")
 GARMENT_KMEANS_K: Final = Threshold(3, "docs/ENGINES.md §6 step 3", False, "clusters")

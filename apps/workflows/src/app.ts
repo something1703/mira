@@ -136,19 +136,21 @@ export function buildApp(
   // With real recordings on disk (MIRA_FIXTURES=recorded) mock mode replays them; with none it
   // says so and shows the synthetic demo instead. It never pretends the demo is a recording.
   const replaying = mock && process.env.MIRA_FIXTURES === "recorded" && hasRecordings();
+  // Real YouCam with local everything else (MIRA_YOUCAM=live): photos are really measured.
+  const realYouCam = mock && env.MIRA_YOUCAM === "live" && options.api === undefined && !replaying;
   const loaded = replaying ? loadFixtures() : undefined;
   const api: YouCamApi =
     options.api ??
     (loaded
       ? new ReplayYouCam({ clock: ports.clock, fixtures: loaded.fixtures, skus: loaded.skus })
-      : mock
+      : mock && !realYouCam
         ? fake
         : liveYouCam(
             { apiKey: env.YOUCAM_API_KEY ?? "", baseUrl: env.YOUCAM_API_BASE_URL },
             ports.clock,
           ).api);
   const identity = new Identity();
-  const synthetic = mock && options.api === undefined && !replaying;
+  const synthetic = mock && options.api === undefined && !replaying && !realYouCam;
   const engines: EngineClient =
     options.engineClient ??
     new HttpEngineClient({
@@ -163,7 +165,7 @@ export function buildApp(
       options.download ??
       (replaying
         ? fixtureDownloader()
-        : mock && options.api === undefined
+        : synthetic
           ? // Synthetic renders have no real image to fetch: they get the placeholder picture.
             lookDownloader(fake, syntheticDownloader(fake, fetchDownloader))
           : fetchDownloader),
@@ -180,7 +182,7 @@ export function buildApp(
     caps: {
       session: env.MIRA_SESSION_UNIT_CAP,
       // Mock mode shares one server between many test runs, so the daily cap applies only if asked.
-      ...(!mock || process.env.MIRA_DEPLOYMENT_DAILY_UNIT_CAP
+      ...(!mock || realYouCam || process.env.MIRA_DEPLOYMENT_DAILY_UNIT_CAP
         ? { deploymentDaily: env.MIRA_DEPLOYMENT_DAILY_UNIT_CAP }
         : {}),
     },
@@ -319,8 +321,25 @@ export function buildApp(
     if (!Buffer.isBuffer(req.body)) {
       return await reply.status(415).send({ error: "unsupported_type", traceId: req.traceId });
     }
-    const bytes = new Uint8Array(req.body);
-    const checked = checkUpload(bytes);
+    let bytes = new Uint8Array(req.body);
+    let checked = checkUpload(bytes);
+    // A head-and-shoulders photo has the face too small for Skin Analysis (YouCam needs it wider
+    // than 60% of the image). Face photos are cropped to the face first; if the engines are not
+    // reachable or find no face, the photo is kept as it was and YouCam's own check decides.
+    let framed = false;
+    if (checked.ok && (who.data.kind === "face" || who.data.kind === "repeat")) {
+      const frame = await engines.frameFace(Buffer.from(bytes).toString("base64"));
+      const cropped = frame.ok ? frame.value.value.image_b64 : null;
+      if (cropped) {
+        const croppedBytes = new Uint8Array(Buffer.from(cropped, "base64"));
+        const recheck = checkUpload(croppedBytes);
+        if (recheck.ok) {
+          bytes = croppedBytes;
+          checked = recheck;
+          framed = true;
+        }
+      }
+    }
     if (!checked.ok) {
       const status = checked.error.code === "unsupported_type" ? 415 : 422;
       return await reply
@@ -345,6 +364,7 @@ export function buildApp(
       height: checked.value.info.height,
       bytes: checked.value.bytes,
       hdCapable: checked.value.hdCapable,
+      framed,
     });
   });
   app.delete("/internal/uploads", async (req, reply) => {
@@ -1091,7 +1111,7 @@ export function buildApp(
   // ---- the demo graph (mock only: it uses a synthetic YouCam) ----
   const fallbackSession = newDemoSession();
   app.post("/internal/runs/demo", async (req, reply) => {
-    if (!mock || replaying)
+    if (!mock || replaying || realYouCam)
       return await reply.status(404).send({ error: "not_found", traceId: req.traceId });
     // The person's own session, so the demo spends from (and shows) their budget.
     const who = z.object({ userId: UserId, sessionId: SessionId }).safeParse(req.body ?? {});

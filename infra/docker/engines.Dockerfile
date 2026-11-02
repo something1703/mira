@@ -7,6 +7,8 @@ WORKDIR /app
 COPY services/engines/pyproject.toml services/engines/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY services/engines/mira_engines ./mira_engines
+# The bundled MediaPipe face model (faces.py looks for it next to the package).
+COPY services/engines/assets ./assets
 RUN uv sync --frozen --no-dev
 
 FROM python:3.12-slim

@@ -65,6 +65,12 @@ export class FakeEngine implements EngineClient {
     return Promise.resolve(ok({ value, engineVersion: "engines-test" }));
   }
 
+  frameFace(_imageB64: string) {
+    return Promise.resolve(
+      ok({ value: { face: null, crop: null, image_b64: null }, engineVersion: "engines-test" }),
+    );
+  }
+
   garmentColour(_imageB64: string) {
     this.lookCalls.push("garment");
     if (this.failLook) return Promise.resolve(err(this.failLook));

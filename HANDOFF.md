@@ -2,6 +2,15 @@
 
 Last updated 2026-11-01, after building Phase 5 (capture and the measured profile) on top of the audited Phases 1 to 4. Read `AGENTS.md` first (the rules), then this file, then the phase you are working on in `phases/`.
 
+## Update 2026-11-02: MIRA now measures real photos
+
+- `pnpm dev:real` runs the real YouCam API with local state (D43). It needs `YOUCAM_API_KEY` in `.env.local`, and units are spent only after a confirmed quote.
+- Five real people were measured end to end and three real shade matches were run. The ledger matched YouCam's charge exactly (584 units). See `docs/TESTS.md` and the app's `/tests` page.
+- The live tests found and fixed three issues: face framing for head-and-shoulders photos (D44), upload angle tolerance (D45), and the shade re-measure angle.
+- New pages: `/how-it-works` (what MIRA is, and what is real today), `/tests` (real results) and `/runs/recorded` (sample run on a drawn face).
+- Camera: MIRA checks resolution before Camera Kit HD, falls back to the browser's camera when Camera Kit cannot open, and gives macOS camera-permission guidance.
+- Still open: the cloud adapters are not wired into workflows for a GCP deploy, Look, Event and Proof have not been tested live, and the launch steps are not done.
+
 ## In one paragraph
 
 Phases 1 to 4 are built and verified as far as they can be without a YouCam key or a deploy. Nothing is deployed to Google Cloud. One real YouCam task has been run (1 unit, F30); nothing else has been spent. The repo runs end to end in mock mode with no credentials: the design system, the Welcome and Consent screens, the YouCam client and node lifecycle (cache, ledger, crash-safe polling, cleanup), the signed webhook door, the measurement engines and a run viewer that shows a demo graph finishing, then finishing again from cache at zero units. Every YouCam result in mock mode is synthetic and says so; one real response (a background-removal task and the price list) has been recorded. Phase 5 adds the capture flow, the measured profile and the privacy screen, all working end to end in mock mode (sample results, a fake Camera Kit in tests). Shade, look and proof screens are Phases 6 to 10.

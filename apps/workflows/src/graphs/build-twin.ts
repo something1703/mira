@@ -90,6 +90,8 @@ export function buildTwinGraph(capture: TwinCapture): GraphSpec {
     // Repeats are separate, separately quoted steps: the person can drop them in the QuoteSheet.
     repeats.forEach((key, i) => nodes.push(skin(`skin-r${String(i + 1)}`, key, true)));
   }
+  // An uploaded photo was taken without the Ring's angle guidance (CONFIG.twin.uploadAngleStrictness).
+  const uploaded = capture.source === "upload";
   if (wants("colouring")) {
     nodes.push(
       {
@@ -97,6 +99,7 @@ export function buildTwinGraph(capture: TwinCapture): GraphSpec {
         kind: "youcam",
         label: "step.measure_colour",
         feature: "skin-tone-analysis",
+        ...(uploaded ? { params: { strictness: CONFIG.twin.uploadAngleStrictness.value } } : {}),
         inputs: { src: blob(capture.face) },
       },
       {
@@ -121,7 +124,10 @@ export function buildTwinGraph(capture: TwinCapture): GraphSpec {
       kind: "youcam",
       label: "step.measure_face",
       feature: "face-attr-analysis",
-      params: { features: [...CONFIG.twin.faceFeatures.value] },
+      params: {
+        features: [...CONFIG.twin.faceFeatures.value],
+        ...(uploaded ? { strictness: CONFIG.twin.uploadAngleStrictness.value } : {}),
+      },
       inputs: { src: blob(capture.face) },
     });
   }

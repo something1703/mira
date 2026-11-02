@@ -27,7 +27,7 @@
 
 ### Build Twin workflow
 - [x] Graph: skin-analysis (HD concerns needed by later phases, chosen to stay in one unit tier), skin-tone-analysis, face attributes, fitzpatrick, hair detectors in parallel; noise-floor engine; write twin; cleanup.
-- [ ] Face-crop helper so the face fills more than 60% of the width before skin analysis. _(not built: needs a face detector model, F35)_
+- [x] Face-crop helper so the face fills more than 60% of the width before skin analysis. _(built: `/face/frame` with the bundled BlazeFace model, D44; 5 of 5 real photos succeeded, F68)_
 - [x] Metrics written with IDs, units, sources and confidence.
 - [x] Partial results: failed groups marked "Not measured" with the mapped reason and a retry. _(retry = take that group's photos again; uploaded photos are deleted when a run ends, so a retry cannot reuse them)_
 

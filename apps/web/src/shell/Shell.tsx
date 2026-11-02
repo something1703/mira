@@ -12,6 +12,8 @@ export function Shell({ children }: { children: ReactNode }) {
   const mock = process.env.MIRA_MODE !== "live";
   // "Recorded run" is only true once real YouCam responses have been captured (Phase 3 fixtures).
   const recorded = process.env.MIRA_FIXTURES === "recorded";
+  // Real YouCam behind local services (`pnpm dev:real`): results are real and spend real units.
+  const realYouCam = mock && process.env.MIRA_YOUCAM === "live";
   return (
     <div className="shell">
       <a href="#main" className="skip-link">
@@ -23,6 +25,8 @@ export function Shell({ children }: { children: ReactNode }) {
             <Lockup className="shell__lockup" />
           </Link>
           <nav className="shell__nav" aria-label="Main">
+            <Link href="/how-it-works">How it works</Link>
+            <Link href="/tests">Tests</Link>
             <Link href="/profile">Profile</Link>
             <Link href="/shade">Shade</Link>
             <Link href="/look">Look</Link>
@@ -37,7 +41,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <div className="shell__banners">
-          <SessionBanners mock={mock} recorded={recorded} />
+          <SessionBanners mock={mock && !realYouCam} recorded={recorded} realYouCam={realYouCam} />
           <BudgetBanner />
         </div>
         <main id="main" tabIndex={-1} className="shell__main">

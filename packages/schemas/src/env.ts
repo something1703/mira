@@ -42,6 +42,12 @@ const Common = z.object({
   PORT: z.coerce.number().int().positive().optional(),
   /** Local state (mock store, blobs) lives here; never committed. */
   MIRA_STATE_DIR: z.string().default(".mira"),
+  /**
+   * `live` sends photos to the real YouCam API while everything else stays local (file-backed
+   * state, in-process queue). For testing that MIRA really measures, before a cloud deploy.
+   * Real units are spent, behind the same quotes and caps. Only meaningful in mock mode.
+   */
+  MIRA_YOUCAM: z.enum(["fake", "live"]).default("fake"),
 
   MIRA_WEB_URL: z.url().default(`http://localhost:${DEFAULT_PORTS.web}`),
   MIRA_AGENT_URL: z.url().default(`http://localhost:${DEFAULT_PORTS.agent}`),
@@ -149,6 +155,10 @@ export function loadEnv(
     problems.push(
       `${key} is not in the NEXT_PUBLIC allowlist; browser-visible variables must never hold secrets.`,
     );
+  }
+
+  if (env.MIRA_YOUCAM === "live" && service === "workflows" && !("YOUCAM_API_KEY" in cleaned)) {
+    problems.push("YOUCAM_API_KEY is required when MIRA_YOUCAM=live (put it in .env.local).");
   }
 
   if (env.MIRA_MODE === "live") {

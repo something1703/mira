@@ -111,7 +111,8 @@ def test_audit_garment_with_supplied_face_box() -> None:
 
 
 def test_audit_garment_without_detector_or_box_is_503(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("MIRA_FACE_MODEL_PATH", raising=False)
+    # The model is bundled; point at a missing one to test the unavailable path.
+    monkeypatch.setenv("MIRA_FACE_MODEL_PATH", "/nonexistent/blaze_face.tflite")
     src = png_b64(np.zeros((20, 20, 3), dtype=np.uint8), "RGB")
     res = client.post(
         "/audit/garment", json={"source_b64": src, "render_b64": src, "garment_labs": [[50, 0, 0]]}

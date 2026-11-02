@@ -6,7 +6,15 @@ import { useEffect, useState } from "react";
 const DISMISSED = "mira-recorded-dismissed";
 
 /** Global notices from docs/UX_FLOWS.md §0 that need no run state: recorded run and offline. */
-export function SessionBanners({ mock, recorded }: { mock: boolean; recorded: boolean }) {
+export function SessionBanners({
+  mock,
+  recorded,
+  realYouCam = false,
+}: {
+  mock: boolean;
+  recorded: boolean;
+  realYouCam?: boolean;
+}) {
   const [online, setOnline] = useState(true);
   const [recordedDismissed, setRecordedDismissed] = useState(true);
 
@@ -50,6 +58,12 @@ export function SessionBanners({ mock, recorded }: { mock: boolean; recorded: bo
           {recorded
             ? "You are viewing a recorded run. Results are real YouCam outputs captured earlier."
             : "You are viewing sample results. Nothing on this screen was measured on you."}
+        </Banner>
+      ) : null}
+      {realYouCam ? (
+        <Banner kind="info">
+          Live measuring: your photos are measured by YouCam, and each run uses real units after you
+          confirm its price.
         </Banner>
       ) : null}
       {online ? null : (

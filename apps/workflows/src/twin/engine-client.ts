@@ -93,6 +93,20 @@ export const GarmentColourReading = z.object({
 });
 export type GarmentColourReading = z.infer<typeof GarmentColourReading>;
 
+const PixelBox = z.object({
+  x: z.number().int(),
+  y: z.number().int(),
+  width: z.number().int(),
+  height: z.number().int(),
+});
+/** `/face/frame`: the face found, the crop chosen, and the cropped photo (null when not needed). */
+export const FaceFrameReading = z.object({
+  face: PixelBox.nullable(),
+  crop: PixelBox.nullable(),
+  image_b64: z.string().nullable(),
+});
+export type FaceFrameReading = z.infer<typeof FaceFrameReading>;
+
 export const GarmentAuditReading = z.object({
   label: z.enum(["verified", "drift", "not_checked"]),
   de: z.number().nullable().optional(),
@@ -183,6 +197,8 @@ export interface EngineClient {
   }): Promise<Result<Enveloped<LookSuggestReading>, EngineFailure>>;
   /** The colour of a garment from its background-removed picture (base64 PNG with alpha). */
   garmentColour(imageB64: string): Promise<Result<Enveloped<GarmentColourReading>, EngineFailure>>;
+  /** Crops a photo so the face fills enough of it for Skin Analysis (docs/YOUCAM_API.md §3). */
+  frameFace(imageB64: string): Promise<Result<Enveloped<FaceFrameReading>, EngineFailure>>;
   /** Did the render put the garment on, in the colour asked for? */
   auditGarment(input: {
     sourceB64: string;
@@ -323,6 +339,10 @@ export class HttpEngineClient implements EngineClient {
 
   garmentColour(imageB64: string) {
     return this.post("/garment/colour", { image_b64: imageB64 }, GarmentColourReading);
+  }
+
+  frameFace(imageB64: string) {
+    return this.post("/face/frame", { image_b64: imageB64 }, FaceFrameReading);
   }
 
   auditGarment(i: Parameters<EngineClient["auditGarment"]>[0]) {

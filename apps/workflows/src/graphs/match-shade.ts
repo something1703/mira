@@ -102,6 +102,9 @@ export function buildMatchShadeGraph(input: MatchShadeInput): GraphSpec {
         kind: "youcam",
         label: "step.measure_render",
         feature: "skin-tone-analysis",
+        // Shade matching works from an uploaded photo, and a render keeps its head angle, so the
+        // re-measure uses the same tolerance as an uploaded profile photo (live test 2026-11-02).
+        params: { strictness: CONFIG.twin.uploadAngleStrictness.value },
         dependsOn: [renderId(i)],
         inputs: { src: `node:${renderId(i)}` },
         optional,

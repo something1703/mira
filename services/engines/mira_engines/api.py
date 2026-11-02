@@ -18,7 +18,7 @@ from typing import Annotated, Any, Literal
 import numpy as np
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from mira_engines import (
@@ -34,6 +34,7 @@ from mira_engines import (
     stats,
 )
 from mira_engines.faces import FaceDetectorUnavailable, detect_face_box
+from mira_engines.framing import frame_face
 
 TRACE_HEADER = "x-mira-trace"
 _TRACE_RE = re.compile(r"^trc_[a-z0-9]{6,64}$")
@@ -299,6 +300,50 @@ def decode_image(b64: str, mode: Literal["RGB", "RGBA"]) -> np.ndarray[Any, np.d
 
 class ImageIn(Strict):
     image_b64: str
+
+
+@app.post("/face/frame")
+def face_frame(body: Annotated[ImageIn, Depends(strict_body(ImageIn))]) -> dict[str, object]:
+    """Crops a photo so the face fills enough of it for Skin Analysis (docs/YOUCAM_API.md §3).
+
+    Returns the face box, the crop, and the cropped photo as an upright JPEG with no metadata, or
+    no image when the face already fills enough of the frame or no face is found.
+    """
+    if len(body.image_b64) > MAX_B64_CHARS:
+        raise HTTPException(413, "Image is larger than 10 MB")
+    try:
+        raw = base64.b64decode(body.image_b64, validate=True)
+        with Image.open(io.BytesIO(raw)) as opened:
+            if opened.width * opened.height > MAX_IMAGE_PIXELS:
+                raise HTTPException(413, "Image has too many pixels; use one under 25 megapixels")
+            # Phone photos carry their rotation in EXIF; detect and crop the upright picture.
+            upright = ImageOps.exif_transpose(opened).convert("RGB")
+    except (binascii.Error, ValueError) as err:
+        raise HTTPException(422, "Image is not valid base64") from err
+    except Image.DecompressionBombError as err:
+        raise HTTPException(413, "Image has too many pixels; use one under 25 megapixels") from err
+    except (UnidentifiedImageError, OSError) as err:
+        raise HTTPException(422, "Image could not be read") from err
+    try:
+        face = detect_face_box(np.asarray(upright, dtype=np.uint8))
+    except FaceDetectorUnavailable as err:
+        raise HTTPException(503, "No face detector is available") from err
+    if face is None:
+        return envelope({"face": None, "crop": None, "image_b64": None})
+    crop = frame_face(upright.width, upright.height, face)
+    if crop is None:
+        return envelope({"face": asdict(face), "crop": None, "image_b64": None})
+    out = io.BytesIO()
+    upright.crop((crop.x, crop.y, crop.x + crop.width, crop.y + crop.height)).save(
+        out, format="JPEG", quality=95
+    )
+    return envelope(
+        {
+            "face": asdict(face),
+            "crop": asdict(crop),
+            "image_b64": base64.b64encode(out.getvalue()).decode("ascii"),
+        }
+    )
 
 
 @app.post("/garment/colour")

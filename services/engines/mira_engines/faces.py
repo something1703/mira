@@ -1,18 +1,22 @@
 """Local face-box detection with MediaPipe (docs/ENGINES.md §7.1 step 1).
 
-No model other than this local detector ever sees the face. The detector needs a ``.tflite`` model
-file that is not bundled; point ``MIRA_FACE_MODEL_PATH`` at one (MediaPipe's BlazeFace short-range
-model). Without it, callers must pass the face box themselves.
+No model other than this local detector ever sees the face. It uses MediaPipe's BlazeFace
+short-range model (Apache 2.0), bundled at ``assets/blaze_face_short_range.tflite`` (sha256
+b4578f35...0152f, from storage.googleapis.com/mediapipe-models, 2026-11-02);
+``MIRA_FACE_MODEL_PATH`` points elsewhere if set.
 """
 
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
 
 from mira_engines.audit import FaceBox
+
+BUNDLED_MODEL = Path(__file__).resolve().parent.parent / "assets" / "blaze_face_short_range.tflite"
 
 
 class FaceDetectorUnavailable(RuntimeError):  # noqa: N818 - reads better as a condition name
@@ -21,9 +25,9 @@ class FaceDetectorUnavailable(RuntimeError):  # noqa: N818 - reads better as a c
 
 def detect_face_box(rgb: npt.NDArray[np.uint8]) -> FaceBox | None:
     """Largest detected face as a pixel box, or None when no face is found."""
-    path = os.environ.get("MIRA_FACE_MODEL_PATH")
-    if not path or not os.path.isfile(path):
-        raise FaceDetectorUnavailable("MIRA_FACE_MODEL_PATH does not point to a model file")
+    path = os.environ.get("MIRA_FACE_MODEL_PATH") or str(BUNDLED_MODEL)
+    if not os.path.isfile(path):
+        raise FaceDetectorUnavailable(f"No face model file at {path}")
     import mediapipe as mp
     from mediapipe.tasks.python import BaseOptions, vision
 

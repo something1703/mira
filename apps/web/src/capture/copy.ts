@@ -55,10 +55,13 @@ export const CAMERA_COPY = {
   permission: "MIRA needs your camera to measure. Nothing is recorded until you capture.",
   denied: "Camera access is off. Turn it on in your browser settings, or upload a photo.",
   deniedHow:
-    "Open the lock or camera icon beside the address, allow the camera for this site, then reload this page.",
+    "Open the lock or camera icon beside the address, allow the camera for this site, then reload this page. On a Mac, also open System Settings, Privacy & Security, Camera, and switch on your browser; until then the browser cannot even ask.",
   unsupported: "This browser cannot open the camera. Upload a photo instead.",
   lowRes:
     "This camera cannot capture the detail HD measuring needs. MIRA will measure in standard detail.",
   failed: "The camera could not be opened. Close other apps that use it, or upload a photo.",
   blocked: "The camera tool could not be loaded. Check your connection, or upload a photo.",
+  /** Offered when YouCam's Camera Kit cannot open; the browser's own camera is the fallback. */
+  simple:
+    "The simple camera takes the photo with your browser's own camera, without the live checks. MIRA still checks the photo before measuring.",
 } as const;

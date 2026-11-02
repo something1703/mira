@@ -117,6 +117,17 @@ export const CONFIG = {
   },
   twin: {
     /**
+     * Face-angle tolerance for skin-tone and face-attribute analysis of an uploaded photo. YouCam's
+     * default ("high", within 10 degrees) refused a real head-and-shoulders photo with a slight
+     * downward tilt (error_face_angle_downward, live test 2026-11-02). "medium" allows 15 degrees.
+     * Camera captures keep the default: the Ring already guides the head angle.
+     */
+    uploadAngleStrictness: setting(
+      "medium" as const,
+      "docs/YOUCAM_API.md §2 (strictness levels); live test 2026-11-02, docs/TESTS.md",
+      false,
+    ),
+    /**
      * HD skin concerns read when building a profile. Skin Analysis is priced in tiers by concern
      * count (HD: 1-4 = 12, 5-8 = 16, 9-12 = 20 units, read live 2026-11-01), so eight is the most
      * that stays in the 16-unit tier. The set serves the phases that read them: pores, wrinkles,

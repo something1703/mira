@@ -46,6 +46,10 @@ export default async function Welcome({
               See a recorded run
             </Link>
           </div>
+          <p className="mira-small">
+            <Link href="/how-it-works">How MIRA works</Link> ·{" "}
+            <Link href="/tests">What we tested on real photos</Link>
+          </p>
         </div>
       )}
     </div>

@@ -1,0 +1,331 @@
+{
+  "date": "2026-11-02",
+  "balanceBefore": 1039,
+  "balanceAfter": 455,
+  "ledgerUnits": 584,
+  "people": [
+    {
+      "id": "t1",
+      "tone": "light",
+      "original": "/tests/t1-original.jpg",
+      "measured": "/tests/t1-measured.jpg",
+      "framed": true,
+      "mode": "HD",
+      "credit": {
+        "author": "Branden Loera",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "https://commons.wikimedia.org/wiki/File:Branden_Loera_Headshot.jpg"
+      },
+      "profile": {
+        "seconds": 43,
+        "unitsTotal": 56,
+        "skin": {
+          "hd_oiliness": 57.2,
+          "hd_redness": 47.4,
+          "hd_dark_circle": 88.0,
+          "hd_acne": 100,
+          "hd_texture": 88.4,
+          "hd_pore": 78.3,
+          "hd_wrinkle": 82.6
+        },
+        "colours": {
+          "skin": "#BB977E",
+          "lip": "#DB938F",
+          "eyebrow": "#825840",
+          "eye": "#757465",
+          "hair": "#000000"
+        },
+        "eyeName": "Gray",
+        "hairName": "Black",
+        "ita": 39.6,
+        "itaBand": "intermediate",
+        "fitzpatrick": "II"
+      },
+      "shade": {
+        "range": "Sample warm range (invented shade colours, 20 shades)",
+        "checkedFree": 20,
+        "finish": "satin",
+        "finishReason": "no_skin_type",
+        "coverage": "medium",
+        "coverageReason": "raised_for_concern",
+        "outcomes": [
+          {
+            "name": "W 180",
+            "hex": "#BA987F",
+            "preDe": 0.73,
+            "blendDe": 0.31,
+            "verdict": "verified",
+            "image": "/tests/t1-render-1.jpg",
+            "label": "blends_closely",
+            "directionOk": true
+          },
+          {
+            "name": "W 190",
+            "hex": "#B29177",
+            "preDe": 2.48,
+            "blendDe": 0.31,
+            "verdict": "verified",
+            "image": "/tests/t1-render-2.jpg",
+            "label": "blends_closely",
+            "directionOk": true
+          },
+          {
+            "name": "W 170",
+            "hex": "#C2A088",
+            "preDe": 2.68,
+            "blendDe": 0.49,
+            "verdict": "drift",
+            "image": "/tests/t1-render-3.jpg",
+            "label": "blends_closely",
+            "directionOk": false
+          }
+        ],
+        "units": 63,
+        "seconds": 40
+      }
+    },
+    {
+      "id": "t2",
+      "tone": "light",
+      "original": "/tests/t2-original.jpg",
+      "measured": "/tests/t2-measured.jpg",
+      "framed": true,
+      "mode": "HD",
+      "credit": {
+        "author": "SarahLM1",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "https://commons.wikimedia.org/wiki/File:Sarah_Lirley_headshot.jpg"
+      },
+      "profile": {
+        "seconds": 44,
+        "unitsTotal": 96,
+        "skin": {
+          "hd_oiliness": 96.4,
+          "hd_dark_circle": 78.8,
+          "hd_redness": 96.4,
+          "hd_acne": 72.9,
+          "hd_texture": 81.9,
+          "hd_pore": 71.9,
+          "hd_wrinkle": 54.9
+        },
+        "colours": {
+          "skin": "#BA9880",
+          "lip": "#DBA79C",
+          "eyebrow": "#5B575A",
+          "eye": "#807766",
+          "hair": "#808080"
+        },
+        "eyeName": "Gray",
+        "hairName": "Grey/White",
+        "ita": 41.3,
+        "itaBand": "light",
+        "fitzpatrick": "II"
+      },
+      "shade": null
+    },
+    {
+      "id": "t3",
+      "tone": "medium",
+      "original": "/tests/t3-original.jpg",
+      "measured": "/tests/t3-measured.jpg",
+      "framed": true,
+      "mode": "SD",
+      "credit": {
+        "author": "Michigan House of Representatives.",
+        "license": "CC0",
+        "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+        "source": "https://commons.wikimedia.org/wiki/File:Farhat-Official-Headshot-3-scaled.jpg"
+      },
+      "profile": {
+        "seconds": 36,
+        "unitsTotal": 92,
+        "skin": {
+          "redness": 84.8,
+          "oiliness": 69.9,
+          "pore": 61.3,
+          "dark_circle_v2": 65.9,
+          "texture": 93.1,
+          "acne": 85.3,
+          "wrinkle": 75.7
+        },
+        "colours": {
+          "skin": "#B79176",
+          "lip": "#CA7F7A",
+          "eyebrow": "#5B3F32",
+          "eye": "#2B1A16",
+          "hair": "#FAF0BE"
+        },
+        "eyeName": "Brown",
+        "hairName": "Blonde",
+        "ita": 33.4,
+        "itaBand": "intermediate",
+        "fitzpatrick": "II"
+      },
+      "shade": {
+        "range": "Sample warm range (invented shade colours, 20 shades)",
+        "checkedFree": 20,
+        "finish": "satin",
+        "finishReason": "no_skin_type",
+        "coverage": "light",
+        "coverageReason": "default_light",
+        "outcomes": [
+          {
+            "name": "W 190",
+            "hex": "#B29177",
+            "preDe": 1.65,
+            "blendDe": 0.32,
+            "verdict": "verified",
+            "image": "/tests/t3-render-1.jpg",
+            "label": "blends_closely",
+            "directionOk": true
+          },
+          {
+            "name": "W 180",
+            "hex": "#BA987F",
+            "preDe": 2.33,
+            "blendDe": 0.42,
+            "verdict": "verified",
+            "image": "/tests/t3-render-2.jpg",
+            "label": "blends_closely",
+            "directionOk": true
+          },
+          {
+            "name": "W 200",
+            "hex": "#AA896F",
+            "preDe": 3.37,
+            "blendDe": 0.42,
+            "verdict": "drift",
+            "image": "/tests/t3-render-3.jpg",
+            "label": "blends_closely",
+            "directionOk": false
+          }
+        ],
+        "units": 63,
+        "seconds": 60
+      }
+    },
+    {
+      "id": "t4",
+      "tone": "deep",
+      "original": "/tests/t4-original.jpg",
+      "measured": "/tests/t4-measured.jpg",
+      "framed": true,
+      "mode": "HD",
+      "credit": {
+        "author": "Andrea Ivory",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "https://commons.wikimedia.org/wiki/File:Andrea_Ivory_-_Headshot_23.jpg"
+      },
+      "profile": {
+        "seconds": 50,
+        "unitsTotal": 56,
+        "skin": {
+          "hd_dark_circle": 74.1,
+          "hd_redness": 100,
+          "hd_oiliness": 64.8,
+          "hd_acne": 92.8,
+          "hd_texture": 71.2,
+          "hd_pore": 72.2,
+          "hd_wrinkle": 49.0
+        },
+        "colours": {
+          "skin": "#A38066",
+          "lip": "#80473F",
+          "eyebrow": "#3E3834",
+          "eye": "#28201F",
+          "hair": "#B56637"
+        },
+        "eyeName": "Brown",
+        "hairName": "Auburn",
+        "ita": 18.0,
+        "itaBand": "tan",
+        "fitzpatrick": "IV"
+      },
+      "shade": {
+        "range": "Sample warm range (invented shade colours, 20 shades)",
+        "checkedFree": 20,
+        "finish": "satin",
+        "finishReason": "no_skin_type",
+        "coverage": "light",
+        "coverageReason": "default_light",
+        "outcomes": [
+          {
+            "name": "W 200",
+            "hex": "#AA896F",
+            "preDe": 3.07,
+            "blendDe": 2.06,
+            "verdict": "verified",
+            "image": "/tests/t4-render-3.jpg",
+            "label": "close",
+            "directionOk": true
+          },
+          {
+            "name": "W 220",
+            "hex": "#9A7A5F",
+            "preDe": 2.8,
+            "blendDe": 2.4,
+            "verdict": "drift",
+            "image": "/tests/t4-render-2.jpg",
+            "label": "close",
+            "directionOk": false
+          },
+          {
+            "name": "W 210",
+            "hex": "#A28167",
+            "preDe": 0.76,
+            "blendDe": 3.07,
+            "verdict": "verified",
+            "image": "/tests/t4-render-1.jpg",
+            "label": "close",
+            "directionOk": true
+          }
+        ],
+        "units": 63,
+        "seconds": 45
+      }
+    },
+    {
+      "id": "t5",
+      "tone": "deep",
+      "original": "/tests/t5-original.jpg",
+      "measured": "/tests/t5-measured.jpg",
+      "framed": true,
+      "mode": "SD",
+      "credit": {
+        "author": "DrPhd47",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "https://commons.wikimedia.org/wiki/File:Dr._Antonio_TillisAl_Torres_Photography_Inc_06.jpg"
+      },
+      "profile": {
+        "seconds": 36,
+        "unitsTotal": 92,
+        "skin": {
+          "oiliness": 41.6,
+          "redness": 97.3,
+          "pore": 42.1,
+          "texture": 22.1,
+          "wrinkle": 27.9,
+          "dark_circle_v2": 72.8,
+          "acne": 100
+        },
+        "colours": {
+          "skin": "#8F6748",
+          "lip": "#BD7069",
+          "eyebrow": "#5B3F32",
+          "eye": "#170908",
+          "hair": "#B56637"
+        },
+        "eyeName": "Brown",
+        "hairName": "Auburn",
+        "ita": -7.2,
+        "itaBand": "brown",
+        "fitzpatrick": "V"
+      },
+      "shade": null
+    }
+  ]
+}

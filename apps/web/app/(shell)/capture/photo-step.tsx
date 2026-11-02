@@ -57,6 +57,8 @@ export function PhotoStep(props: PhotoStepProps) {
     props.autoStart ? { v: "camera", run: 0 } : { v: "start" },
   );
   const [howOpen, setHowOpen] = useState(false);
+  // Camera Kit could not open (or the person chose to skip it): use the browser's own camera.
+  const [simple, setSimple] = useState(false);
   const runs = useRef(1);
   const previewUrl = useRef<string | undefined>(undefined);
   const heldKeys = useRef<string[]>([]);
@@ -87,6 +89,11 @@ export function PhotoStep(props: PhotoStepProps) {
   const toCamera = () => {
     runs.current += 1;
     setView({ v: "camera", run: runs.current });
+  };
+
+  const toSimpleCamera = () => {
+    setSimple(true);
+    toCamera();
   };
 
   /** Uploads what was captured or chosen, then reviews it (or accepts it straight away). */
@@ -124,9 +131,10 @@ export function PhotoStep(props: PhotoStepProps) {
   };
 
   const fromCamera = (shots: CapturedPhoto[]) => {
-    void send(
-      ordered(shots, kinds.length).map((s) => ({ blob: s.blob, source: "camera" as const })),
-    );
+    // "camera" means the Ring's live checks passed. The simple camera has none, so its photos are
+    // treated like uploads: unguided, checked by YouCam alone, with the upload angle tolerance.
+    const source: Photo["source"] = simple && engine === "camerakit" ? "upload" : "camera";
+    void send(ordered(shots, kinds.length).map((s) => ({ blob: s.blob, source })));
   };
 
   const picker = (message?: string) => {
@@ -162,7 +170,7 @@ export function PhotoStep(props: PhotoStepProps) {
   if (view.v === "camera") {
     return (
       <div className="capture__panel">
-        {engine === "camerakit" && mode ? (
+        {engine === "camerakit" && mode && !simple ? (
           <CameraStage
             key={`${String(view.run)}-${String(hd)}`}
             mode={mode}
@@ -192,6 +200,11 @@ export function PhotoStep(props: PhotoStepProps) {
           >
             Upload a photo instead
           </Button>
+          {engine === "camerakit" && !simple ? (
+            <Button variant="quiet" onClick={toSimpleCamera}>
+              Camera not starting? Use the simple camera
+            </Button>
+          ) : null}
           {skip}
         </div>
       </div>
@@ -219,6 +232,9 @@ export function PhotoStep(props: PhotoStepProps) {
                   ? CAMERA_COPY.blocked
                   : CAMERA_COPY.failed}
         </p>
+        {engine === "camerakit" && !simple && (p === "failed" || p === "blocked") ? (
+          <p className="mira-small mira-muted">{CAMERA_COPY.simple}</p>
+        ) : null}
         {p === "denied" ? (
           <>
             <Button
@@ -247,6 +263,13 @@ export function PhotoStep(props: PhotoStepProps) {
           ) : null}
           {p !== "unsupported" && p !== "lowres" ? (
             <Button onClick={toCamera}>Try the camera again</Button>
+          ) : null}
+          {engine === "camerakit" &&
+          !simple &&
+          (p === "failed" || p === "blocked" || p === "lowres") ? (
+            <Button variant="secondary" onClick={toSimpleCamera}>
+              Use the simple camera
+            </Button>
           ) : null}
           <Button
             variant={p === "unsupported" || p === "lowres" ? "primary" : "secondary"}
