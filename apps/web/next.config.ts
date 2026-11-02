@@ -2,6 +2,15 @@ import type { NextConfig } from "next";
 import { resolve } from "node:path";
 
 const config: NextConfig = {
+  // The e2e tests run their own dev server (apps/web/playwright.config.ts) in a separate build
+  // folder. Two dev servers sharing `.next` corrupt its cache and make the browser reload forever.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
+  experimental: {
+    // Next 16 keeps a Turbopack cache on disk between dev runs. After a dev server was stopped or
+    // restarted mid-write, that cache made every page load bump the HMR version, so the browser
+    // reloaded ~15 times a second (D46). A cold start takes a few seconds longer without it.
+    turbopackFileSystemCacheForDev: false,
+  },
   // Self-contained server for the Cloud Run image.
   output: "standalone",
   outputFileTracingRoot: resolve(process.cwd(), "../.."),

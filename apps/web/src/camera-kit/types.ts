@@ -55,6 +55,7 @@ export interface InitArgs {
   qualityLevel: "relaxed" | "moderate" | "strict";
   /** `hdskincare` only; the SDK ignores it elsewhere. */
   videoQuality?: "720p" | "1080p" | "1920p";
+  /** Size of the view the SDK draws, 300–1920 px each (docs/YOUCAM_API.md §5). */
   width?: number;
   height?: number;
   language?: string;

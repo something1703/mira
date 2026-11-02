@@ -9,6 +9,10 @@ Last updated 2026-11-01, after building Phase 5 (capture and the measured profil
 - The live tests found and fixed three issues: face framing for head-and-shoulders photos (D44), upload angle tolerance (D45), and the shade re-measure angle.
 - New pages: `/how-it-works` (what MIRA is, and what is real today), `/tests` (real results) and `/runs/recorded` (sample run on a drawn face).
 - Camera: MIRA checks resolution before Camera Kit HD, falls back to the browser's camera when Camera Kit cannot open, and gives macOS camera-permission guidance.
+- **Fixed: pages reloading over and over in `pnpm dev:*`.** Next 16's on-disk dev cache went bad after restarts. It is now off (D46), and the e2e tests use their own build folder. If it ever happens again: stop the app, `pnpm clean:dev`, start again.
+- **Fixed: phones zoomed out on capture, Proof and Brand.** A hidden data table, the step row and a file chooser were wider than the screen (D47); `e2e/phone-fit.spec.ts` now guards every page.
+- **Capture redesigned:** Camera Kit gets a large rectangular view (its own prompts were clipped by the round Ring), MIRA shows a live checklist beside it, and both ask for the same thing in the same order.
+- **Fixed for the cloud:** MediaPipe needs `libegl1`/`libgles2` on Linux; CI and the engines image now install them.
 - Still open: the cloud adapters are not wired into workflows for a GCP deploy, Look, Event and Proof have not been tested live, and the launch steps are not done.
 
 ## In one paragraph

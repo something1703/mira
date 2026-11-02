@@ -32,11 +32,11 @@ describe("qualityChecks", () => {
 describe("instructionFor", () => {
   it("names one failing check in plain words, and nothing when all hold", () => {
     expect(instructionFor(good)).toBeUndefined();
-    expect(instructionFor({ hasFace: false })).toBe("Bring your face into the circle.");
+    expect(instructionFor({ hasFace: false })).toBe("Bring your face into the frame.");
     expect(instructionFor({ ...good, position: "toosmall" })).toBe("Move a little closer.");
     expect(instructionFor({ ...good, position: "notgood" })).toBe("Move back a little.");
     expect(instructionFor({ ...good, position: "outofboundary" })).toBe(
-      "Centre your face in the circle.",
+      "Centre your face in the frame.",
     );
     expect(instructionFor({ ...good, frontal: "notgood" })).toBe("Look straight at the camera.");
     expect(instructionFor({ ...good, lighting: "notgood" })).toBe(
@@ -44,15 +44,18 @@ describe("instructionFor", () => {
     );
   });
 
-  it("says the most urgent thing first when several fail", () => {
-    expect(
-      instructionFor({
-        hasFace: true,
-        position: "toosmall",
-        frontal: "notgood",
-        lighting: "notgood",
-      }),
-    ).toBe("Move a little closer.");
+  it("asks in Camera Kit's own order when several fail: lighting, angle, then distance", () => {
+    const all = {
+      hasFace: true,
+      position: "toosmall",
+      frontal: "notgood",
+      lighting: "notgood",
+    } as const;
+    expect(instructionFor(all)).toBe("Face a window or a lamp so your face is evenly lit.");
+    expect(instructionFor({ ...all, lighting: "good" })).toBe("Look straight at the camera.");
+    expect(instructionFor({ ...all, lighting: "good", frontal: "good" })).toBe(
+      "Move a little closer.",
+    );
   });
 });
 

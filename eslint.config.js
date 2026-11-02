@@ -23,6 +23,7 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/dist/**",
       "**/.next/**",
+      "**/.next-e2e/**",
       "**/.turbo/**",
       "**/coverage/**",
       "**/.mira/**",

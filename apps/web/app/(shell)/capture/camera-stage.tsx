@@ -1,7 +1,6 @@
 "use client";
 
-import { Ring } from "@mira/ui";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   NO_CHECKS,
   SteadyTracker,
@@ -38,14 +37,31 @@ export interface CameraStageProps {
   label: string;
   onCaptured: (photos: CapturedPhoto[]) => void;
   onProblem: (problem: CameraProblem) => void;
+  /** The step's actions (upload instead, skip), shown beside the camera. */
+  children?: ReactNode;
 }
+
+/** The four checks in plain words, in the order Camera Kit prompts for them. */
+const CHECKS = [
+  ["lighting", "Even lighting"],
+  ["angle", "Facing the camera"],
+  ["distance", "Right distance"],
+  ["steadiness", "Holding still"],
+] as const;
 
 /**
  * YouCam's Camera Kit inside the Ring (docs/UX_FLOWS.md §3). The SDK draws the live view into
  * `#YMK-module`; MIRA turns its `faceQualityChanged` events into the Ring's four ticks and one
  * instruction line, and hands back the photo when the SDK takes it.
  */
-export function CameraStage({ mode, hd, label, onCaptured, onProblem }: CameraStageProps) {
+export function CameraStage({
+  mode,
+  hd,
+  label,
+  onCaptured,
+  onProblem,
+  children,
+}: CameraStageProps) {
   const [view, setView] = useState<RingView>({ checks: NO_CHECKS, capturing: false });
   const [starting, setStarting] = useState(true);
   // The callbacks change on every render of the parent; the SDK session must not restart for that.
@@ -137,8 +153,13 @@ export function CameraStage({ mode, hd, label, onCaptured, onProblem }: CameraSt
         if (photos.length === 0) handlers.current.onProblem("failed");
         else handlers.current.onCaptured(photos);
       });
+      // Draw the view at the size of its frame (4:3), within the SDK's 300–1920 px limits.
+      const frame = document.getElementById(MOUNT_ID)?.clientWidth ?? 640;
+      const width = Math.min(1920, Math.max(300, Math.round(frame)));
       ymk.init({
         faceDetectionMode: mode,
+        width,
+        height: Math.min(1920, Math.max(300, Math.round((width * 3) / 4))),
         imageFormat: "blob",
         qualityLevel: "moderate",
         ...(mode === "hdskincare" && hd ? { videoQuality: "1080p" as const } : {}),
@@ -166,21 +187,48 @@ export function CameraStage({ mode, hd, label, onCaptured, onProblem }: CameraSt
   }, [mode, hd]);
 
   const passed = Object.values(view.checks).filter(Boolean).length;
+  // Camera Kit draws a rectangular view with its own prompts, so it gets a rectangle, not the
+  // Ring's circle (which clipped them). MIRA's own checks sit beside it, in words.
+  const status = view.capturing
+    ? view.countdown !== undefined
+      ? `Hold still. Taking the photo in ${String(view.countdown)}`
+      : "Hold still"
+    : starting
+      ? "Opening the camera"
+      : (view.instruction ?? "Looking for your face");
   return (
-    <Ring
-      mode="capture"
-      label={`${label}. Capture checks: ${String(passed)} of 4 passed`}
-      checks={view.checks}
-      capturing={view.capturing}
-      {...(view.instruction ? { instruction: view.instruction } : {})}
-      {...(view.countdown === undefined ? {} : { countdown: view.countdown })}
+    <div
+      className="camera"
+      data-state={view.capturing ? "capturing" : starting ? "starting" : "checking"}
     >
-      <div id={MOUNT_ID} className="capture__mount" />
-      {starting ? (
-        <p className="capture__starting" role="status">
-          Opening the camera
+      <div className="camera__view">
+        <div id={MOUNT_ID} className="camera__mount" />
+        {starting ? (
+          <p className="camera__starting" aria-hidden="true">
+            Opening the camera
+          </p>
+        ) : null}
+      </div>
+      <div className="camera__side">
+        <p className="camera__status" role="status" aria-live="polite">
+          {status}
         </p>
-      ) : null}
-    </Ring>
+        <div role="group" aria-label={`${label}. Capture checks: ${String(passed)} of 4 passed`}>
+          <ul className="camera__checks">
+            {CHECKS.map(([key, words]) => (
+              <li key={key} className={view.checks[key] ? "is-ok" : undefined}>
+                <span className="camera__mark" aria-hidden="true" />
+                <span>{words}</span>
+                <span className="camera__word">{view.checks[key] ? "Good" : "Not yet"}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <p className="mira-small mira-muted">
+          The photo is taken by itself once every check holds. Nothing is recorded before that.
+        </p>
+        {children}
+      </div>
+    </div>
   );
 }

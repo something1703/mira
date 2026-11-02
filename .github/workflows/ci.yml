@@ -36,6 +36,9 @@ jobs:
           terraform_version: "1.15.6"
           terraform_wrapper: false
 
+      - name: System libraries for MediaPipe (face framing)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libegl1 libgles2
+
       - name: Install
         run: |
           pnpm install --frozen-lockfile

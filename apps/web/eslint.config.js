@@ -5,7 +5,15 @@ import root from "../../eslint.config.js";
 const config = [
   ...nextVitals,
   ...root,
-  { ignores: [".next/**", "next-env.d.ts", "playwright-report/**", "test-results/**"] },
+  {
+    ignores: [
+      ".next/**",
+      ".next-e2e/**",
+      "next-env.d.ts",
+      "playwright-report/**",
+      "test-results/**",
+    ],
+  },
 ];
 
 export default config;

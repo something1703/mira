@@ -290,7 +290,7 @@ test.describe("Proof: verdicts", () => {
     await expect(page.getByText("Smallest change MIRA can tell apart")).toBeVisible();
     // The chart is described for screen readers, with the numbers.
     await expect(page.getByRole("img", { name: /Timeline of 4 sessions/ })).toBeVisible();
-    await expect(page.locator("table.mira-sr-only tbody tr")).toHaveCount(4);
+    await expect(page.locator(".mira-sr-only table tbody tr")).toHaveCount(4);
     await expectAccessible(page);
     await snapshotForReview(page, testInfo, "proof-detected");
   });

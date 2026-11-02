@@ -60,6 +60,9 @@ a {
 }
 .shell__home {
   display: inline-flex;
+  align-items: center;
+  /* The whole link is a 44 px touch target even where the logo itself is smaller. */
+  min-height: 44px;
   border-radius: var(--mira-radius-control);
 }
 .shell__lockup {
@@ -490,7 +493,137 @@ a {
 .capture {
   display: grid;
   gap: var(--mira-space-5);
+  max-width: 64rem;
+}
+.capture__head {
   max-width: 44rem;
+}
+/* Grid children may not grow past the screen: a wide row (the step pills) must scroll inside
+   its own box, or a phone widens and zooms out the whole page. */
+.capture > *,
+.camera > * {
+  min-width: 0;
+}
+/* In capture, the steps are a compact row of progress pills, not a tall list. */
+.capture .mira-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mira-space-2);
+}
+.capture .mira-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mira-space-2);
+  padding: var(--mira-space-1) var(--mira-space-3);
+  border: 1px solid var(--mira-rule);
+  border-radius: 999px;
+  font: 400 var(--mira-small) var(--mira-font-ui);
+  color: var(--mira-ink-2);
+  background: var(--mira-surface);
+}
+.capture .mira-step--running {
+  border-color: var(--mira-accent);
+  color: var(--mira-ink);
+  background: var(--mira-accent-wash);
+  font-weight: 600;
+}
+.capture .mira-step--done {
+  color: var(--mira-ink);
+}
+@media (max-width: 640px) {
+  /* Compact pills on a phone: they wrap, and only the current step keeps its word. */
+  .capture .mira-step {
+    padding: 2px var(--mira-space-2);
+  }
+  .capture .mira-step:not(.mira-step--running) .mira-step__state {
+    display: none;
+  }
+}
+.capture .mira-step__state {
+  color: var(--mira-ink-3);
+}
+.capture .mira-step--running .mira-step__state {
+  color: var(--mira-accent);
+}
+
+/* ---------- Live camera (Camera Kit) ---------- */
+.camera {
+  display: grid;
+  gap: var(--mira-space-5);
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .camera {
+    grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 1fr);
+  }
+}
+/* A rectangle on the neutral mat: Camera Kit draws its own view and prompts in here. */
+.camera__view {
+  position: relative;
+  background: var(--mira-mat);
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+}
+.camera__mount {
+  width: 100%;
+}
+.camera__mount video,
+.camera__mount canvas {
+  max-width: 100%;
+  height: auto;
+}
+.camera__starting {
+  position: absolute;
+  margin: 0;
+  color: var(--mira-on-mat);
+}
+.camera__side {
+  display: grid;
+  gap: var(--mira-space-4);
+  align-content: start;
+}
+.camera__status {
+  margin: 0;
+  font: 600 var(--mira-title) var(--mira-font-ui);
+}
+.camera[data-state="capturing"] .camera__status {
+  color: var(--mira-accent);
+}
+.camera__checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  border-top: 1px solid var(--mira-rule);
+}
+.camera__checks li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--mira-space-3);
+  align-items: center;
+  padding: var(--mira-space-3) 0;
+  border-bottom: 1px solid var(--mira-rule);
+}
+.camera__mark {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--mira-rule);
+}
+.camera__checks li.is-ok .camera__mark {
+  background: var(--mira-accent);
+  border-color: var(--mira-accent);
+}
+.camera__word {
+  font: 400 var(--mira-small) var(--mira-font-ui);
+  color: var(--mira-ink-3);
+}
+.camera__checks li.is-ok .camera__word {
+  color: var(--mira-accent);
+  font-weight: 600;
 }
 .capture__head h1 {
   margin: 0 0 var(--mira-space-2);
@@ -743,6 +876,12 @@ a {
   display: grid;
   gap: var(--mira-space-1);
 }
+/* Native dropdowns meet the 44 px touch size (docs/DESIGN_SYSTEM.md §11). */
+.look__select select {
+  min-height: 44px;
+  font: inherit;
+  padding-inline: var(--mira-space-2);
+}
 .look__form,
 .look__adder {
   display: grid;
@@ -986,6 +1125,21 @@ a {
   gap: var(--mira-space-5);
   max-width: 64rem;
   padding-bottom: var(--mira-space-8, 4rem);
+}
+.brand > *,
+.brand__ingest > * {
+  min-width: 0;
+}
+/* A file chooser's natural width is wide; never let it push a phone page past the screen. */
+.mira-field,
+.mira-field > * {
+  min-width: 0;
+}
+input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .brand h1 {
   margin: 0 0 var(--mira-space-2);

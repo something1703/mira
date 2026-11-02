@@ -81,9 +81,9 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   }, testInfo) => {
     await page.goto("/capture");
     await allow(page);
-    const ring = page.locator(".mira-ring");
+    const ring = page.getByRole("group", { name: /Capture checks/ });
     await quality(page, { hasFace: false });
-    await expect(page.getByText("Bring your face into the circle.")).toBeVisible();
+    await expect(page.getByText("Bring your face into the frame.")).toBeVisible();
     await quality(page, { hasFace: true, position: "toosmall", frontal: "good", lighting: "good" });
     await expect(page.getByText("Move a little closer.")).toBeVisible();
     await expect(ring).toHaveAttribute("aria-label", /Capture checks: 2 of 4 passed/);
@@ -104,14 +104,14 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
     await page.goto("/capture");
     await allow(page);
     await good(page);
-    await expect(page.locator(".mira-ring")).toHaveAttribute(
+    await expect(page.getByRole("group", { name: /Capture checks/ })).toHaveAttribute(
       "aria-label",
       /Capture checks: 3 of 4 passed/,
     );
     await expect(page.getByText(/Hold still\. Taking the photo in \d/)).toBeVisible({
       timeout: 5_000,
     });
-    await expect(page.locator(".mira-ring")).toHaveAttribute(
+    await expect(page.getByRole("group", { name: /Capture checks/ })).toHaveAttribute(
       "aria-label",
       /Capture checks: 4 of 4 passed/,
     );
@@ -213,7 +213,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
 
     await page.getByRole("button", { name: "Retake" }).click();
     await expect.poll(() => pendingPhotos(page, request)).toBe(0);
-    await expect(page.locator(".mira-ring")).toBeVisible();
+    await expect(page.getByRole("group", { name: /Capture checks/ })).toBeVisible();
   });
 
   test("cancelling while a photo is in review deletes it", async ({ page, request }) => {
@@ -343,7 +343,7 @@ test.describe("Capture: uploading instead", () => {
     await page.goto("/capture");
     await page.getByRole("button", { name: "Upload a photo instead" }).click();
     await page.getByRole("button", { name: "Use the camera instead" }).click();
-    await expect(page.locator(".mira-ring")).toBeVisible();
+    await expect(page.getByRole("group", { name: /Capture checks/ })).toBeVisible();
   });
 
   test("hair: front is enough; right and left come as a pair", async ({ page }) => {

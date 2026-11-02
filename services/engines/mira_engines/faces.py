@@ -28,11 +28,17 @@ def detect_face_box(rgb: npt.NDArray[np.uint8]) -> FaceBox | None:
     path = os.environ.get("MIRA_FACE_MODEL_PATH") or str(BUNDLED_MODEL)
     if not os.path.isfile(path):
         raise FaceDetectorUnavailable(f"No face model file at {path}")
-    import mediapipe as mp
-    from mediapipe.tasks.python import BaseOptions, vision
+    try:
+        import mediapipe as mp
+        from mediapipe.tasks.python import BaseOptions, vision
 
-    options = vision.FaceDetectorOptions(base_options=BaseOptions(model_asset_path=path))
-    with vision.FaceDetector.create_from_options(options) as detector:
+        options = vision.FaceDetectorOptions(base_options=BaseOptions(model_asset_path=path))
+        detector = vision.FaceDetector.create_from_options(options)
+    except (ImportError, OSError, RuntimeError) as err:
+        # MediaPipe needs system graphics libraries (libEGL, libGLES) on Linux; without them the
+        # import or the detector fails. That is "no detector here", not a server error.
+        raise FaceDetectorUnavailable(f"MediaPipe could not start: {err}") from err
+    with detector:
         image = mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(rgb))
         detections = detector.detect(image).detections
     if not detections:

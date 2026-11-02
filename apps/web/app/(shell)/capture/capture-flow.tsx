@@ -173,7 +173,6 @@ export function CaptureFlow({ plan }: { plan: Plan }) {
 
   return (
     <div className="capture">
-      <StepRail label="Capture steps" steps={rail} />
       <header className="capture__head">
         <h1 ref={heading} tabIndex={-1} className="mira-display-l">
           {step === "repeats"
@@ -183,6 +182,7 @@ export function CaptureFlow({ plan }: { plan: Plan }) {
         <p className="lead">{STEP_GUIDE[step]}</p>
         {STEP_WHY[step] ? <p className="mira-small mira-muted">{STEP_WHY[step]}</p> : null}
       </header>
+      <StepRail label="Capture steps" steps={rail} />
       {pause ? (
         <p role="status" className="capture__panel">
           Stay where you are. The next photo is coming.

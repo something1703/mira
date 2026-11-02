@@ -105,31 +105,33 @@ export function GapMap({ view }: { view: Extract<GapView, { state: "ok" }> }) {
         Darker cells hold more shoppers. Hatched cells hold shoppers that no shade in your range is
         within ΔE {view.nearDe} of. Dots are your shades, in their own colour.
       </figcaption>
-      <table className="mira-sr-only">
-        <caption>{summary}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Hue</th>
-            <th scope="col">Lightness</th>
-            <th scope="col">Share of shoppers</th>
-            <th scope="col">Of them, with no shade near</th>
-          </tr>
-        </thead>
-        <tbody>
-          {view.cells.map((c, i) => (
-            <tr key={i}>
-              <th scope="row">
-                {c.hueLo}° to {c.hueHi}° ({hueWord((c.hueLo + c.hueHi) / 2)})
-              </th>
-              <td>
-                {c.lLo} to {c.lHi}
-              </td>
-              <td>{Math.round(c.share * 100)}%</td>
-              <td>{Math.round(c.unservedShare * 100)}%</td>
+      <div className="mira-sr-only">
+        <table>
+          <caption>{summary}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Hue</th>
+              <th scope="col">Lightness</th>
+              <th scope="col">Share of shoppers</th>
+              <th scope="col">Of them, with no shade near</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {view.cells.map((c, i) => (
+              <tr key={i}>
+                <th scope="row">
+                  {c.hueLo}° to {c.hueHi}° ({hueWord((c.hueLo + c.hueHi) / 2)})
+                </th>
+                <td>
+                  {c.lLo} to {c.lHi}
+                </td>
+                <td>{Math.round(c.share * 100)}%</td>
+                <td>{Math.round(c.unservedShare * 100)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {gaps.length > 0 ? (
         <ul className="brand__gaps" aria-label="Skin colours your range does not serve">
           {gaps

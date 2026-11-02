@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "MIRA_MODE=live turbo run dev --env-mode=loose",
     "dev:mock": "MIRA_MODE=mock turbo run dev --env-mode=loose",
+    "clean:dev": "rm -rf apps/web/.next/dev",
     "dev:real": "MIRA_MODE=mock MIRA_YOUCAM=live turbo run dev --env-mode=loose",
     "build": "turbo run build",
     "test": "turbo run test",

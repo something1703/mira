@@ -12,8 +12,8 @@ COPY services/engines/assets ./assets
 RUN uv sync --frozen --no-dev
 
 FROM python:3.12-slim
-# MediaPipe needs these shared libraries at runtime.
-RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+# MediaPipe needs these shared libraries at runtime (libEGL and libGLES for the face detector).
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libegl1 libgles2 \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app /app

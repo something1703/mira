@@ -168,45 +168,51 @@ export function PhotoStep(props: PhotoStepProps) {
   }
 
   if (view.v === "camera") {
+    const actions = (
+      <div className="mira-row">
+        <Button
+          variant="secondary"
+          onClick={() => {
+            picker();
+          }}
+        >
+          Upload a photo instead
+        </Button>
+        {engine === "camerakit" && !simple ? (
+          <Button variant="quiet" onClick={toSimpleCamera}>
+            Camera not starting? Use the simple camera
+          </Button>
+        ) : null}
+        {skip}
+      </div>
+    );
+    if (engine === "camerakit" && mode && !simple) {
+      return (
+        <CameraStage
+          key={`${String(view.run)}-${String(hd)}`}
+          mode={mode}
+          hd={hd}
+          label={label}
+          onCaptured={fromCamera}
+          onProblem={(problem) => {
+            setView({ v: "problem", problem });
+          }}
+        >
+          {actions}
+        </CameraStage>
+      );
+    }
     return (
       <div className="capture__panel">
-        {engine === "camerakit" && mode && !simple ? (
-          <CameraStage
-            key={`${String(view.run)}-${String(hd)}`}
-            mode={mode}
-            hd={hd}
-            label={label}
-            onCaptured={fromCamera}
-            onProblem={(problem) => {
-              setView({ v: "problem", problem });
-            }}
-          />
-        ) : (
-          <PlainStage
-            key={view.run}
-            label={label}
-            onCaptured={fromCamera}
-            onProblem={(problem) => {
-              setView({ v: "problem", problem });
-            }}
-          />
-        )}
-        <div className="mira-row">
-          <Button
-            variant="secondary"
-            onClick={() => {
-              picker();
-            }}
-          >
-            Upload a photo instead
-          </Button>
-          {engine === "camerakit" && !simple ? (
-            <Button variant="quiet" onClick={toSimpleCamera}>
-              Camera not starting? Use the simple camera
-            </Button>
-          ) : null}
-          {skip}
-        </div>
+        <PlainStage
+          key={view.run}
+          label={label}
+          onCaptured={fromCamera}
+          onProblem={(problem) => {
+            setView({ v: "problem", problem });
+          }}
+        />
+        {actions}
       </div>
     );
   }

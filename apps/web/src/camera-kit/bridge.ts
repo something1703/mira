@@ -31,14 +31,18 @@ export function qualityChecks(q: FaceQuality): Omit<Checks, "steadiness"> {
   };
 }
 
-/** One sentence naming the check that is failing (docs/UX_FLOWS.md §3), or undefined when none is. */
+/**
+ * One sentence naming the check that is failing (docs/UX_FLOWS.md §3), or undefined when none is.
+ * The order matches Camera Kit's own on-screen prompt (lighting, then angle, then distance), so the
+ * person never sees YouCam and MIRA ask for different things at once.
+ */
 export function instructionFor(q: FaceQuality): string | undefined {
-  if (q.hasFace === false) return "Bring your face into the circle.";
+  if (q.hasFace === false) return "Bring your face into the frame.";
+  if (q.lighting === "notgood") return "Face a window or a lamp so your face is evenly lit.";
+  if (q.frontal === "notgood") return "Look straight at the camera.";
   if (q.position === "toosmall") return "Move a little closer.";
   if (q.position === "notgood") return "Move back a little.";
-  if (q.position === "outofboundary") return "Centre your face in the circle.";
-  if (q.frontal === "notgood") return "Look straight at the camera.";
-  if (q.lighting === "notgood") return "Face a window or a lamp so your face is evenly lit.";
+  if (q.position === "outofboundary") return "Centre your face in the frame.";
   return undefined;
 }
 

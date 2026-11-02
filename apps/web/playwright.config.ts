@@ -38,6 +38,9 @@ export default defineConfig({
       env: {
         MIRA_MODE: "mock",
         NEXT_PUBLIC_MIRA_MODE: "mock",
+        // Its own build folder: never share `.next` with a dev server a person is using, or the
+        // cache corrupts and the browser reloads forever (next.config.ts).
+        NEXT_DIST_DIR: ".next-e2e",
         MIRA_WORKFLOWS_URL: `http://localhost:${WORKFLOWS_PORT}`,
         MIRA_WEBHOOK_URL: `http://localhost:${WEBHOOK_PORT}`,
         MIRA_AGENT_URL: `http://localhost:${AGENT_PORT}`,

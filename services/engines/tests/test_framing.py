@@ -82,6 +82,8 @@ def test_the_endpoint_crops_a_real_head_and_shoulders_photo() -> None:
     res = TestClient(app).post(
         "/face/frame", json={"image_b64": base64.b64encode(buf.getvalue()).decode()}
     )
+    if res.status_code == 503:
+        pytest.skip("no face detector on this machine (MediaPipe needs libEGL on Linux)")
     assert res.status_code == 200
     body = res.json()["result"]
     if body["face"] is None:

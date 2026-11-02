@@ -141,31 +141,33 @@ export function Timeline({ proof }: { proof: ProofRecord }) {
         Each point is the mean of three photos; the line through it spans the highest and lowest
         photo. The shaded band is your own day-to-day variation around your baseline.
       </figcaption>
-      <table className="mira-sr-only">
-        <caption>{summary}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Session</th>
-            <th scope="col">Day</th>
-            <th scope="col">Mean score</th>
-            <th scope="col">Lowest photo</th>
-            <th scope="col">Highest photo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {points.map(({ s, d }, i) => (
-            <tr key={s.runId}>
-              <th scope="row">
-                {s.kind === "baseline" ? `Baseline ${String(i + 1)}` : "Check-in"}
-              </th>
-              <td>{Math.round(d)}</td>
-              <td>{s.mean.toFixed(1)}</td>
-              <td>{Math.min(...s.scores).toFixed(1)}</td>
-              <td>{Math.max(...s.scores).toFixed(1)}</td>
+      <div className="mira-sr-only">
+        <table>
+          <caption>{summary}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Session</th>
+              <th scope="col">Day</th>
+              <th scope="col">Mean score</th>
+              <th scope="col">Lowest photo</th>
+              <th scope="col">Highest photo</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {points.map(({ s, d }, i) => (
+              <tr key={s.runId}>
+                <th scope="row">
+                  {s.kind === "baseline" ? `Baseline ${String(i + 1)}` : "Check-in"}
+                </th>
+                <td>{Math.round(d)}</td>
+                <td>{s.mean.toFixed(1)}</td>
+                <td>{Math.min(...s.scores).toFixed(1)}</td>
+                <td>{Math.max(...s.scores).toFixed(1)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }
