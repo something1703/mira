@@ -45,8 +45,8 @@ variable "billing_account_id" {
   default     = ""
 }
 
-variable "monthly_budget_usd" {
-  description = "Budget alert amount. Emails at 50%, 90% and 100% of actual spend and 100% of forecast; it does not cap spend."
+variable "monthly_budget" {
+  description = "Budget alert amount, in the billing account's currency (about $40 a month: 40 for USD, 3500 for INR). Emails at 50%, 90% and 100% of actual spend and 100% of forecast; it does not cap spend."
   type        = number
   default     = 40
 }

@@ -232,8 +232,9 @@ resource "google_compute_disk_resource_policy_attachment" "daily" {
 # ---- GitHub Actions: keyless deploys through Workload Identity Federation ----
 
 resource "google_iam_workload_identity_pool" "github" {
-  workload_identity_pool_id = "github"
-  display_name              = "GitHub Actions"
+  # Its own pool: a project can hold pools for other repositories.
+  workload_identity_pool_id = "mira-github"
+  display_name              = "MIRA GitHub Actions"
   depends_on                = [google_project_service.apis]
 }
 
@@ -312,8 +313,8 @@ resource "google_billing_budget" "monthly" {
   }
   amount {
     specified_amount {
-      currency_code = "USD"
-      units         = tostring(var.monthly_budget_usd)
+      # In the billing account's own currency; naming another one is refused.
+      units = tostring(var.monthly_budget)
     }
   }
   threshold_rules {
