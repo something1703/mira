@@ -29,7 +29,7 @@
 
 ### Hardening
 - [x] Security review (docs/SECURITY_REVIEW.md; open gaps listed there) against `docs/SECURITY_PRIVACY.md`; fix findings.
-- [ ] Performance: first paint under 2 s on a mid-range phone over 4G; Ring at 60 fps during capture.
+- [ ] Performance: first paint under 2 s on a mid-range phone over 4G; Ring at 60 fps during capture. (Stand-in measured, `docs/PERFORMANCE.md`: about 0.7 s in throttled Chromium. Not a phone, and the Ring during camera capture is not measured, so not ticked.)
 - [ ] Full sweep: every state in `docs/UX_FLOWS.md` passes Playwright in light and dark themes; axe clean.
 - [ ] Re-record fixtures from the final live runs so mock mode reflects the shipped product.
 - [ ] `docs/FACTS.md`: every public claim (rows F1 to F64 exist; the Devpost text has not been written, so the audit of its claims is not done) has a row with status Measured, Built or Source read; withdraw anything else.
