@@ -4,7 +4,13 @@ FROM node:24-slim AS build
 RUN corepack enable
 WORKDIR /repo
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1 NEXT_PUBLIC_MIRA_MODE=live
+# Pages without request data are rendered at build time, so the build must know the mode the
+# server will run in (the banner says whether results are real). Cloud Run: live. One VM: mock
+# state with real YouCam (infra/vm).
+ARG MIRA_MODE=live
+ARG MIRA_YOUCAM=fake
+ENV NEXT_TELEMETRY_DISABLED=1 MIRA_MODE=${MIRA_MODE} MIRA_YOUCAM=${MIRA_YOUCAM} \
+    NEXT_PUBLIC_MIRA_MODE=${MIRA_MODE}
 RUN pnpm install --frozen-lockfile --filter "@mira/web..." \
  && pnpm --filter @mira/web run build
 

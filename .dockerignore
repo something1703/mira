@@ -3,6 +3,8 @@
 .github
 **/node_modules
 **/.next
+**/.next-e2e
+**/.terraform
 **/dist
 **/.turbo
 **/test-results

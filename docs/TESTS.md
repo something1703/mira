@@ -41,4 +41,4 @@ The first runs of MIRA against the real YouCam API with photos of real people. T
 pnpm dev:real          # needs YOUCAM_API_KEY in .env.local; spends real units after each quote
 ```
 
-Then upload a photo at `/capture`, or open `/runs/recorded` for the drawn sample.
+Then upload a photo at `/capture`. The drawn sample at `/runs/recorded` runs only with synthetic YouCam (`pnpm dev`), so it never spends real units (D49).

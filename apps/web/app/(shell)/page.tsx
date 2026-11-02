@@ -1,5 +1,6 @@
 import { Ring } from "@mira/ui";
 import Link from "next/link";
+import { spendsRealUnits } from "../../src/mode";
 import { profileState } from "../../src/profile-state";
 import { later } from "../../src/routes";
 import { Journey } from "../../src/shell/Journey";
@@ -39,7 +40,7 @@ export default async function Welcome({
       <p className="home__more mira-small">
         {measured ? "About MIRA:" : "New here?"} <Link href="/how-it-works">How MIRA works</Link> ·{" "}
         <Link href="/tests">What we tested on real photos</Link>
-        {measured ? null : (
+        {measured || spendsRealUnits() ? null : (
           <>
             {" "}
             · <Link href={later("/runs/recorded")}>See a sample run</Link>

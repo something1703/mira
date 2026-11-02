@@ -25,11 +25,12 @@ __pycache__/
 .env*
 !.env.example
 
-# Terraform
-infra/.terraform/
-infra/*.tfstate
-infra/*.tfstate.*
-infra/*.tfvars
-!infra/*.tfvars.example
+# Terraform (both stacks: infra/ and infra/vm/)
+infra/**/.terraform/
+infra/**/.terraform.lock.hcl.bak
+infra/**/*.tfstate
+infra/**/*.tfstate.*
+infra/**/*.tfvars
+!infra/**/*.tfvars.example
 
 .DS_Store

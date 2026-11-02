@@ -1,0 +1,95 @@
+# MIRA on one VM (infra/vm/README.md). deploy.sh writes .env next to this file (registry, tag,
+# host) and the settings and secrets in /etc/mira. Only Caddy publishes ports; the services reach
+# each other on the project's private network. MIRA_ETC and MIRA_DATA move the settings and state
+# folders, so the same file runs on a laptop for a local check.
+name: mira
+
+x-service: &service
+  restart: unless-stopped
+  init: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+
+x-node-health: &node-health
+  interval: 15s
+  timeout: 5s
+  retries: 3
+  start_period: 30s
+
+services:
+  caddy:
+    image: caddy:2.11-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      MIRA_HOST: ${MIRA_HOST:?}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates persist across deploys, so a restart never asks for a new one.
+      - caddy_data:/data
+      - caddy_config:/config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    depends_on:
+      web: { condition: service_healthy }
+
+  web:
+    <<: *service
+    image: ${MIRA_REGISTRY:?}/mira-web:${MIRA_TAG:?}
+    env_file:
+      - ${MIRA_ETC:-/etc/mira}/common.env
+      - ${MIRA_ETC:-/etc/mira}/web.env
+    environment: { PORT: "3000" }
+    mem_limit: 768m
+    healthcheck:
+      <<: *node-health
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+    depends_on:
+      workflows: { condition: service_healthy }
+      agent: { condition: service_healthy }
+
+  workflows:
+    <<: *service
+    image: ${MIRA_REGISTRY:?}/mira-workflows:${MIRA_TAG:?}
+    env_file:
+      - ${MIRA_ETC:-/etc/mira}/common.env
+      - ${MIRA_ETC:-/etc/mira}/workflows.env
+    environment: { PORT: "4020", MIRA_DATA_DIR: /data }
+    volumes:
+      - ${MIRA_DATA:-/var/lib/mira}/workflows:/data
+    mem_limit: 640m
+    healthcheck:
+      <<: *node-health
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4020/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+    depends_on:
+      engines: { condition: service_healthy }
+
+  agent:
+    <<: *service
+    image: ${MIRA_REGISTRY:?}/mira-agent:${MIRA_TAG:?}
+    env_file:
+      - ${MIRA_ETC:-/etc/mira}/common.env
+    environment: { PORT: "4010" }
+    mem_limit: 384m
+    healthcheck:
+      <<: *node-health
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4010/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+    depends_on:
+      workflows: { condition: service_healthy }
+
+  engines:
+    <<: *service
+    image: ${MIRA_REGISTRY:?}/mira-engines:${MIRA_TAG:?}
+    env_file:
+      - ${MIRA_ETC:-/etc/mira}/common.env
+    environment: { PORT: "4040" }
+    mem_limit: 1g
+    healthcheck:
+      <<: *node-health
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:4040/health', timeout=4).status == 200 else 1)"]
+
+volumes:
+  caddy_data:
+  caddy_config:

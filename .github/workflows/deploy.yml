@@ -1,0 +1,134 @@
+name: Deploy
+
+# Builds the four images and starts them on the MIRA VM (infra/vm/README.md). Runs after CI passes
+# on main, or by hand from the Actions tab. Until the repository variables exist it does nothing.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time; a newer one waits rather than cutting an older one off mid-start.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  # The commit CI passed (workflow_run), or the one picked by hand.
+  SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+jobs:
+  build:
+    name: Build ${{ matrix.service }}
+    if: >-
+      vars.GCP_WIF_PROVIDER != '' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - service: web
+            dockerfile: infra/docker/web.Dockerfile
+            # Pages rendered at build time must know the mode the VM runs in.
+            build-args: |
+              MIRA_MODE=mock
+              MIRA_YOUCAM=live
+          - service: workflows
+            dockerfile: infra/docker/node-service.Dockerfile
+            build-args: |
+              PACKAGE=@mira/workflows
+              PACKAGE_DIR=apps/workflows
+          - service: agent
+            dockerfile: infra/docker/node-service.Dockerfile
+            build-args: |
+              PACKAGE=@mira/agent
+              PACKAGE_DIR=apps/agent
+          - service: engines
+            dockerfile: infra/docker/engines.Dockerfile
+            build-args: ""
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+          token_format: access_token
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ vars.GCP_REGION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          build-args: ${{ matrix.build-args }}
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ vars.MIRA_REGISTRY }}/mira-${{ matrix.service }}:${{ env.SHA }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  deploy:
+    name: Start on the VM
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://${{ vars.MIRA_HOST }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      # SSH goes through Identity-Aware Proxy; port 22 is closed to the internet.
+      - name: Copy the deploy files and start the release
+        run: |
+          ssh_flags=(--zone "${{ vars.GCP_ZONE }}" --project "${{ vars.GCP_PROJECT_ID }}" --tunnel-through-iap --quiet)
+          gcloud compute ssh "${{ vars.MIRA_VM }}" "${ssh_flags[@]}" --command 'rm -rf /tmp/mira-host && mkdir /tmp/mira-host'
+          gcloud compute scp infra/vm/host/compose.yaml infra/vm/host/Caddyfile infra/vm/host/deploy.sh \
+            "${{ vars.MIRA_VM }}:/tmp/mira-host/" "${ssh_flags[@]}"
+          gcloud compute ssh "${{ vars.MIRA_VM }}" "${ssh_flags[@]}" --command \
+            "sudo install -m 0644 /tmp/mira-host/compose.yaml /tmp/mira-host/Caddyfile /opt/mira/ \
+             && sudo install -m 0755 /tmp/mira-host/deploy.sh /opt/mira/ \
+             && sudo /opt/mira/deploy.sh '${{ env.SHA }}'"
+
+      # From the outside, through Caddy and HTTPS, as a visitor sees it.
+      - name: Smoke test
+        id: smoke
+        run: |
+          url="https://${{ vars.MIRA_HOST }}"
+          curl -fsS --retry 12 --retry-delay 5 --retry-all-errors --max-time 15 "$url/health"
+          curl -fsS --max-time 20 "$url/" | grep -q "Look, measured."
+          echo "MIRA is live at $url"
+
+      - name: Roll back if the smoke test failed
+        if: failure() && steps.smoke.outcome == 'failure'
+        run: |
+          gcloud compute ssh "${{ vars.MIRA_VM }}" --zone "${{ vars.GCP_ZONE }}" \
+            --project "${{ vars.GCP_PROJECT_ID }}" --tunnel-through-iap --quiet \
+            --command "sudo /opt/mira/deploy.sh rollback"

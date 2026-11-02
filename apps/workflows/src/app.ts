@@ -1078,8 +1078,9 @@ export function buildApp(
   });
 
   // ---- mock only: lets a test give one session its own unit cap, so suites that need a larger
-  // budget do not change the default cap other tests rely on. Absent in live mode. ----
-  if (mock) {
+  // budget do not change the default cap other tests rely on. Absent in live mode, and absent
+  // whenever real YouCam is on: there a raised cap would spend real units. ----
+  if (mock && !realYouCam) {
     app.post("/internal/dev/session-cap", async (req, reply) => {
       const body = z
         .object({ sessionId: SessionId, cap: z.number().int().min(0).max(100_000) })

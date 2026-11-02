@@ -58,6 +58,8 @@ jobs:
           terraform -chdir=infra fmt -check -recursive
           terraform -chdir=infra init -backend=false -input=false
           terraform -chdir=infra validate
+          terraform -chdir=infra/vm init -backend=false -input=false
+          terraform -chdir=infra/vm validate
 
       - name: Check
         run: pnpm check

@@ -1,0 +1,12 @@
+# MIRA's front door: HTTPS with a certificate Caddy gets and renews itself, then the web app.
+# The camera only works on an HTTPS page. Plain HTTP redirects to HTTPS.
+{$MIRA_HOST} {
+	encode zstd gzip
+
+	# The app accepts photos up to 10 MB; anything far larger stops here.
+	request_body {
+		max_size 12MB
+	}
+
+	reverse_proxy web:3000
+}

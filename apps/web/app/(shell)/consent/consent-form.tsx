@@ -7,29 +7,43 @@ import { useId, useState } from "react";
 import { HELD_HOURS } from "../../../src/capture/copy";
 import { later } from "../../../src/routes";
 
+/** What a person who declines can look at instead, by what this server can show for free (D25). */
+const INSTEAD = {
+  recorded: {
+    title: "You can still try MIRA with a recorded run.",
+    lead: "A recorded run replays real YouCam outputs captured earlier. Nothing about you is measured.",
+    href: "/runs/recorded",
+    action: "See a recorded run",
+  },
+  sample: {
+    title: "You can still look around MIRA with sample results.",
+    lead: "Sample results are made-up numbers that show how MIRA looks. Nothing about you is measured.",
+    href: "/runs/recorded",
+    action: "See sample results",
+  },
+  tests: {
+    title: "You can still see what MIRA measures.",
+    lead: "The test results show five real people measured by YouCam, with every number. Nothing about you is measured.",
+    href: "/tests",
+    action: "See the test results",
+  },
+} as const;
+
 /** Consent and privacy (docs/UX_FLOWS.md §2): default, ticked, declined. */
-/** `recorded` is true only when real YouCam recordings exist (D25); until then it is sample results. */
-export function ConsentForm({ recorded }: { recorded: boolean }) {
+export function ConsentForm({ instead }: { instead: keyof typeof INSTEAD }) {
   const [agreed, setAgreed] = useState(false);
   const [declined, setDeclined] = useState(false);
   const reasonId = useId();
 
   if (declined) {
+    const offer = INSTEAD[instead];
     return (
       <div className="consent">
-        <h1 className="mira-display-l">
-          {recorded
-            ? "You can still try MIRA with a recorded run."
-            : "You can still look around MIRA with sample results."}
-        </h1>
-        <p className="lead">
-          {recorded
-            ? "A recorded run replays real YouCam outputs captured earlier. Nothing about you is measured."
-            : "Sample results are made-up numbers that show how MIRA looks. Nothing about you is measured."}
-        </p>
+        <h1 className="mira-display-l">{offer.title}</h1>
+        <p className="lead">{offer.lead}</p>
         <div className="mira-row">
-          <Link href={later("/runs/recorded")} className={buttonClass("primary")}>
-            {recorded ? "See a recorded run" : "See sample results"}
+          <Link href={later(offer.href)} className={buttonClass("primary")}>
+            {offer.action}
           </Link>
           <Button
             variant="quiet"

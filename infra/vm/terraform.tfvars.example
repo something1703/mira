@@ -1,0 +1,11 @@
+project_id = "your-project-id"
+
+# Optional. Defaults: us-central1-a, e2-medium, 20 GB, <ip>.sslip.io.
+# region       = "us-central1"
+# zone         = "us-central1-a"
+# machine_type = "e2-medium"
+# hostname     = "mira.example.com"
+
+# Optional budget alert. Keep the real ID only in terraform.tfvars (gitignored).
+# billing_account_id = "XXXXXX-XXXXXX-XXXXXX"
+# monthly_budget_usd = 40
