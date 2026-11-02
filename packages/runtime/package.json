@@ -5,16 +5,23 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./identity": "./src/identity.ts"
+    "./identity": "./src/identity.ts",
+    "./gcp": "./src/gcp/index.ts"
   },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:emulator": "bash scripts/test-emulator.sh"
   },
   "dependencies": {
+    "@google-cloud/firestore": "9.4.0",
+    "@google-cloud/pubsub": "6.3.2",
+    "@google-cloud/storage": "8.4.0",
+    "@google-cloud/tasks": "7.3.1",
     "@mira/schemas": "workspace:*",
     "fastify": "5.12.7",
+    "google-auth-library": "11.3.2",
     "pino": "10.4.0",
     "zod": "4.6.7"
   },

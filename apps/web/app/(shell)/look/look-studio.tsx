@@ -1,6 +1,11 @@
 "use client";
 
-import type { GarmentItem, GarmentKind, LookSuggestion } from "@mira/schemas";
+import {
+  HAIR_COLOURS,
+  type GarmentItem,
+  type GarmentKind,
+  type LookSuggestion,
+} from "@mira/schemas";
 import type { z } from "zod";
 import {
   Banner,
@@ -28,7 +33,6 @@ import {
 } from "../../../src/look/api";
 import {
   BLUSH_WHY,
-  HAIR_COLOURS,
   LIP_WHY,
   LOOK_REASONS,
   QUOTE_WORDS,

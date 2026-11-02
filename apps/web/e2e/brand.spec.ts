@@ -26,7 +26,7 @@ test.describe("Brand console", () => {
       buffer: Buffer.from("product,shade,hex\nFoundation,Ivory,#F1D5BF\nFoundation,Sand,tan\n"),
     });
     await expect(page.locator(".brand__problems")).toContainText(
-      "Line 3 is not a colour. Use a code like #C99870.",
+      "Line 3 is not a colour. Use a six-digit code with a leading hash sign.",
     );
     await expect(page.getByText("Add your range to see who it serves.")).toBeVisible();
   });

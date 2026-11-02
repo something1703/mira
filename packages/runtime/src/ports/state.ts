@@ -22,7 +22,7 @@ export interface StateStore {
 }
 
 /** A rejected promise for a malformed path, or undefined when the path is fine. */
-function badPath(path: string): Promise<never> | undefined {
+export function badPath(path: string): Promise<never> | undefined {
   if (path === "" || path.startsWith("/") || path.endsWith("/") || path.includes("//")) {
     return Promise.reject(new Error(`Invalid state path: ${JSON.stringify(path)}`));
   }

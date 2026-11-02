@@ -4,7 +4,7 @@ export const RECORDED =
   "Recorded data. The shoppers, outcomes and looks here are invented for the demo, and nothing in them is a real person.";
 
 export const CSV_PROBLEMS: Record<string, string> = {
-  not_a_colour: "is not a colour. Use a code like #C99870.",
+  not_a_colour: "is not a colour. Use a six-digit code with a leading hash sign.",
   missing_product: "has no product name.",
   missing_shade: "has no shade name.",
   wrong_columns: "needs the columns product, shade and hex.",

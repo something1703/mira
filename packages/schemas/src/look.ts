@@ -179,3 +179,12 @@ export const WEDDING_FUNCTIONS: readonly Omit<EventFunction, "id" | "lookId">[] 
   { name: "Wedding", timeOfDay: "morning", venue: "temple" },
   { name: "Reception", timeOfDay: "night", venue: "hall" },
 ];
+
+/** Hair colours to choose from: choices, not measurements. "Keep mine" is the default. */
+export const HAIR_COLOURS = [
+  { name: "Soft black", hex: "#2B1D14" },
+  { name: "Dark brown", hex: "#4A2F1E" },
+  { name: "Chestnut", hex: "#6B3B22" },
+  { name: "Burgundy", hex: "#6A1B2B" },
+  { name: "Copper", hex: "#9A4B25" },
+] as const;

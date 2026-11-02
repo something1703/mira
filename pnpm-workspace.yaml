@@ -6,6 +6,7 @@ packages:
 # Packages allowed to run install scripts (pnpm 11 blocks all others by default).
 allowBuilds:
   esbuild: true
+  protobufjs: false
   unrs-resolver: true
 
 # Exact versions in every package.json; the lockfile is the source of truth.

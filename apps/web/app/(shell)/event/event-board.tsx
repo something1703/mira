@@ -2,6 +2,7 @@
 
 import { EventPlan, TimeOfDay, VenueType, type EventFunction } from "@mira/schemas";
 import { Banner, Button, EmptyState, Field, buttonClass } from "@mira/ui";
+import { color } from "@mira/ui/tokens";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -273,7 +274,10 @@ function Setup({
   );
 }
 
-/** Draws the board on the neutral mat and downloads it, or hands it to the share sheet. */
+/**
+ * Draws the board on the neutral mat and downloads it, or hands it to the share sheet. The board
+ * is the same in both themes (a file, not a screen), so it uses the light tokens.
+ */
 async function downloadBoard(plan: EventPlan, mode: "download" | "share"): Promise<void> {
   const tile = { w: 360, h: 450, gap: 24, cap: 56 };
   const cols = Math.min(3, plan.functions.length);
@@ -283,7 +287,7 @@ async function downloadBoard(plan: EventPlan, mode: "download" | "share"): Promi
   canvas.height = rows * (tile.h + tile.cap) + (rows + 1) * tile.gap;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  ctx.fillStyle = "#777777";
+  ctx.fillStyle = color.light.mat;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   for (const [i, f] of plan.functions.entries()) {
     const x = tile.gap + (i % cols) * (tile.w + tile.gap);
@@ -296,16 +300,16 @@ async function downloadBoard(plan: EventPlan, mode: "download" | "share"): Promi
     if (bitmap) {
       ctx.drawImage(bitmap, x, y, tile.w, tile.h);
     } else {
-      ctx.fillStyle = "#EDEDED";
+      ctx.fillStyle = color.light.sunken;
       ctx.fillRect(x, y, tile.w, tile.h);
-      ctx.fillStyle = "#1A1A1A";
+      ctx.fillStyle = color.light.ink;
       ctx.font = "20px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText(f.lookId ? "Look deleted" : "Not planned yet", x + tile.w / 2, y + tile.h / 2);
     }
-    ctx.fillStyle = "#EDEDED";
+    ctx.fillStyle = color.light.sunken;
     ctx.fillRect(x, y + tile.h, tile.w, tile.cap);
-    ctx.fillStyle = "#1A1A1A";
+    ctx.fillStyle = color.light.ink;
     ctx.font = "bold 22px sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(f.name, x + 14, y + tile.h + 34);

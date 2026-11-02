@@ -34,15 +34,6 @@ export const OUTFIT_CATEGORIES = [
   { value: "outer", label: "Jacket or coat" },
 ] as const;
 
-/** Hair colours to choose from: choices, not measurements. "Keep mine" is the default. */
-export const HAIR_COLOURS = [
-  { name: "Soft black", hex: "#2B1D14" },
-  { name: "Dark brown", hex: "#4A2F1E" },
-  { name: "Chestnut", hex: "#6B3B22" },
-  { name: "Burgundy", hex: "#6A1B2B" },
-  { name: "Copper", hex: "#9A4B25" },
-] as const;
-
 /** Venues described in words, for when YouCam's own presets are not available. */
 export const VENUE_PROMPTS: Record<string, { name: string; prompt: string }[]> = {
   hall: [
