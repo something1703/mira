@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { sessionOf, setCap } from "./fixtures";
+import { makeTwin, seedTwin, sessionOf, setCap } from "./fixtures";
 import { expectAccessible, snapshotForReview } from "./helpers";
 
 test.describe("Welcome (UX_FLOWS §1)", () => {
@@ -11,7 +11,10 @@ test.describe("Welcome (UX_FLOWS §1)", () => {
       "href",
       "/consent",
     );
-    await expect(page.getByRole("link", { name: "See a recorded run" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "See a sample run" })).toBeVisible();
+    // The three steps, in order, with only the first one open before measuring.
+    await expect(page.getByRole("list", { name: "How MIRA works, in three steps" })).toBeVisible();
+    await expect(page.getByText("After step 1")).toHaveCount(2);
     await expect(page.getByRole("link", { name: "MIRA home" })).toBeVisible();
     await expectAccessible(page);
     await snapshotForReview(page, testInfo, "welcome-first-visit");
@@ -34,15 +37,18 @@ test.describe("Welcome (UX_FLOWS §1)", () => {
     await expect(page.getByRole("link", { name: "Start measuring" })).toBeVisible();
   });
 
-  test("the profile cookie drives the state when no preview is given", async ({
+  test("a saved profile drives the state when no preview is given", async ({
     page,
     context,
+    request,
   }) => {
-    await context.addCookies([
-      { name: "mira_profile", value: "exists", url: "http://localhost:3100" },
-    ]);
+    const who = await sessionOf(context, page);
+    await seedTwin(request, makeTwin(who.userId));
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1, name: "Welcome back." })).toBeVisible();
+    // Step 1 is done, so step 2 is the one to do next.
+    await expect(page.getByRole("link", { name: "See your results" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Match my shade" })).toBeVisible();
   });
 
   test("See a recorded run measures the drawn sample face and ends on a sample profile", async ({
@@ -53,7 +59,7 @@ test.describe("Welcome (UX_FLOWS §1)", () => {
     await page.goto("/");
     // Its own allowance, so units other tests spent in this session cannot block the build.
     await setCap(request, await sessionOf(context, page), 400);
-    await page.getByRole("link", { name: "See a recorded run" }).click();
+    await page.getByRole("link", { name: "See a sample run" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "A sample run" })).toBeVisible();
     await expect(page.getByText("Drawn sample face, not a real person")).toBeVisible();
     await expectAccessible(page);
@@ -72,10 +78,10 @@ test.describe("Welcome (UX_FLOWS §1)", () => {
   test("the sample run never replaces a profile the person already has", async ({
     page,
     context,
+    request,
   }) => {
-    await context.addCookies([
-      { name: "mira_profile", value: "exists", url: "http://localhost:3100" },
-    ]);
+    const who = await sessionOf(context, page);
+    await seedTwin(request, makeTwin(who.userId));
     await page.goto("/runs/recorded");
     await expect(
       page.getByRole("heading", { name: "You already have a measured profile." }),

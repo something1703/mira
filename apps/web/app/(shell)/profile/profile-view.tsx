@@ -83,6 +83,49 @@ function Readings({ twin, group }: { twin: Twin; group: TwinGroupName }) {
   );
 }
 
+/** What worked and what to do next, before the detail. */
+function Summary({ twin }: { twin: Twin }) {
+  const measured = ORDER.filter((g) => twin.groups[g].status === "measured");
+  const taken = ORDER.filter((g) => !(g === "hair" && twin.groups.hair.status === "not_measured"));
+  const allTaken = taken.every((g) => twin.groups[g].status === "measured");
+  return (
+    <section className="profile__summary" aria-labelledby="summary-title">
+      <h2 id="summary-title" className="mira-title">
+        {twin.synthetic
+          ? "Sample profile ready (made-up numbers)"
+          : allTaken
+            ? "Measured by YouCam"
+            : `Partly measured: ${String(measured.length)} of ${String(taken.length)} parts`}
+      </h2>
+      <ul className="profile__checks">
+        {ORDER.map((g) => {
+          const status = twin.groups[g].status;
+          return (
+            <li key={g} className={`is-${status}`}>
+              <span aria-hidden="true">
+                {status === "measured" ? "✓" : status === "partial" ? "◐" : "–"}
+              </span>
+              {GROUP_TITLES[g]}: {STATUS_WORDS[status].toLowerCase()}
+              {g === "hair" && status === "not_measured" ? " (optional)" : null}
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mira-row">
+        <Link href={later("/shade")} className={buttonClass("primary")}>
+          Next: match my shade
+        </Link>
+        <Link href={later("/capture")} className={buttonClass("quiet")}>
+          Measure again with a new photo
+        </Link>
+        <Link href={later("/capture?step=all")} className={buttonClass("quiet")}>
+          Add more photos (optional)
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 /** The measured profile (docs/UX_FLOWS.md §4): Skin, Colouring, Face, Hair, each with its state. */
 export function ProfileView({ twin }: { twin: Twin }) {
   const noNoise = Object.keys(twin.noiseFloors).length === 0;
@@ -102,6 +145,8 @@ export function ProfileView({ twin }: { twin: Twin }) {
           these numbers and not the photos.
         </p>
       </header>
+
+      <Summary twin={twin} />
 
       {ORDER.map((group) => {
         const g = twin.groups[group];
@@ -144,9 +189,6 @@ export function ProfileView({ twin }: { twin: Twin }) {
       ) : null}
 
       <div className="mira-row">
-        <Link href={later("/shade")} className={buttonClass("primary")}>
-          Match my shade
-        </Link>
         <Link href={later("/look")} className={buttonClass("secondary")}>
           Build a look
         </Link>

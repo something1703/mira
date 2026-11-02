@@ -1,9 +1,10 @@
-import { Ring, buttonClass } from "@mira/ui";
+import { Ring } from "@mira/ui";
 import Link from "next/link";
 import { profileState } from "../../src/profile-state";
 import { later } from "../../src/routes";
+import { Journey } from "../../src/shell/Journey";
 
-/** Welcome (docs/UX_FLOWS.md §1): first visit, returning, and profile deleted. */
+/** Welcome (docs/UX_FLOWS.md §1): what MIRA is, the three steps, and where the person is. */
 export default async function Welcome({
   searchParams,
 }: {
@@ -11,47 +12,40 @@ export default async function Welcome({
 }) {
   const preview = (await searchParams).profile;
   const state = await profileState(typeof preview === "string" ? preview : undefined);
+  const measured = state === "returning";
 
   return (
-    <div className="hero">
-      <Ring mode="reading" value={1 / 3} label="The Ring: MIRA's measuring scale at rest" />
-      {state === "returning" ? (
+    <div className="home">
+      <header className="home__head">
+        <Ring mode="reading" value={1 / 3} label="The Ring: MIRA's measuring scale at rest" />
         <div>
-          <h1 className="mira-display-xl">Welcome back.</h1>
-          <p className="lead">Your measured profile is saved. Pick up where you left off.</p>
-          <div className="mira-row">
-            <Link href={later("/shade")} className={buttonClass("primary")}>
-              Match my shade
-            </Link>
-            <Link href={later("/look")} className={buttonClass("secondary")}>
-              Build a look
-            </Link>
-            <Link href={later("/proof")} className={buttonClass("secondary")}>
-              Check my progress
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <h1 className="mira-display-xl">Look, measured.</h1>
+          <h1 className="mira-display-xl">{measured ? "Welcome back." : "Look, measured."}</h1>
           <p className="lead">
-            MIRA measures you once, then shows makeup and clothes on you without smoothing your
-            skin, and checks every preview before you see it.
-          </p>
-          <div className="mira-row">
-            <Link href="/consent" className={buttonClass("primary")}>
-              Start measuring
-            </Link>
-            <Link href={later("/runs/recorded")} className={buttonClass("secondary")}>
-              See a recorded run
-            </Link>
-          </div>
-          <p className="mira-small">
-            <Link href="/how-it-works">How MIRA works</Link> ·{" "}
-            <Link href="/tests">What we tested on real photos</Link>
+            {measured
+              ? "Your measured profile is saved. Pick the next step."
+              : "Try makeup and outfits on your own photo, with no skin smoothing, and see a measured check of every preview, so you know it shows the real colour on you."}
           </p>
         </div>
-      )}
+      </header>
+
+      <Journey measured={measured} />
+
+      {measured ? (
+        <p className="home__more">
+          Also: <Link href={later("/proof")}>Check my progress</Link> ·{" "}
+          <Link href="/event">Plan an event</Link>
+        </p>
+      ) : null}
+      <p className="home__more mira-small">
+        {measured ? "About MIRA:" : "New here?"} <Link href="/how-it-works">How MIRA works</Link> ·{" "}
+        <Link href="/tests">What we tested on real photos</Link>
+        {measured ? null : (
+          <>
+            {" "}
+            · <Link href={later("/runs/recorded")}>See a sample run</Link>
+          </>
+        )}
+      </p>
     </div>
   );
 }

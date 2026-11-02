@@ -22,12 +22,13 @@ const photo = (key: string, o: Partial<Photo> = {}): Photo => ({
   ...o,
 });
 const run = (s: FlowState, ...actions: Action[]) => actions.reduce(reduce, s);
-const full = () => initialState(planFrom({}));
+const full = () => initialState(planFrom({ step: "all" }));
 
 describe("planFrom", () => {
-  it("is the whole sequence by default", () => {
-    expect(planFrom({}).steps).toEqual(["face", "repeats", "body", "hand", "hair"]);
-    expect(planFrom({}).only).toBeUndefined();
+  it("is one face photo by default, and the whole sequence on ?step=all", () => {
+    expect(planFrom({})).toEqual({ steps: ["face"] });
+    expect(planFrom({ step: "all" }).steps).toEqual(["face", "repeats", "body", "hand", "hair"]);
+    expect(planFrom({ step: "all" }).only).toBeUndefined();
   });
 
   it("retries only the groups asked for, and ignores anything else", () => {
@@ -37,13 +38,7 @@ describe("planFrom", () => {
       only: ["face", "colouring"],
     });
     expect(planFrom({ only: "skin" }).steps).toEqual(["face", "repeats"]);
-    expect(planFrom({ only: "nonsense,<script>" }).steps).toEqual([
-      "face",
-      "repeats",
-      "body",
-      "hand",
-      "hair",
-    ]);
+    expect(planFrom({ only: "nonsense,<script>" }).steps).toEqual(["face"]);
   });
 
   it("?step=repeats re-takes the skin group with its repeats", () => {
@@ -100,7 +95,7 @@ describe("the sequence", () => {
     expect(stepOf(s)).toBe("body");
     expect(s.body).toBeUndefined();
     expect(run(s, { t: "back" }).index).toBe(s.index - 1);
-    expect(run(initialState(planFrom({})), { t: "back" }).index).toBe(0);
+    expect(run(full(), { t: "back" }).index).toBe(0);
   });
 
   it("lists every held photo", () => {

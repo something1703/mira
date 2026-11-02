@@ -45,13 +45,13 @@ test.describe("How it works and the live test results", () => {
     await snapshotForReview(page, testInfo, "tests-page");
   });
 
-  test("the header links to both pages", async ({ page }) => {
+  test("the header and footer link to both pages", async ({ page }) => {
     await page.goto("/");
     await expect(
       page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "How it works" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Tests" }),
+      page.getByRole("navigation", { name: "More" }).getByRole("link", { name: "What we tested" }),
     ).toBeVisible();
   });
 });

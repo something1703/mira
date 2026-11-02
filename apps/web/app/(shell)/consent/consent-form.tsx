@@ -101,12 +101,12 @@ export function ConsentForm({ recorded }: { recorded: boolean }) {
         />
         {agreed ? (
           <Link href={later("/capture")} className={buttonClass("primary")}>
-            Open the camera
+            Continue to your photo
           </Link>
         ) : (
           <>
             <Button disabled aria-describedby={reasonId}>
-              Open the camera
+              Continue to your photo
             </Button>
             <p id={reasonId} className="mira-small mira-muted">
               Tick the box to continue

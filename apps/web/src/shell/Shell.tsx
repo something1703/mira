@@ -1,3 +1,4 @@
+import { DISCLAIMER } from "@mira/schemas";
 import { Lockup } from "@mira/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -25,15 +26,11 @@ export function Shell({ children }: { children: ReactNode }) {
             <Lockup className="shell__lockup" />
           </Link>
           <nav className="shell__nav" aria-label="Main">
-            <Link href="/how-it-works">How it works</Link>
-            <Link href="/tests">Tests</Link>
-            <Link href="/profile">Profile</Link>
+            <Link href="/profile">My profile</Link>
             <Link href="/shade">Shade</Link>
             <Link href="/look">Look</Link>
-            <Link href="/event">Event</Link>
-            <Link href="/proof">Proof</Link>
-            <Link href="/brand">For brands</Link>
-            <Link href="/settings/privacy">Privacy</Link>
+            <Link href="/proof">Progress</Link>
+            <Link href="/how-it-works">How it works</Link>
           </nav>
           <div className="shell__tools">
             <ThemeSwitch />
@@ -47,6 +44,15 @@ export function Shell({ children }: { children: ReactNode }) {
         <main id="main" tabIndex={-1} className="shell__main">
           {children}
         </main>
+        <footer className="shell__footer">
+          <nav aria-label="More">
+            <Link href="/event">Plan an event</Link>
+            <Link href="/tests">What we tested</Link>
+            <Link href="/brand">For brands</Link>
+            <Link href="/settings/privacy">Privacy and my data</Link>
+          </nav>
+          <p className="mira-small mira-muted">{DISCLAIMER}</p>
+        </footer>
       </div>
       <FlashToast />
     </div>

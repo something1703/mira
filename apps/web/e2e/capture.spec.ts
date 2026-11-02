@@ -40,6 +40,25 @@ const pendingPhotos = async (page: Page, request: Parameters<typeof setCap>[0]) 
   return ((await inv.json()) as { pendingUploads: number }).pendingUploads;
 };
 
+test.describe("Capture: measuring is one face photo by default", () => {
+  test("the default is one photo, then the price: no step rail, a plain step count", async ({
+    page,
+  }) => {
+    await page.goto("/capture");
+    await expect(page.getByText("Step 1 of 2: your photo")).toBeVisible();
+    await expect(page.getByRole("list", { name: "Capture steps" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Upload a photo instead" }).click();
+    await page.locator('input[type="file"]').setInputFiles({
+      name: "me.jpg",
+      mimeType: "image/jpeg",
+      buffer: jpegBytes(1200, 1600, 4242),
+    });
+    await page.getByRole("button", { name: "Use this photo" }).click();
+    await expect(page.getByText("Step 2 of 2: check the price and start")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Start measuring" })).toBeVisible();
+  });
+});
+
 test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   test.beforeEach(async ({ page }) => {
     await installFakeCameraKit(page);
@@ -48,7 +67,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   test("permission prompt: says what happens, offers the camera and an upload", async ({
     page,
   }, testInfo) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await expect(heading(page, "Your face")).toBeVisible();
     await expect(
       page.getByText("MIRA needs your camera to measure. Nothing is recorded until you capture."),
@@ -65,7 +84,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   test("loads the SDK as documented: HD skin capture, 1080p, a 3 second hold, blob images", async ({
     page,
   }) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     const args = await initArgs(page);
     expect(args).toMatchObject({
@@ -79,7 +98,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   test("checking: one instruction names the failing check, and the Ring counts the passes", async ({
     page,
   }, testInfo) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     const ring = page.getByRole("group", { name: /Capture checks/ });
     await quality(page, { hasFace: false });
@@ -101,7 +120,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   });
 
   test("ready: all four ticks light after the face holds, then the countdown", async ({ page }) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await good(page);
     await expect(page.getByRole("group", { name: /Capture checks/ })).toHaveAttribute(
@@ -120,7 +139,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   test("permission denied: says how to turn the camera on, and offers an upload", async ({
     page,
   }, testInfo) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await sdkReady(page);
     await page.evaluate(() => {
@@ -141,7 +160,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   test("low camera resolution: continues in standard detail with the standard capture mode", async ({
     page,
   }) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await sdkReady(page);
     await page.evaluate(() => {
@@ -165,7 +184,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
     await page.addInitScript(() => {
       window.__cameraLongSide = 1920;
     });
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await expect(
       page.getByText(
@@ -188,7 +207,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   test("camera failed for another reason: names it and offers retry and upload", async ({
     page,
   }) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await sdkReady(page);
     await page.evaluate(() => {
@@ -202,7 +221,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
     page,
     request,
   }, testInfo) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await takePhoto(page);
     await expect(page.getByRole("img", { name: "The photo you just took" })).toBeVisible();
@@ -217,7 +236,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   });
 
   test("cancelling while a photo is in review deletes it", async ({ page, request }) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await takePhoto(page);
     await expect(page.getByRole("button", { name: "Use this photo" })).toBeVisible();
@@ -228,7 +247,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   });
 
   test("a photo that is replaced is deleted, not left waiting", async ({ page, request }) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await takePhoto(page);
     await page.getByRole("button", { name: "Use this photo" }).click();
@@ -259,7 +278,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   });
 
   test("a photo below HD size is accepted for standard detail", async ({ page }) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await takePhoto(page, { width: 720, height: 960 });
     await page.getByRole("button", { name: "Use this photo" }).click();
@@ -271,7 +290,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
     request,
   }) => {
     test.setTimeout(60_000);
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await takePhoto(page);
     await page.getByRole("button", { name: "Use this photo" }).click();
@@ -305,7 +324,7 @@ test.describe("Capture: uploading instead", () => {
   });
 
   test("a good photo is checked on the server and reviewed", async ({ page }) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await page.getByRole("button", { name: "Upload a photo instead" }).click();
     await page
       .locator('input[type="file"]')
@@ -314,7 +333,7 @@ test.describe("Capture: uploading instead", () => {
   });
 
   test("each refusal says what is wrong and how to fix it", async ({ page }, testInfo) => {
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await page.getByRole("button", { name: "Upload a photo instead" }).click();
     const file = page.locator('input[type="file"]');
 
@@ -340,7 +359,7 @@ test.describe("Capture: uploading instead", () => {
 
   test("the camera can be chosen again from the upload screen", async ({ page }) => {
     await installFakeCameraKit(page);
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await page.getByRole("button", { name: "Upload a photo instead" }).click();
     await page.getByRole("button", { name: "Use the camera instead" }).click();
     await expect(page.getByRole("group", { name: /Capture checks/ })).toBeVisible();
@@ -370,7 +389,7 @@ test.describe("Capture: when the camera is not available", () => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, "mediaDevices", { value: undefined, configurable: true });
     });
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await expect(
       page.getByText("This browser cannot open the camera. Upload a photo instead."),
@@ -382,7 +401,7 @@ test.describe("Capture: when the camera is not available", () => {
 
   test("a camera tool that cannot be loaded says so and offers an upload", async ({ page }) => {
     await blockCameraKit(page);
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await expect(page.getByText("The camera tool could not be loaded.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Try the camera again" })).toBeVisible();
@@ -392,7 +411,7 @@ test.describe("Capture: when the camera is not available", () => {
 test.describe("Capture: the price and the build", () => {
   const through = async (page: Page, size = { width: 1200, height: 1600 }) => {
     await installFakeCameraKit(page);
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await takePhoto(page, size);
     await page.getByRole("button", { name: "Use this photo" }).click();
@@ -478,7 +497,7 @@ test.describe("Capture: the price and the build", () => {
     const who = await sessionOf(context, page);
     await setCap(request, who, 400);
     await installFakeCameraKit(page);
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await takePhoto(page);
     await page.getByRole("button", { name: "Use this photo" }).click();
@@ -520,9 +539,9 @@ test.describe("Capture: the price and the build", () => {
   test("a retry plan asks only for what it needs", async ({ page }) => {
     await page.goto("/capture?only=face");
     await expect(heading(page, "Your face")).toBeVisible();
-    await expect(
-      page.getByRole("list", { name: "Capture steps" }).getByRole("listitem"),
-    ).toHaveCount(1);
+    // One photo needs no list of steps.
+    await expect(page.getByText("Step 1 of 2: your photo")).toBeVisible();
+    await expect(page.getByRole("list", { name: "Capture steps" })).toHaveCount(0);
     await page.goto("/capture?step=repeats");
     await expect(
       page.getByRole("list", { name: "Capture steps" }).getByRole("listitem"),
@@ -546,7 +565,7 @@ test.describe("Capture: body and hand use a plain camera", () => {
     const who = await sessionOf(context, page);
     await setCap(request, who, 400);
     await installFakeCameraKit(page);
-    await page.goto("/capture");
+    await page.goto("/capture?step=all");
     await allow(page);
     await takePhoto(page);
     await page.getByRole("button", { name: "Use this photo" }).click();

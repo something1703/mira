@@ -39,7 +39,11 @@ export function planFrom(query: { only?: string | undefined; step?: string | und
     .map((s) => s.trim())
     .filter((s): s is TwinGroupName => GROUPS.has(s));
   const only = [...new Set(asked)];
-  if (only.length === 0) return { steps: ["face", "repeats", "body", "hand", "hair"] };
+  // Every photo MIRA can use, from the profile's "Add more photos".
+  if (query.step === "all") return { steps: ["face", "repeats", "body", "hand", "hair"] };
+  // Measuring is one face photo. The extras are offered where they matter: repeat photos and
+  // hair from the profile, the full-length photo inside Look.
+  if (only.length === 0) return { steps: ["face"] };
   const steps: StepId[] = [];
   if (only.some((g) => g === "skin" || g === "colouring" || g === "face")) steps.push("face");
   if (only.includes("skin")) steps.push("repeats");

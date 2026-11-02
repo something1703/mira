@@ -1480,3 +1480,186 @@ input[type="file"] {
   gap: var(--mira-space-2);
   max-width: 48rem;
 }
+
+/* ---------- Home and the three steps ---------- */
+.home {
+  display: grid;
+  gap: var(--mira-space-6);
+  max-width: 72rem;
+}
+.home__head {
+  display: grid;
+  gap: var(--mira-space-5);
+  align-items: center;
+}
+@media (min-width: 900px) {
+  .home__head {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: var(--mira-space-7);
+  }
+}
+.home__head .mira-ring-wrap {
+  width: min(220px, 60vw);
+}
+.home__head h1 {
+  margin: 0 0 var(--mira-space-3);
+}
+.home__head .lead {
+  margin: 0;
+  max-width: 40rem;
+}
+.home__more {
+  margin: 0;
+  color: var(--mira-ink-2);
+}
+.journey {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--mira-space-4);
+}
+@media (min-width: 900px) {
+  .journey {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.journey__card {
+  position: relative;
+  display: grid;
+  gap: var(--mira-space-3);
+  align-content: start;
+  padding: var(--mira-space-5);
+  background: var(--mira-raised);
+  border: 1px solid var(--mira-rule);
+  border-radius: 12px;
+}
+.journey__card.is-current {
+  border-color: var(--mira-accent);
+  box-shadow: inset 0 0 0 1px var(--mira-accent);
+}
+.journey__card h2,
+.journey__card p {
+  margin: 0;
+}
+.journey__card > a {
+  justify-self: start;
+}
+.journey__num {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--mira-rule);
+  font-weight: 700;
+  color: var(--mira-ink-2);
+}
+.journey__card.is-current .journey__num {
+  border-color: var(--mira-accent);
+  color: var(--mira-accent);
+}
+.journey__card.is-done .journey__num,
+.journey__step.is-done .journey__num {
+  background: var(--mira-accent);
+  border-color: var(--mira-accent);
+  color: var(--mira-on-accent);
+}
+.journey__status {
+  font-weight: 600;
+}
+.journey--compact ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mira-space-2) var(--mira-space-4);
+}
+.journey--compact a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mira-space-2);
+  min-height: 44px;
+  color: var(--mira-ink-2);
+  text-decoration: none;
+}
+.journey--compact .journey__num {
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
+}
+.journey__step.is-current a {
+  color: var(--mira-ink);
+  font-weight: 600;
+}
+
+/* ---------- Footer ---------- */
+.shell__footer {
+  display: grid;
+  gap: var(--mira-space-3);
+  padding: var(--mira-space-6) 0 var(--mira-space-7);
+  border-top: 1px solid var(--mira-rule);
+}
+.shell__footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mira-space-2) var(--mira-space-5);
+}
+.shell__footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--mira-ink-2);
+}
+.shell__footer p {
+  margin: 0;
+}
+
+/* ---------- Capture progress, profile summary, consent cards ---------- */
+.capture__progress {
+  margin: 0;
+  font: 600 var(--mira-small) var(--mira-font-ui);
+  color: var(--mira-accent);
+}
+.profile__summary {
+  display: grid;
+  gap: var(--mira-space-3);
+  padding: var(--mira-space-5);
+  background: var(--mira-raised);
+  border: 1px solid var(--mira-accent);
+  border-radius: 12px;
+}
+.profile__summary h2 {
+  margin: 0;
+}
+.profile__checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mira-space-2) var(--mira-space-5);
+}
+.profile__checks li {
+  display: inline-flex;
+  gap: var(--mira-space-2);
+}
+.profile__checks .is-measured span {
+  color: var(--mira-accent);
+  font-weight: 700;
+}
+@media (min-width: 900px) {
+  .consent {
+    max-width: 64rem;
+  }
+  .consent__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.consent__list section {
+  padding: var(--mira-space-4);
+  background: var(--mira-raised);
+  border: 1px solid var(--mira-rule);
+  border-radius: 12px;
+}

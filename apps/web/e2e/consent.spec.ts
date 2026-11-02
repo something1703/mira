@@ -17,13 +17,15 @@ test.describe("Consent (UX_FLOWS §2)", () => {
       await expect(page.getByRole("heading", { level: 2, name: h })).toBeVisible();
     }
     await expect(
-      page.getByText(
-        "MIRA is a cosmetic and appearance tool. It does not diagnose, treat or give medical advice.",
-      ),
+      page
+        .getByRole("main")
+        .getByText(
+          "MIRA is a cosmetic and appearance tool. It does not diagnose, treat or give medical advice.",
+        ),
     ).toBeVisible();
     const box = page.getByRole("checkbox", { name: "I understand and want to continue" });
     await expect(box).not.toBeChecked();
-    const open = page.getByRole("button", { name: "Open the camera" });
+    const open = page.getByRole("button", { name: "Continue to your photo" });
     await expect(open).toBeDisabled();
     await expect(open).toHaveAccessibleDescription("Tick the box to continue");
     await expectAccessible(page);
@@ -33,7 +35,7 @@ test.describe("Consent (UX_FLOWS §2)", () => {
   test("ticked: the camera link is enabled", async ({ page }, testInfo) => {
     await page.goto("/consent");
     await page.getByRole("checkbox", { name: "I understand and want to continue" }).check();
-    const open = page.getByRole("link", { name: "Open the camera" });
+    const open = page.getByRole("link", { name: "Continue to your photo" });
     await expect(open).toBeVisible();
     await expect(page.getByText("Tick the box to continue")).toHaveCount(0);
     await expectAccessible(page);
@@ -45,7 +47,7 @@ test.describe("Consent (UX_FLOWS §2)", () => {
     const box = page.getByRole("checkbox", { name: "I understand and want to continue" });
     await box.check();
     await box.uncheck();
-    await expect(page.getByRole("button", { name: "Open the camera" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Continue to your photo" })).toBeDisabled();
   });
 
   test("declined: offers sample results, not a recorded run that does not exist (D25)", async ({
@@ -95,5 +97,5 @@ test("keyboard-only path: Welcome to the camera link", async ({ page, browserNam
   await page.keyboard.press("Space");
   await expect(box).toBeChecked();
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "Open the camera" })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Continue to your photo" })).toBeFocused();
 });
