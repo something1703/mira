@@ -106,16 +106,25 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v3
 
       # SSH goes through Identity-Aware Proxy; port 22 is closed to the internet.
+      # A fresh runner's OS Login key can take a few seconds to reach the VM, so wait for a login
+      # that works before doing anything that should run only once.
+      - name: Wait for SSH
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            gcloud compute ssh "${{ vars.MIRA_VM }}" --zone "${{ vars.GCP_ZONE }}" \
+              --project "${{ vars.GCP_PROJECT_ID }}" --tunnel-through-iap --quiet --command true && exit 0
+            echo "SSH not ready (attempt $attempt); retrying in 10 s"
+            sleep 10
+          done
+          exit 1
+
+      # One connection: the deploy files go in on stdin, then the release starts.
       - name: Copy the deploy files and start the release
         run: |
-          ssh_flags=(--zone "${{ vars.GCP_ZONE }}" --project "${{ vars.GCP_PROJECT_ID }}" --tunnel-through-iap --quiet)
-          gcloud compute ssh "${{ vars.MIRA_VM }}" "${ssh_flags[@]}" --command 'rm -rf /tmp/mira-host && mkdir /tmp/mira-host'
-          gcloud compute scp infra/vm/host/compose.yaml infra/vm/host/Caddyfile infra/vm/host/deploy.sh \
-            "${{ vars.MIRA_VM }}:/tmp/mira-host/" "${ssh_flags[@]}"
-          gcloud compute ssh "${{ vars.MIRA_VM }}" "${ssh_flags[@]}" --command \
-            "sudo install -m 0644 /tmp/mira-host/compose.yaml /tmp/mira-host/Caddyfile /opt/mira/ \
-             && sudo install -m 0755 /tmp/mira-host/deploy.sh /opt/mira/ \
-             && sudo /opt/mira/deploy.sh '${{ env.SHA }}'"
+          tar -czf - -C infra/vm/host compose.yaml Caddyfile deploy.sh |
+            gcloud compute ssh "${{ vars.MIRA_VM }}" --zone "${{ vars.GCP_ZONE }}" \
+              --project "${{ vars.GCP_PROJECT_ID }}" --tunnel-through-iap --quiet --command \
+              "sudo tar -xzf - --no-same-owner -C /opt/mira && sudo /opt/mira/deploy.sh '${{ env.SHA }}'"
 
       # From the outside, through Caddy and HTTPS, as a visitor sees it.
       - name: Smoke test
