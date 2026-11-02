@@ -9,8 +9,6 @@ import { discardPhoto, uploadPhoto, type UploadKind } from "../../../src/capture
 import { CameraStage, type CameraProblem, type CapturedPhoto } from "./camera-stage";
 import { PlainStage } from "./plain-stage";
 
-const ALL_CHECKS = { lighting: true, distance: true, angle: true, steadiness: true } as const;
-
 type View =
   | { v: "start" }
   | { v: "camera"; run: number }
@@ -297,12 +295,25 @@ export function PhotoStep(props: PhotoStepProps) {
   }
 
   if (view.v === "review") {
+    const fromUpload = view.photos.some((p) => p.source === "upload");
     return (
       <div className="capture__panel">
-        <Ring mode="capture" label={`${label}. Photo taken`} checks={ALL_CHECKS}>
+        {/* A photo under review is finished, so the Ring shows it at rest, not as a live check. */}
+        <Ring
+          mode="reading"
+          value={1}
+          label={`${label}. ${fromUpload ? "Photo chosen" : "Photo taken"}`}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element -- a local object URL, not a remote image */}
-          <img className="capture__preview" src={view.preview} alt="The photo you just took" />
+          <img
+            className="capture__preview"
+            src={view.preview}
+            alt={fromUpload ? "The photo you chose" : "The photo you just took"}
+          />
         </Ring>
+        <p className="mira-small mira-muted">
+          Check that your whole face is in the photo and evenly lit.
+        </p>
         <div className="mira-row">
           <Button
             onClick={() => {
@@ -375,6 +386,7 @@ function Picker({
             {multi && i > 0 ? " (optional, right and left together)" : ""}
           </span>
           <input
+            className="capture__input"
             type="file"
             accept="image/jpeg,image/png"
             onChange={(e) => {
@@ -390,6 +402,7 @@ function Picker({
           />
         </label>
       ))}
+      <p className="mira-small mira-muted">A JPEG or PNG photo, taken in even light.</p>
       {multi && chosen[0] && Boolean(chosen[1]) !== Boolean(chosen[2]) ? (
         <p role="status" className="mira-small">
           Add the other side too, or MIRA will use the front photo only.

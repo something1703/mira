@@ -85,11 +85,38 @@ a {
   color: var(--mira-ink);
   text-decoration: underline;
 }
+.shell__nav a {
+  white-space: nowrap;
+}
 @media (max-width: 640px) {
+  /* Logo and the two tools share the first row; the nav is one swipeable row under them. */
+  .shell__header {
+    flex-wrap: wrap;
+    row-gap: var(--mira-space-2);
+  }
+  .shell__lockup {
+    height: 28px;
+  }
+  .shell__tools .mira-btn {
+    min-height: 44px;
+    padding-inline: var(--mira-space-3);
+    font-size: 14px;
+  }
   .shell__nav {
     order: 3;
     width: 100%;
     margin: 0;
+    gap: var(--mira-space-5);
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* A fade at the right edge says there is more to swipe to. */
+    mask-image: linear-gradient(to right, black calc(100% - 32px), transparent);
+  }
+  .shell__nav::-webkit-scrollbar {
+    display: none;
+  }
+  .shell__nav a:last-child {
+    padding-right: var(--mira-space-6);
   }
 }
 .shell__tools {
@@ -492,6 +519,11 @@ a {
   height: 100%;
   object-fit: cover;
 }
+/* Camera Kit draws its own view and messages into the mount; keep them inside the mirror. */
+.capture__mount {
+  overflow: hidden;
+  border-radius: 50%;
+}
 .capture__video {
   transform: scaleX(-1);
 }
@@ -515,7 +547,30 @@ a {
 }
 .capture__file {
   display: grid;
-  gap: var(--mira-space-1);
+  gap: var(--mira-space-2);
+  font-weight: 600;
+}
+/* The native chooser, restyled as a secondary button with the chosen file name beside it. */
+.capture__input {
+  font: inherit;
+  font-weight: 400;
+  color: var(--mira-ink-2);
+}
+.capture__input::file-selector-button {
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  margin-right: var(--mira-space-3);
+  padding: var(--mira-space-2) var(--mira-space-5);
+  border: 1px solid var(--mira-rule);
+  border-radius: 6px;
+  background: var(--mira-raised);
+  color: var(--mira-ink);
+  cursor: pointer;
+}
+.capture__input:focus-visible {
+  outline: 2px solid var(--mira-accent);
+  outline-offset: 2px;
 }
 .capture__quote {
   display: grid;
@@ -1001,4 +1056,30 @@ a {
   border: 1px solid var(--mira-rule);
   border-radius: var(--mira-radius-control);
   padding: var(--mira-space-3);
+}
+
+/* Headings that receive focus from code (a step change) are not keyboard targets; no focus ring. */
+[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* ---------- Sample run ---------- */
+.sample {
+  display: grid;
+  gap: var(--mira-space-5);
+  max-width: 64rem;
+}
+.sample-run {
+  display: grid;
+  gap: var(--mira-space-6);
+  align-items: start;
+}
+.sample-run .mira-plate-wrap,
+.sample-run > :first-child {
+  width: min(100%, 320px);
+}
+@media (min-width: 900px) {
+  .sample-run {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
 }

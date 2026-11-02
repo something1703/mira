@@ -10,7 +10,8 @@ import {
   ringView,
   type RingView,
 } from "../../../src/camera-kit/bridge";
-import { loadCameraKit } from "../../../src/camera-kit/loader";
+import { meetsHdSkincare, probeCamera } from "../../../src/camera-kit/capability";
+import { cameraSupported, loadCameraKit } from "../../../src/camera-kit/loader";
 import {
   Captured,
   FaceQuality,
@@ -71,6 +72,24 @@ export function CameraStage({ mode, hd, label, onCaptured, onProblem }: CameraSt
     };
 
     void (async () => {
+      // HD needs a camera Camera Kit will accept; check first so a lesser camera gets MIRA's own
+      // "standard detail" choice instead of the SDK's refusal inside the Ring.
+      if (!cameraSupported()) {
+        handlers.current.onProblem("unsupported");
+        return;
+      }
+      if (mode === "hdskincare" && hd) {
+        const probe = await probeCamera();
+        if (!life.alive) return;
+        if (!probe.ok) {
+          handlers.current.onProblem(probe.reason === "denied" ? "denied" : "failed");
+          return;
+        }
+        if (!meetsHdSkincare(probe)) {
+          handlers.current.onProblem("lowres");
+          return;
+        }
+      }
       const sdk = await loadCameraKit();
       if (!life.alive) return;
       if (!sdk.ok) {
@@ -102,6 +121,9 @@ export function CameraStage({ mode, hd, label, onCaptured, onProblem }: CameraSt
         );
       });
       on("unsupportedResolution", () => {
+        if (life.alive) handlers.current.onProblem("lowres");
+      });
+      on("unsupportedWebcamResolution", () => {
         if (life.alive) handlers.current.onProblem("lowres");
       });
       on("faceDetectionCaptured", (payload) => {

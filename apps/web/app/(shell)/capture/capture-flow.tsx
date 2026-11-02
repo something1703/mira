@@ -61,17 +61,20 @@ export function CaptureFlow({ plan }: { plan: Plan }) {
     if (moved.current) heading.current?.focus();
     moved.current = true;
   }, [place]);
-  const rail: Step[] = plan.steps.map((id, i) => ({
-    id,
-    label: STEP_RAIL_LABELS[id],
-    state: state.skipped.includes(id)
-      ? "skipped"
-      : stepComplete(state, id)
-        ? "done"
-        : i === state.index
-          ? "running"
-          : "queued",
-  }));
+  // Capture steps are the person's to take, so the rail says "Now" and "Optional", not "Running"
+  // and "Queued", which describe a machine at work.
+  const rail: Step[] = plan.steps.map((id, i) => {
+    if (state.skipped.includes(id)) return { id, label: STEP_RAIL_LABELS[id], state: "skipped" };
+    if (stepComplete(state, id)) return { id, label: STEP_RAIL_LABELS[id], state: "done" };
+    if (i === state.index)
+      return { id, label: STEP_RAIL_LABELS[id], state: "running", word: "Now" };
+    return {
+      id,
+      label: STEP_RAIL_LABELS[id],
+      state: "queued",
+      ...(OPTIONAL.has(id) ? { word: "Optional" } : {}),
+    };
+  });
 
   const leave = () => {
     for (const key of held.current) void discardPhoto(key);

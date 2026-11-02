@@ -55,18 +55,46 @@ const SCRIPT = String.raw`
 })();
 `;
 
+/**
+ * A stand-in camera for MIRA's own resolution check, which runs before Camera Kit (the SDK refuses
+ * HD skin capture below a 2560 px long side). It reports an HD-capable camera unless a test sets
+ * `window.__cameraLongSide` first, e.g. 1920 for a typical laptop camera.
+ */
+const CAMERA = String.raw`
+(() => {
+  const md = navigator.mediaDevices;
+  if (!md || !md.getUserMedia) return;
+  const real = md.getUserMedia.bind(md);
+  // The browser's fake device gives a real stream (the plain camera needs it for <video>); only
+  // what the track reports about its resolution is replaced.
+  md.getUserMedia = async (constraints) => {
+    const stream = await real(constraints);
+    const long = window.__cameraLongSide ?? 2560;
+    const short = Math.round(long * 0.5625);
+    for (const track of stream.getVideoTracks()) {
+      track.getCapabilities = () => ({ width: { max: long }, height: { max: short } });
+      track.getSettings = () => ({ width: long, height: short });
+    }
+    return stream;
+  };
+})();
+`;
+
 export async function installFakeCameraKit(page: Page): Promise<void> {
+  await page.addInitScript(CAMERA);
   await page.route(isSdk, (route) =>
     route.fulfill({ status: 200, contentType: "application/javascript", body: SCRIPT }),
   );
 }
 
 export async function blockCameraKit(page: Page): Promise<void> {
+  await page.addInitScript(CAMERA);
   await page.route(isSdk, (route) => route.abort("failed"));
 }
 
 declare global {
   interface Window {
+    __cameraLongSide?: number;
     __ymk: {
       calls: { op: string; args?: Record<string, unknown> }[];
       emit: (name: string, payload?: unknown) => void;

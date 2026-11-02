@@ -268,6 +268,19 @@ describe("Reading, Swatch, StepRail, QuoteSheet, Verdict", () => {
     expect(latestAnnouncement([])).toBe("");
   });
 
+  it("step rail: a step's own word replaces the state word, on screen and when announced", () => {
+    const steps = [
+      { id: "face", label: "Face photo", state: "done" },
+      { id: "repeats", label: "Two repeat photos", state: "running", word: "Now" },
+      { id: "hair", label: "Hair photos", state: "queued", word: "Optional" },
+    ] as const;
+    render(<StepRail label="Capture steps" steps={steps} />);
+    expect(screen.getByText("Now")).toBeInTheDocument();
+    expect(screen.getByText("Optional")).toBeInTheDocument();
+    expect(screen.queryByText("Running")).toBeNull();
+    expect(latestAnnouncement([{ ...steps[0], word: "Taken" }])).toBe("Face photo: Taken");
+  });
+
   it("quote sheet: ready sums the lines and confirms", async () => {
     const onConfirm = vi.fn();
     render(

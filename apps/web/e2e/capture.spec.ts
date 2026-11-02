@@ -6,6 +6,10 @@ import { expectAccessible, snapshotForReview } from "./helpers";
 const allow = async (page: Page) => {
   await page.getByRole("button", { name: "Allow camera" }).click();
 };
+/** MIRA checks the camera's resolution before loading Camera Kit, so the SDK arrives a moment later. */
+const sdkReady = async (page: Page) => {
+  await page.waitForFunction(() => "__ymk" in window);
+};
 const takePhoto = async (page: Page, size?: { width: number; height: number }) => {
   await page.waitForFunction(
     () => "__ymk" in window && window.__ymk.listenerCount("faceDetectionCaptured") > 0,
@@ -118,6 +122,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   }, testInfo) => {
     await page.goto("/capture");
     await allow(page);
+    await sdkReady(page);
     await page.evaluate(() => {
       window.__ymk.emit("cameraFailed", "error_permission_denied");
     });
@@ -138,6 +143,7 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
   }) => {
     await page.goto("/capture");
     await allow(page);
+    await sdkReady(page);
     await page.evaluate(() => {
       window.__ymk.emit("unsupportedResolution");
     });
@@ -153,11 +159,38 @@ test.describe("Capture: the camera (UX_FLOWS §3)", () => {
     expect(args.videoQuality).toBeUndefined();
   });
 
+  test("a laptop camera below the HD requirement gets MIRA's choice, not the SDK's refusal", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.__cameraLongSide = 1920;
+    });
+    await page.goto("/capture");
+    await allow(page);
+    await expect(
+      page.getByText(
+        "This camera cannot capture the detail HD measuring needs. MIRA will measure in standard detail.",
+      ),
+    ).toBeVisible();
+    // MIRA decided before the SDK was asked for HD, so the SDK never drew its own message.
+    expect(
+      await page.evaluate(
+        () =>
+          (window as { __ymk?: Window["__ymk"] }).__ymk?.calls.some((c) => c.op === "init") ??
+          false,
+      ),
+    ).toBe(false);
+    await page.getByRole("button", { name: "Continue in standard" }).click();
+    const args = await initArgs(page);
+    expect(args.faceDetectionMode).toBe("comprehensive");
+  });
+
   test("camera failed for another reason: names it and offers retry and upload", async ({
     page,
   }) => {
     await page.goto("/capture");
     await allow(page);
+    await sdkReady(page);
     await page.evaluate(() => {
       window.__ymk.emit("cameraFailed", "error_access_failed");
     });

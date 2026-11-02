@@ -11,6 +11,8 @@ export interface Step {
   state: StepState;
   /** Why it failed or was skipped. */
   detail?: string;
+  /** Replaces the state word where the default would mislead, e.g. "Now" for a capture step. */
+  word?: string;
 }
 
 export const STEP_WORDS: Record<StepState, string> = {
@@ -42,7 +44,7 @@ export interface StepRailProps {
 export function latestAnnouncement(steps: readonly Step[]): string {
   const idx = steps.map((s) => SETTLED.has(s.state)).lastIndexOf(true);
   const step = steps[idx];
-  return step ? `${step.label}: ${STEP_WORDS[step.state]}` : "";
+  return step ? `${step.label}: ${step.word ?? STEP_WORDS[step.state]}` : "";
 }
 
 export function StepRail({ steps, label }: StepRailProps) {
@@ -60,7 +62,7 @@ export function StepRail({ steps, label }: StepRailProps) {
                 {step.label}
                 {step.detail ? <span className="mira-step__detail">{step.detail}</span> : null}
               </span>
-              <span className="mira-step__state">{STEP_WORDS[step.state]}</span>
+              <span className="mira-step__state">{step.word ?? STEP_WORDS[step.state]}</span>
             </li>
           );
         })}
