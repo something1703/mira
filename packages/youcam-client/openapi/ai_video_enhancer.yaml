@@ -98,7 +98,7 @@ info:
         > *If the number of images or video duration isn’t evenly divisible, units round up.
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -139,7 +139,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunVidTaskV2'
+                - $ref: "#/components/schemas/BasicRunVidTaskV2"
                 - type: object
                   properties:
                     dst_duration:
@@ -148,23 +148,23 @@ paths:
                   required:
                     - dst_duration
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/video-sr/{task_id}:
     get:
       summary: Check a AI Video Enhance task status.
@@ -181,18 +181,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VidTaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/VidTaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -226,10 +226,10 @@ components:
         - anyOf:
             - title: Run task with src video file url
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2VidSrcFileUrl'
+                - $ref: "#/components/schemas/BasicRunTaskV2VidSrcFileUrl"
             - title: Run task with src video file ID
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
         - title: BasicRunVidTaskV2
           type: object
           required:
@@ -360,12 +360,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/VidTaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/VidTaskStatusResponseBodySingleUrlResultsV2"
   responses:
     InvalidApiKey:
       description: Invalid or missing API key

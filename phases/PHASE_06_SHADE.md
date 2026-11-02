@@ -11,7 +11,7 @@
 | `apps/workflows/src/graphs/match-shade.ts` | Match Shade graph |
 | `apps/agent/src/extract/shade-range.ts` | Small-model extraction of shade names and hexes from a product page |
 | `apps/web/app/shade/` | Shade screens |
-| `packages/fixtures/catalogues/` | Two or three real shade ranges for mock mode |
+| `packages/fixtures/catalogues/` | Two or three real shade ranges for mock mode. **Today: two invented sample ranges, labelled as samples.** A real range needs someone to read one from a page they may use, with its address and date (`catalogues/README.md`) |
 | `experiments/shade-closed-loop/` | The F1 and F8 experiments with results |
 
 ## Tasks
@@ -22,12 +22,12 @@
   *Accept:* results table in `experiments/shade-closed-loop/RESULTS.md` and rows in `docs/FACTS.md`.
 
 ### Feature
-- [ ] Range input: paste a product link or pick a recorded catalogue; extraction returns shade name, hex and finish with a schema; unreadable pages give the UX_FLOWS "Range not readable" state.
-- [ ] Pre-rank all shades at zero units; show "Checked N shades for free".
-- [ ] QuoteSheet for the top N renders (default 3, max 5).
-- [ ] Parallel `makeup-vto` foundation renders with `skin_smooth: 0`, finish and coverage from the engine rules; re-measure; blend ΔE and direction check.
-- [ ] Results: best-match plate with verified label, runner-ups, "why this finish and coverage", no-match and drift states.
-- [ ] Concealer as an optional second pass using the dark-circle and eye-bag readings.
+- [x] Range input: paste a product link or pick a recorded catalogue; extraction returns shade name, hex and finish with a schema; unreadable pages give the UX_FLOWS "Range not readable" state. _(a deterministic swatch reader behind a `ShadeReader` port; the small-model reader comes with the agent in Phase 7, D37)_
+- [x] Pre-rank all shades at zero units; show "Checked N shades for free".
+- [x] QuoteSheet for the top N renders (default 3, max 5).
+- [x] Parallel `makeup-vto` foundation renders with `skin_smooth: 0`, finish and coverage from the engine rules; re-measure; blend ΔE and direction check.
+- [x] Results: best-match plate with verified label, runner-ups, "why this finish and coverage", no-match and drift states.
+- [x] Concealer as an optional second pass using the dark-circle and eye-bag readings. _(dark-circle reading only: eye-bag readings are not in the profile)_
 
 ## Tests
 
@@ -38,7 +38,7 @@
 
 - [ ] F1 and F8 recorded with honest results, whichever way they landed.
 - [ ] Live run on a real person with a real brand range works end to end.
-- [ ] Every state implemented and tested.
+- [x] Every state implemented and tested. _(UX_FLOWS §5: choose, reading, not readable, pre-ranked, quote, rendering, results, no match, drift, partial)_
 
 ## Demo moment
 

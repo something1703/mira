@@ -3,7 +3,7 @@
  * Cloud Run image ships one file plus the few dependencies that cannot be bundled.
  */
 import { build } from "esbuild";
-import { readFileSync } from "node:fs";
+import { cpSync, existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const cwd = process.cwd();
@@ -26,5 +26,13 @@ await build({
   },
   logLevel: "info",
 });
+
+// Text the service reads at run time (the agent's system prompt) ships beside the bundle.
+if (existsSync(join(cwd, "src/prompts"))) {
+  cpSync(join(cwd, "src/prompts"), join(cwd, "dist/prompts"), {
+    recursive: true,
+    filter: (src) => !src.endsWith(".ts"),
+  });
+}
 
 console.log(`Built ${pkg.name} → dist/main.js`);

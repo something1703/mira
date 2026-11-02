@@ -45,6 +45,11 @@ jobs:
       - name: JSON Schema export is current
         run: pnpm --filter @mira/schemas exec tsx scripts/export-json-schema.ts --check
 
+      - name: Python models and contract samples are current
+        run: |
+          pnpm --filter @mira/schemas exec tsx scripts/export-contract-samples.ts --check
+          (cd services/engines && uv run --frozen python tools/generate_models.py --check)
+
       - name: Terraform format and validate
         run: |
           terraform -chdir=infra fmt -check -recursive

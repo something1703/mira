@@ -22,7 +22,10 @@ export const metadata: Metadata = {
   title: { default: "MIRA — look, measured", template: "%s · MIRA" },
   description:
     "MIRA measures you once with YouCam, then matches foundation, composes complete looks and checks every preview before you see it.",
-  icons: { icon: "/brand/favicon.svg" },
+  icons: {
+    icon: "/brand/favicon.svg",
+    apple: [{ url: "/icons/icon-180.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -31,9 +34,19 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/**
+ * Applies a saved theme before first paint, so a returning person never sees a flash of the other
+ * theme. With nothing saved, the CSS follows prefers-color-scheme on its own.
+ */
+const THEME_SCRIPT =
+  "try{var t=localStorage.getItem('mira-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}";
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${ui.variable}`}>
+    <html lang="en" className={`${display.variable} ${ui.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );

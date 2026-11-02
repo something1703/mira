@@ -8,7 +8,7 @@
 
 | Path | What |
 | --- | --- |
-| `packages/youcam-client/src/generated/` | Types generated from Perfect Corp's OpenAPI bundles |
+| `packages/youcam-client/src/schemas/` | Hand-written Zod request and response schemas per feature, checked against the saved OpenAPI bundles (D11) |
 | `packages/youcam-client/src/features.ts` | Feature registry: slug, version, file endpoint, task endpoint, webhook support, request builder, result parser |
 | `packages/youcam-client/src/mock/` | Fixture replay with recorded latencies |
 | `packages/fixtures/` | Recorded responses for every feature MIRA uses + `CONSENT.md` |
@@ -21,30 +21,39 @@
 ## Tasks
 
 ### Client
-- [ ] Download the OpenAPI bundles for every feature in `docs/YOUCAM_API.md` §2; generate types; commit with the bundle date.
-- [ ] Confirm every _confirm_ entry in `docs/YOUCAM_API.md` §2 from the bundles; update the doc and `docs/FACTS.md`.
-- [ ] Feature registry with request builders; `makeup-vto` builder injects `skin_smooth: 0` unless `allowSmoothing` is explicitly true.
+- [ ] Write Zod schemas per feature from the saved bundles in `packages/youcam-client/openapi/` (D11); note the bundle date in each file. _(built for the features of phases 5–6 plus clothes, hair colour, background and video; accessories, jewellery and hair transfer follow with Phase 8)_
+- [ ] Confirm every _confirm_ entry in `docs/YOUCAM_API.md` §2 from the bundles; update the doc and `docs/FACTS.md`. _(still open: each needs a live response, which needs the key)_
+- [x] Feature registry with request builders; `makeup-vto` builder injects `skin_smooth: 0` unless `allowSmoothing` is explicitly true.
   *Accept:* unit test fails if any makeup request lacks `skin_smooth`.
-- [ ] File registration + presigned PUT with the exact returned headers; image pre-processing (resize to limits, face-crop helper for skin analysis).
-- [ ] Task create, poll (exponential backoff, cap), result parse; error mapping table for every documented error code.
-- [ ] Credit balance and feature-cost calls; cost cache refreshed daily.
-- [ ] Task delete with resources.
+- [ ] File registration + presigned PUT with the exact returned headers; image pre-processing (resize to limits, face-crop helper for skin analysis). _(registration and PUT are done; resizing and the face-crop helper are not)_
+- [x] Task create, poll (exponential backoff, cap), result parse; error mapping table for every documented error code. _(Backoff 2 s ×1.5 to 15 s, tested. Every code in the 15 bundles of features MIRA calls maps to a specific code; `tests/error-codes.test.ts` fails on a new one.)_
+- [x] Request builders checked against the saved bundles: every body satisfies its OpenAPI request schema and sends only declared fields (`tests/request-schemas.test.ts`).
+- [x] A client-side sliding-window rate limiter (200 requests per 300 s) in the HTTP transport, so every path, including the CLIs and multi-photo submits, stays under YouCam's 250 (F11, F25).
+- [x] Credit balance and feature-cost calls; cost cache refreshed daily. _(24 h TTL, stale prices kept if a refresh fails, balance re-read at most every 15 s; `tests/costs.test.ts`.)_
+- [x] Task delete with resources.
 
 ### Lifecycle and runner
-- [ ] Cache key = SHA-256(input hash, feature, version, canonical params, engine version).
-- [ ] Ledger: reserve → commit / release; caps per node, run, session.
+- [x] Cache key = SHA-256(input hash, feature, version, canonical params, engine version).
+- [x] Ledger: reserve → commit / release; caps per node, run, session.
   *Accept:* over-cap node never submits; ledger sums equal committed units.
-- [ ] Persist `taskId` before waiting; on restart with `taskId` present, resume polling.
+- [x] Persist `taskId` before waiting; on restart with `taskId` present, resume polling.
   *Accept:* a test kills the worker after submit; the resumed run makes zero additional create calls.
-- [ ] Webhook receiver verifies secret and task existence, then enqueues `advance(runId, nodeId)`; poll fallback for features without webhooks.
-- [ ] Graph runner: typed graph definition, dependency resolution, parallel ready nodes up to queue rate, partial-failure semantics, cancellation of unstarted nodes.
-- [ ] Pub/Sub `run-events` (node started, done, cached, failed, audited); web subscribes through a server-sent events endpoint.
-- [ ] End-of-run cleanup: delete Cloud Storage objects and YouCam tasks unless the user saved the output.
+- [x] Webhook receiver verifies secret and task existence, then enqueues `advance(runId, nodeId)`; poll fallback for features without webhooks.
+- [x] Graph runner: typed graph definition, dependency resolution, parallel ready nodes up to queue rate, partial-failure semantics, cancellation of unstarted nodes.
+- [ ] Pub/Sub `run-events` (node started, done, cached, failed, audited); web subscribes through a server-sent events endpoint. _(events and the SSE endpoint exist in-process; Pub/Sub is not built and the run viewer polls instead)_
+- [x] End-of-run cleanup: delete Cloud Storage objects and YouCam tasks unless the user saved the output. _(Saving copies the images to `saved/{userId}/{lookId}/` first, `runner/save.ts`; the run's own copies are always deleted.)_
+- [x] A failed node stores what the person can do about it (`guidance`: retake, retry, other garment, contact support).
+
+### Ports, adapters and edges
+- [x] Ports and adapters in `packages/runtime` for state, queue, events and blobs (D10): file-backed / in-process for mock.
+- [ ] Live adapters for the same ports: Firestore / Cloud Tasks / Pub/Sub / Cloud Storage (built at deploy time, with phases/PHASE_01).
+- [x] `mira-web` proxies the public webhook and MCP paths to the internal services (route handlers, so the targets are run-time settings).
+- [ ] `mira-workflows` verifies Google OIDC tokens on Cloud Tasks calls itself. _(The queue endpoint is deny-by-default in live mode until this is built.)_
 
 ### Tools
-- [ ] `pnpm fixtures:record` (quote + confirm, scrubs signed URLs).
-- [ ] `pnpm smoke:live` (one cheap task per feature, after quote + confirm).
-- [ ] Run viewer: graph with node states, units per node, cache hits, audit outcomes, ledger table.
+- [x] `pnpm fixtures:record` (quote + confirm, scrubs signed URLs).
+- [x] `pnpm smoke:live` (one cheap task per feature, after quote + confirm).
+- [x] Run viewer: graph with node states, units per node, cache hits, audit outcomes, ledger table.
 
 ## Tests
 
@@ -52,9 +61,9 @@ Everything listed for client, lifecycle and workflows in `docs/TESTING.md`, usin
 
 ## Definition of done
 
-- [ ] Fixtures recorded for every feature used by Phases 5–9.
-- [ ] Lifecycle tests cover cache hit, over budget, crash after submit, webhook vs poll, error release, cleanup.
-- [ ] A demo graph of three fake nodes runs live and in mock, visible in the run viewer.
+- [ ] Fixtures recorded for every feature used by Phases 5–9. _(1 of 15 recorded: background removal on a synthetic image, F30, plus the real price list. The face features need a photo of a person who has consented.)_
+- [x] Lifecycle tests cover cache hit, over budget, crash after submit, webhook vs poll, error release, cleanup.
+- [ ] A demo graph of three fake nodes runs live and in mock, visible in the run viewer. _(runs in mock mode and shows in the run viewer; the live half waits for the deploy)_
 
 ## Demo moment
 

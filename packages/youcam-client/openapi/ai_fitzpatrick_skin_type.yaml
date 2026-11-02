@@ -250,7 +250,7 @@ info:
 
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -266,7 +266,7 @@ tags:
       six types, from Type I: White, Type II: Beige, Type III: Light Brown, Type
       V: Medium Brown, Type V: Dark Brown, to Type VI: Very Dark Brown, based on
       melanin levels and sensitivity to UV exposure. This system predicts how
-      likely your skin is to burn or tan. 
+      likely your skin is to burn or tan.
 paths:
   /s2s/v2.0/task/fitzpatrick-scale-analyzer/pre-process:
     post:
@@ -308,25 +308,25 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - $ref: "#/components/schemas/BasicRunTaskV2"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/fitzpatrick-scale-analyzer/pre-process/{task_id}:
     get:
       summary: Check the status of a AI Fitzpatrick Scale Analyzer detection task.
@@ -343,19 +343,19 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
                 $ref: >-
                   #/components/schemas/TaskStatusResponsePreProcessSingleIndexWithTimed
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
   /s2s/v2.0/task/fitzpatrick-scale-analyzer:
     post:
       summary: Run an AI Fitzpatrick Scale Analyzer task.
@@ -382,7 +382,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - $ref: "#/components/schemas/BasicRunTaskV2"
                 - type: object
                   required:
                     - version
@@ -392,9 +392,9 @@ paths:
                       description: >
                         Version of the features specification. Defaults to
                         `"1.0"` unless otherwise specified.
-                      example: '1.0'
+                      example: "1.0"
                       enum:
-                        - '1.0'
+                        - "1.0"
                     index:
                       type: integer
                       description: >-
@@ -433,23 +433,23 @@ paths:
                       default: 0
                       example: 0
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/fitzpatrick-scale-analyzer/{task_id}:
     get:
       summary: Check the status of a AI Fitzpatrick Scale Analyzer task.
@@ -466,13 +466,13 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/TaskStatusResponsePreProcessNoUrlBase'
+                  - $ref: "#/components/schemas/TaskStatusResponsePreProcessNoUrlBase"
                   - type: object
                     properties:
                       data:
@@ -497,12 +497,12 @@ paths:
                               timed:
                                 type: number
                                 description: Engine processing time, in seconds.
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -536,10 +536,10 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -655,13 +655,13 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
     TaskStatusResponsePreProcessSingleIndexWithTimed:
       allOf:
-        - $ref: '#/components/schemas/TaskStatusResponsePreProcessNoUrlBase'
+        - $ref: "#/components/schemas/TaskStatusResponsePreProcessNoUrlBase"
         - type: object
           properties:
             data:

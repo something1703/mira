@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Wavy Hair Virtual Try-On
   description: "# Overview\nWhether you're dreaming of bouncy ringlets, loose waves, or a bold curly statement, the YouCam API’s curly hair filter lets you experiment with a fresh, fabulous hairstyle in seconds—all from the comfort of home.\n\nWhether you're trying a soft wave or a bold afro, YouCam delivers a level of precision and realism that sets it apart. It's the ideal tool for exploring new hairstyles with confidence before your next salon visit.\n\n\n![](https://plugins-media.makeupar.com/smb/blog/post/2025-04-01/webp_03963789-fb1e-4ad8-be4d-48932e247376.jpg)\n\n![](https://plugins-media.makeupar.com/smb/blog/post/2025-03-20/b25b228a-259b-4efb-a7c1-31d200b62e8c.jpg)\n\nSuggestions for How to Shoot:\n![Suggestions for How to Shoot](https://bcw-media.s3.ap-northeast-1.amazonaws.com/AI_Hair_Extension_recommendation_ba24bd5d92.png \"Suggestions for How to Shoot\")\n\n---\n\n## File Specs & Errors\n\n* Supported Formats & Dimensions\n\n|AI Feature|Supported Dimensions|Supported File Size|Supported Formats|\n|  ----  | ----  | ----  | ----  |\n|AI Wavy Hair|long side <= 1024, face width >= 128, face pose: -10 < pitch < +10, -45 < yaw < +45, -15 < roll < +15, single face only, need to show full face|< 10MB|jpg/jpeg/png|\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n|error_no_shoulder\t|Shoulders are not visible in the source image\n|error_large_face_angle\t|The face angle in the uploaded image is too large\n|error_insufficient_landmarks\t|Cannot detect sufficient face or body landmarks in the source image\n|error_hair_too_short\t|Input hair is too short\n|error_face_pose\t|The face pose of source image is unsupported\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Wavy Hair Virtual Try-On V1.0 | 1 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -42,24 +42,24 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
+        "200":
           description: Successful retrieval of styles
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateResponseSchema'
-        '400':
+                $ref: "#/components/schemas/TemplateResponseSchema"
+        "400":
           description: Invalid request parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorInvalidParameters'
-        '401':
+                $ref: "#/components/schemas/ErrorInvalidParameters"
+        "401":
           description: Invalid API Key or Inactive API Key or Expired API Key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorInvalidApiKey'
+                $ref: "#/components/schemas/ErrorInvalidApiKey"
   /s2s/v2.0/task/hair-curl:
     post:
       summary: Run an AI Wavy Hair task.
@@ -73,27 +73,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RunWithSingleTemplateAndSrcUrl'
+              $ref: "#/components/schemas/RunWithSingleTemplateAndSrcUrl"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorRunError'
-        '401':
+                $ref: "#/components/schemas/ErrorRunError"
+        "401":
           description: Invalid API Key or Inactive API Key or Expired API Key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorInvalidApiKey'
-        '429':
+                $ref: "#/components/schemas/ErrorInvalidApiKey"
+        "429":
           description: Too many requests within a given amount of time
           content:
             application/json:
@@ -115,30 +115,30 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
           description: Invalid task id
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorInvalidTaskId'
-        '401':
+                $ref: "#/components/schemas/ErrorInvalidTaskId"
+        "401":
           description: Invalid API Key or Inactive API Key or Expired API Key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorInvalidApiKey'
-        '500':
+                $ref: "#/components/schemas/ErrorInvalidApiKey"
+        "500":
           description: The task has no response in the expected time
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorTaskTimeout'
+                $ref: "#/components/schemas/ErrorTaskTimeout"
 components:
   schemas:
     FileV1.1:
@@ -225,7 +225,7 @@ components:
           example: 200
           description: Response status
         data:
-          $ref: '#/components/schemas/BasicFileResponse'
+          $ref: "#/components/schemas/BasicFileResponse"
     Template:
       type: object
       properties:
@@ -255,7 +255,7 @@ components:
             templates:
               type: array
               items:
-                $ref: '#/components/schemas/Template'
+                $ref: "#/components/schemas/Template"
             next_token:
               type: string
               example: 73a3c9e69b89
@@ -263,8 +263,8 @@ components:
     RunWithSingleTemplateAndSrcUrl:
       title: RunWithSingleTemplateAndSrcUrl
       allOf:
-        - $ref: '#/components/schemas/RunWithSingleTemplate'
-        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: "#/components/schemas/RunWithSingleTemplate"
+        - $ref: "#/components/schemas/BasicRunTaskV2"
     RunWithSingleTemplate:
       title: RunWithSingleTemplate
       type: object
@@ -300,8 +300,8 @@ components:
     BasicRunTaskV2:
       title: BasicRunTaskV2
       anyOf:
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -336,12 +336,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results:
-              $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+              $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
     TaskStatusResponseBodySingleUrlResultsV2:
       type: object
       properties:

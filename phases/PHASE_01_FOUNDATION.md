@@ -14,7 +14,7 @@
 | `packages/schemas/src/claim-linter.ts` | Claim linter with the banned list from `docs/COPY.md` |
 | `infra/` | Terraform for every GCP resource below |
 | `.github/workflows/ci.yml` | `pnpm check` on every push |
-| `scripts/dev-mock.sh` | Starts all services with `MIRA_MODE=mock` and the Firestore emulator |
+| `pnpm dev:mock` (Turborepo) | Starts all services with `MIRA_MODE=mock` (file-backed state in `.mira/`, no emulator; D10) |
 
 ## Tasks
 
@@ -25,7 +25,7 @@
   *Accept:* `pnpm dev:mock` starts every service and the web app shows a placeholder page with the lockup.
 - [x] Config loader (`packages/schemas/src/env.ts`): validates env with Zod at start-up; in `mock` mode no secret is required.
   *Accept:* starting live mode without `YOUCAM_API_KEY` fails fast with a readable message.
-- [x] Trace ID middleware for every service; propagated via `x-mira-trace` header and Pub/Sub attributes.
+- [ ] Trace ID middleware for every service; propagated via `x-mira-trace` header and Pub/Sub attributes. _(done in the Fastify and engines services and on run events; the web app does not yet create or forward the header, and Pub/Sub is not built)_
 - [x] Claim linter: stems and scope rules from `docs/COPY.md` §3 (disclaimer allowlisted; prompts and refusal templates excluded); runs on UI copy files, the README and the Devpost description.
   *Accept:* a test file containing "clinically proven" fails `pnpm lint`.
 
@@ -49,9 +49,9 @@
 
 ## Definition of done
 
-- [ ] `pnpm check` passes locally and in CI.
-- [ ] `pnpm dev:mock` works on a fresh clone with no credentials.
-- [ ] All five services deployed and returning 200 on `/health` in the cloud.
+- [x] `pnpm check` passes locally and in CI. _(Locally exit 0 including 84 Playwright tests; CI green on every push of this branch.)_
+- [x] `pnpm dev:mock` works on a fresh clone with no credentials. _(Fresh clone, no YouCam or Google variables: all six services healthy in 9 s, a demo run succeeds, state survives a restart. F24.)_
+- [ ] All six services deployed and returning 200 on `/health` in the cloud.
 - [ ] Vertex smoke test passes; model IDs recorded.
 
 ## Demo moment

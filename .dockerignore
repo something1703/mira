@@ -1,0 +1,17 @@
+# Nothing a person or a developer keeps locally belongs in a build context (docs/SECURITY_PRIVACY.md §2).
+.git
+.github
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/test-results
+**/playwright-report
+**/coverage
+**/.venv
+**/__pycache__
+.env
+.env.*
+!.env.example
+.mira
+*.log

@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Beard Style Generator
   description: "# Overview\nAI Simulation for Men's Beard Styles\n\nThe AI algorithm also empowers men to have the complete freedom to virtually try different beard styles with the highly sophisticated beard simulation technology, including trim beard, stubble beard, full beard, circle beard, mustache, goatee, and others.\n\nShoppers can also see before and after results, without the commitment of putting a razor to the skin.\nThe beard filters include mustache, short box, ducktail, circle and a dozen more.\n\n## Integration Guide\n\n1. **Upload a Selfie**\n  You can provide the source image in one of two ways:\n\n  - **Use an Existing Public Image URL**\n    Instead of uploading, you may supply a publicly accessible image URL directly when initiating the AI task.\n\n  - **Upload via File API**\n    Use the endpoint:\n    ```\n    POST /s2s/v2.0/file\n    ```\n    This returns a `file_id` for subsequent task execution.\n\n    - ***Important***: Simply calling the File API does not upload your file. You must **manually upload** the file to the **URL provided in the File API response**. That URL is your upload destination, make sure the file is successfully transferred there before proceeding.<br></br>\n    Before calling the AI API, ensure your file has been successfully uploaded. Use the File API to retrieve an upload URL, then upload your file to that location. Once the upload is complete, you'll receive a ***file_id*** in the response, this ID is what you'll use to access AI features related to that file.\n\n      > **Warning:** Please note that, you will get an 500 Server Error / unknown_internal_error or 404 Not Found error when using AI APIs if you do not upload the file to the URL provided in the File API response.\n\n2.  **List Predefined Styles**\n    *   Use /s2s/v2.0/task/template/beard-style to fetch a predefined template list and select a ``template_id`` to run an AI task.\n\n3.  **Run an AI Task to Obtain a Task ID**\n    Execute the AI task using /s2s/v2.0/task/beard-style. For the target user image, provide either ``src_file_url`` or ``src_file_id``. And a stype ``template_id`` to apply and obtain a ``task_id``.\n\n4.  **Poll to Check the Status of a Task Until It Succeeds or Fails**\n    Use the ``task_id`` to monitor the task status by polling GET /s2s/v2.0/task/beard-style to retrieve the current engine status. Until the engine completes the task, the status will remain as running, and no units will be consumed during this stage.\n    You can also implement a webhook to receive notifications when an AI task succeeds or fails. Refer to the **[Webhook](../../../develop/webhook)** section for details.\n\n    > **Warning:** Polling to check the status of a task within its retention period is mandatory. A task will time out if there is no polling request within the retention period, even if the task is processed successfully. Your units will still be consumed.\n\n    > **Warning:** You will receive an InvalidTaskId error if you check the status of a timed-out task. Therefore, once you run an AI task, you must poll to check the status within the retention period until the status becomes either success or error.\n\n5.  **Retrieve the Result of an AI Task Once Successful**\n    The task status will change to success after the engine processes your input file and generates the resulting image. You will receive a URL for the processed image.\n\n---\n\n## File Specs & Errors\n   * Supported Formats & Dimensions\n\n|AI Feature|Supported Dimensions|Supported File Size|Supported Formats|\n|  ----  | ----  | ----  | ----  |\n|AI Beardstyle Generator|Resolution: Long side < 1024 <br>face width > 256 <br>face pose: -30 < yaw < 30, <br>single face only, <br>need to show full face|< 10MB|jpg/jpeg|\n\n   * Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n|error_no_face\t|Face are not visible in the source image\n|error_src_face_too_small\t|The face is too small\n|error_inference\t|Beard removal error or beard generation error\n|error_face_pose\t|The face pose of source image is unsupported\n\n   * Environment & Dependency\n\n| Sample Code Language / Tool | Recommended Runtime Versions |\n|---|---|\n| cURL | - bash >= 3.2</br>   - curl >= 7.58 (modern TLS/HTTP support)</br>   - jq >= 1.6 (robust JSON parsing) |\n| Node.js (JavaScript) | Node >= 18 (for global fetch) |\n| JavaScript | - Chrome / Edge >= 80</br>   - Firefox >= 74</br>   - Safari >= 13.1 |\n| PHP | PHP >= 7.4 (for modern TLS/compat), ext-curl (recommended) or allow_url_fopen=On + ext-openssl, ext-json |\n| Python | Python >= 3.10 (for f-strings), requests >= 2.20.0 |\n| Java | Java 11+ (for HttpClient), Jackson Databind >= 2.12.0 |\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Beard Style Generator V1.0 | 2 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -42,12 +42,12 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
-          $ref: '#/components/schemas/TemplateResponse'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+        "200":
+          $ref: "#/components/schemas/TemplateResponse"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
   /s2s/v2.0/task/beard-style:
     post:
       summary: Run an AI Beard Style Generator task.
@@ -74,25 +74,25 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RunWithSingleTemplateAndSrcUrl'
+                - $ref: "#/components/schemas/RunWithSingleTemplateAndSrcUrl"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/beard-style/{task_id}:
     get:
       summary: Check the status of a AI Beard Style Generator task.
@@ -109,18 +109,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   schemas:
     Template:
@@ -152,7 +152,7 @@ components:
             templates:
               type: array
               items:
-                $ref: '#/components/schemas/Template'
+                $ref: "#/components/schemas/Template"
             next_token:
               type: string
               example: 73a3c9e69b89
@@ -160,8 +160,8 @@ components:
     RunWithSingleTemplateAndSrcUrl:
       title: RunWithSingleTemplateAndSrcUrl
       allOf:
-        - $ref: '#/components/schemas/RunWithSingleTemplate'
-        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: "#/components/schemas/RunWithSingleTemplate"
+        - $ref: "#/components/schemas/BasicRunTaskV2"
     RunWithSingleTemplate:
       title: RunWithSingleTemplate
       type: object
@@ -197,10 +197,10 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -323,12 +323,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   securitySchemes:
     BearerAuthenticationV2:
       type: http

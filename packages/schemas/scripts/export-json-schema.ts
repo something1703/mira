@@ -7,7 +7,7 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { Audit, Lab, LedgerEntry, Metric, Plan, Quote, Run, RunEvent, RunNode } from "../src";
+import { Audit, Lab, LedgerEntry, Metric, Plan, Quote, Run, RunEvent, RunNode, Twin } from "../src";
 
 const EXPORTS: Record<string, z.ZodType> = {
   Audit,
@@ -19,6 +19,7 @@ const EXPORTS: Record<string, z.ZodType> = {
   Run,
   RunEvent,
   RunNode,
+  Twin,
 };
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");

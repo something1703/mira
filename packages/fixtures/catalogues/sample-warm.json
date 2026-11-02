@@ -1,0 +1,113 @@
+{
+  "id": "sample-warm",
+  "brand": "Sample brand",
+  "product": "Sample foundation, warm-leaning",
+  "finish": "satin",
+  "sample": true,
+  "source": {
+    "kind": "catalogue",
+    "catalogueId": "sample-warm"
+  },
+  "shades": [
+    {
+      "id": "W110",
+      "name": "W 110",
+      "hex": "#F2D1BC"
+    },
+    {
+      "id": "W120",
+      "name": "W 120",
+      "hex": "#EAC8B3"
+    },
+    {
+      "id": "W130",
+      "name": "W 130",
+      "hex": "#E2C0AA"
+    },
+    {
+      "id": "W140",
+      "name": "W 140",
+      "hex": "#DAB8A1"
+    },
+    {
+      "id": "W150",
+      "name": "W 150",
+      "hex": "#D2B099"
+    },
+    {
+      "id": "W160",
+      "name": "W 160",
+      "hex": "#CAA890"
+    },
+    {
+      "id": "W170",
+      "name": "W 170",
+      "hex": "#C2A088"
+    },
+    {
+      "id": "W180",
+      "name": "W 180",
+      "hex": "#BA987F"
+    },
+    {
+      "id": "W190",
+      "name": "W 190",
+      "hex": "#B29177"
+    },
+    {
+      "id": "W200",
+      "name": "W 200",
+      "hex": "#AA896F"
+    },
+    {
+      "id": "W210",
+      "name": "W 210",
+      "hex": "#A28167"
+    },
+    {
+      "id": "W220",
+      "name": "W 220",
+      "hex": "#9A7A5F"
+    },
+    {
+      "id": "W230",
+      "name": "W 230",
+      "hex": "#937257"
+    },
+    {
+      "id": "W240",
+      "name": "W 240",
+      "hex": "#8B6B4F"
+    },
+    {
+      "id": "W250",
+      "name": "W 250",
+      "hex": "#836447"
+    },
+    {
+      "id": "W260",
+      "name": "W 260",
+      "hex": "#7C5D3F"
+    },
+    {
+      "id": "W270",
+      "name": "W 270",
+      "hex": "#745538"
+    },
+    {
+      "id": "W280",
+      "name": "W 280",
+      "hex": "#6C4F31"
+    },
+    {
+      "id": "W290",
+      "name": "W 290",
+      "hex": "#654829"
+    },
+    {
+      "id": "W300",
+      "name": "W 300",
+      "hex": "#5D4122"
+    }
+  ]
+}

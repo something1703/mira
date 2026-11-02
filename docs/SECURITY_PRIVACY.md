@@ -13,7 +13,7 @@ MIRA handles face images, so it keeps as little as possible for as short as poss
 
 - YouCam key, model credentials and webhook secret live in Secret Manager; services read them at start-up.
 - The browser never receives the YouCam key; `NEXT_PUBLIC_*` variables never hold secrets (lint rule).
-- The webhook endpoint verifies a shared secret and the task ID's existence in Firestore before acting.
+- The webhook endpoint verifies the Standard Webhooks HMAC-SHA256 signature (D13), rejects stale timestamps, and checks the task ID exists in Firestore before acting.
 
 ## 3. Access
 

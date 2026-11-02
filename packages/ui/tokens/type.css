@@ -1,0 +1,73 @@
+/*
+ * MIRA type tokens (docs/DESIGN_SYSTEM.md §3). Scale ratio 1.25, base 16.
+ * --font-display and --font-ui are set by next/font in apps/web; the fallbacks apply elsewhere.
+ */
+:root {
+  --mira-font-display: var(--font-display, "Gloock"), Georgia, serif;
+  --mira-font-ui: var(--font-ui, "Atkinson Hyperlegible Next"), system-ui, sans-serif;
+
+  --mira-display-xl: 61px / 64px;
+  --mira-display-l: 39px / 44px;
+  --mira-display-m: 31px / 36px;
+  --mira-title: 25px / 30px;
+  --mira-reading: 31px / 32px;
+  --mira-body-l: 20px / 30px;
+  --mira-body: 16px / 24px;
+  --mira-small: 14px / 20px;
+  --mira-caption: 13px / 18px;
+}
+
+/* Every measurement uses tabular, lining figures so columns align and 1/l/I stay distinct. */
+.mira-figures {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+/* The font shorthand resets variants, so re-apply figures after any type class. */
+:is(
+  .mira-display-xl,
+  .mira-display-l,
+  .mira-display-m,
+  .mira-title,
+  .mira-body-l,
+  .mira-body,
+  .mira-small,
+  .mira-caption
+).mira-figures {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.mira-display-xl {
+  font: 400 var(--mira-display-xl) var(--mira-font-display);
+  letter-spacing: -0.01em;
+}
+.mira-display-l {
+  font: 400 var(--mira-display-l) var(--mira-font-display);
+}
+.mira-display-m {
+  font: 400 var(--mira-display-m) var(--mira-font-display);
+}
+.mira-title {
+  font: 600 var(--mira-title) var(--mira-font-ui);
+}
+.mira-reading {
+  font: 700 var(--mira-reading) var(--mira-font-ui);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.mira-body-l {
+  font: 400 var(--mira-body-l) var(--mira-font-ui);
+}
+.mira-body {
+  font: 400 var(--mira-body) var(--mira-font-ui);
+}
+.mira-small {
+  font: 400 var(--mira-small) var(--mira-font-ui);
+}
+.mira-caption {
+  font: 400 var(--mira-caption) var(--mira-font-ui);
+}
+
+@media (max-width: 900px) {
+  :root {
+    --mira-display-xl: 44px / 48px;
+    --mira-display-l: 33px / 38px;
+  }
+}

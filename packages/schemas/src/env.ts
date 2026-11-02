@@ -53,6 +53,12 @@ const Common = z.object({
   MIRA_NODE_UNIT_CAP: intFromEnv(60),
   MIRA_RUN_UNIT_CAP: intFromEnv(120),
   MIRA_SESSION_UNIT_CAP: intFromEnv(200),
+  /**
+   * Units the whole deployment may spend in one UTC day, whoever asks. A session cap alone can be
+   * reset by clearing cookies, so this is the cap a script cannot get around (D35). Live default;
+   * mock mode applies it only when set.
+   */
+  MIRA_DEPLOYMENT_DAILY_UNIT_CAP: intFromEnv(400),
   /** Minimum cohort before any brand aggregate is shown (DATA_MODEL §3). */
   MIRA_K_ANON_MIN: intFromEnv(20),
 

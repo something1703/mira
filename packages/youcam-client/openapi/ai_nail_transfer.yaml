@@ -265,7 +265,7 @@ info:
 
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -308,25 +308,25 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2WithRequiredRef'
+                - $ref: "#/components/schemas/BasicRunTaskV2WithRequiredRef"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/ai-nail/{task_id}:
     get:
       summary: Check the status of a AI Nail Transfer task.
@@ -345,18 +345,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -408,26 +408,26 @@ components:
             - title: Run task with src file url & ref file url
               required:
                 - ref_file_url
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrl"
         - allOf:
             - title: Run task with src file url & ref file ID
               required:
                 - ref_file_id
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileId"
         - allOf:
             - title: Run task with src file ID & ref file url
               required:
                 - ref_file_url
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrl"
         - allOf:
             - title: Run task with src file ID & ref file ID
               required:
                 - ref_file_id
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -550,12 +550,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   responses:
     InvalidApiKey:
       description: Invalid or missing API key

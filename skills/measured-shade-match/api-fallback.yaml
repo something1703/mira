@@ -1,0 +1,28 @@
+# The MIRA MCP server's shade_match tool, for agents that call it without an MCP client.
+# POST {MIRA_MCP_URL} with `Authorization: Bearer <token>` and the JSON-RPC body below.
+# The reply is JSON or a single server-sent event carrying the same JSON-RPC response.
+tool: shade_match
+request:
+  jsonrpc: "2.0"
+  id: 1
+  method: tools/call
+  params:
+    name: shade_match
+    arguments:
+      skin_hex: "#C79A78" # required, #RRGGBB
+      shades: # required, 1 to 200
+        - { id: "w130", name: "W 130", hex: "#E2C0AA" }
+      top: 5 # optional, 1 to 20, default 5
+response:
+  result:
+    structuredContent:
+      ranked: # closest first
+        - { id: "w130", name: "W 130", de2000: 1.82, reads: "blends_closely" }
+      checked: 1
+      engine_version: "0.1.0"
+      note: string
+    isError: false # true with a text message when the call was refused
+errors:
+  401: no or wrong bearer token
+  isError: input out of range, the day's units used, or the engines unreachable (no units taken)
+units: 1

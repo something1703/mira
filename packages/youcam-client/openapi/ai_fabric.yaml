@@ -326,7 +326,7 @@ info:
 
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -366,24 +366,24 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
+        "200":
           description: Successful retrieval of styles
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateResponseSchema'
-        '400':
+                $ref: "#/components/schemas/TemplateResponseSchema"
+        "400":
           description: Invalid request parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidParametersSchema'
-        '401':
+                $ref: "#/components/schemas/InvalidParametersSchema"
+        "401":
           description: Invalid API Key or Inactive API Key or Expired API Key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidApiKeySchema'
+                $ref: "#/components/schemas/InvalidApiKeySchema"
   /s2s/v2.0/task/fabric:
     post:
       summary: Run an Fabric task.
@@ -397,28 +397,28 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RunWithSingleTemplateAndSrcUrl'
+              $ref: "#/components/schemas/RunWithSingleTemplateAndSrcUrl"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunErrorSchema'
-        '401':
+                  - $ref: "#/components/schemas/RunErrorSchema"
+        "401":
           description: Invalid API Key or Inactive API Key or Expired API Key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidApiKeySchema'
-        '429':
+                $ref: "#/components/schemas/InvalidApiKeySchema"
+        "429":
           description: Too many requests within a given amount of time
           content:
             application/json:
@@ -440,30 +440,30 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
           description: Invalid task id
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidTaskIdSchema'
-        '401':
+                $ref: "#/components/schemas/InvalidTaskIdSchema"
+        "401":
           description: Invalid API Key or Inactive API Key or Expired API Key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidApiKeySchema'
-        '500':
+                $ref: "#/components/schemas/InvalidApiKeySchema"
+        "500":
           description: The task has no response in the expected time
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskTimeoutSchema'
+                $ref: "#/components/schemas/TaskTimeoutSchema"
 components:
   schemas:
     Template:
@@ -495,7 +495,7 @@ components:
             templates:
               type: array
               items:
-                $ref: '#/components/schemas/Template'
+                $ref: "#/components/schemas/Template"
             next_token:
               type: string
               example: 73a3c9e69b89
@@ -503,8 +503,8 @@ components:
     RunWithSingleTemplateAndSrcUrl:
       title: RunWithSingleTemplateAndSrcUrl
       allOf:
-        - $ref: '#/components/schemas/RunWithSingleTemplate'
-        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: "#/components/schemas/RunWithSingleTemplate"
+        - $ref: "#/components/schemas/BasicRunTaskV2"
     RunWithSingleTemplate:
       title: RunWithSingleTemplate
       type: object
@@ -540,8 +540,8 @@ components:
     BasicRunTaskV2:
       title: BasicRunTaskV2
       anyOf:
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -632,12 +632,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results:
-              $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+              $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
     InvalidParametersSchema:
       type: object
       properties:

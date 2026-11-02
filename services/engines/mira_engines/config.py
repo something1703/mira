@@ -21,8 +21,21 @@ class Threshold:
 # Shade matching (docs/ENGINES.md §4)
 MATCH_DE: Final = Threshold(2.0, "docs/ENGINES.md §4.1 starting value; Phase 6 F8", False, "ΔE00")
 CLOSE_DE: Final = Threshold(3.5, "docs/ENGINES.md §4.1 starting value; Phase 6 F8", False, "ΔE00")
+# Brand: the Shade Gap Map (docs/DESIGN_SYSTEM.md §10)
+GAP_NEAR_DE: Final = Threshold(
+    3.5, "A shopper is served when a shade is within CLOSE_DE (docs/ENGINES.md §4.1)", False, "ΔE00"
+)
+GAP_HUE_BINS: Final = Threshold(12, "Product choice: 30° of hue a bin", False, "bins")
+GAP_L_BINS: Final = Threshold(8, "Product choice: 12.5 of L* a bin", False, "bins")
 SHADE_RENDER_TOP_N: Final = Threshold(3, "docs/ENGINES.md §4.1 default", False, "shades")
 SHADE_RENDER_TOP_N_MAX: Final = Threshold(5, "docs/ENGINES.md §4.1 max", False, "shades")
+DIRECTION_EPS: Final = Threshold(
+    0.5,
+    "Starting value: below this a Lab difference is treated as no difference when checking "
+    "that a render moved in the intended direction (docs/ENGINES.md §4.2); Phase 6 F8",
+    False,
+    "L*/b*",
+)
 COVERAGE_RAISE: Final = Threshold(
     50, "docs/ENGINES.md §4.3; raw_score below which coverage is raised", False, "raw score"
 )
@@ -50,6 +63,18 @@ KMEANS_SEED: Final = Threshold(20261101, "Fixed seed for reproducible clustering
 # Look suggestions (docs/ENGINES.md §5)
 LIP_HUE_WINDOW_DEG: Final = Threshold(30.0, "docs/ENGINES.md §5", False, "°")
 BLUSH_HUE_WINDOW_DEG: Final = Threshold(20.0, "docs/ENGINES.md §5", False, "°")
+MIN_HUE_CHROMA: Final = Threshold(
+    8.0,
+    "Product choice (D35): below this a colour is near-grey and its hue angle is noise",
+    False,
+    "C*",
+)
+CONTRAST_TOLERANCE: Final = Threshold(
+    10.0,
+    "Product choice: how far a lip's lightness contrast may sit from the person's own",
+    False,
+    "L*",
+)
 
 # Noise floor and change (docs/ENGINES.md §8)
 CAPTURES_PER_SESSION: Final = Threshold(3, "docs/ENGINES.md §8 default k", True, "captures")

@@ -21,10 +21,49 @@ export const CONFIG = {
     renderTopN: setting(3, "docs/ENGINES.md §4.1 default", false),
     /** Upper bound the person can raise it to in the QuoteSheet. */
     renderTopNMax: setting(5, "docs/ENGINES.md §4.1 max", false),
+    /**
+     * Foundation request values for each finish and coverage the engine suggests. They map a style
+     * rule to `makeup-vto`'s 0-100 integers (docs/ENGINES.md §4.3). Starting values: no experiment
+     * has compared them with what a person would pick, so they are not presented as calibrated.
+     */
+    glowByFinish: setting(
+      { matte: 10, satin: 35, dewy: 65 },
+      "docs/ENGINES.md §4.3; Phase 6 F8 to calibrate",
+      false,
+    ),
+    coverageByLevel: setting(
+      { light: 35, medium: 60 },
+      "docs/ENGINES.md §4.3; Phase 6 F8 to calibrate",
+      false,
+    ),
+    /** How strongly the shade's colour is applied. Full strength shows the shade as it is. */
+    colourIntensity: setting(70, "Product choice; Phase 6 F8 to calibrate", false),
+    /**
+     * The concealer pass (an optional second run): how it is asked for. Starting values with no
+     * experiment behind them, so not calibrated. Whether to offer it is the engine's decision.
+     */
+    concealerColourIntensity: setting(60, "Product choice; Phase 6 F8 to calibrate", false),
+    concealerUnderEyeIntensity: setting(50, "Product choice; Phase 6 F8 to calibrate", false),
+    concealerCoverageLevel: setting(50, "Product choice; Phase 6 F8 to calibrate", false),
+    /** Shades a range may list. A page with more is more likely a mistaken read than a range. */
+    maxShadesPerRange: setting(200, "Product choice", false),
   },
   budget: {
     /** "Session budget low" banner shows below this share of the session cap. */
     lowShare: setting(0.2, "docs/UX_FLOWS.md §0", true),
+    /**
+     * Unit caps (docs/UX_FLOWS.md §0, "Session budget reached"). Starting values chosen so one
+     * look with a 10-second video (about 30 units) fits several times in a session. The session
+     * cap is a deploy setting, `MIRA_SESSION_UNIT_CAP` (packages/schemas/src/env.ts).
+     */
+    nodeCap: setting(40, "Product choice; the costliest step is a 10 s video", false),
+    runCap: setting(120, "Product choice", false),
+    /** The live balance is re-read at most this often. */
+    balanceCacheSeconds: setting(
+      15,
+      "Product choice; polls share a 250 / 5 min rate budget",
+      false,
+    ),
   },
   agent: {
     maxToolDepth: setting(6, "docs/AGENT_RUNTIME.md §1", true),
@@ -32,6 +71,103 @@ export const CONFIG = {
     /** Invalid model output gets one retry, then a templated fallback (AGENTS.md §9). */
     outputRetries: setting(1, "AGENTS.md §9", true),
     segmentMaxChars: setting(400, "docs/AGENT_RUNTIME.md §4", true),
+    /** A quote stays valid this long; after that the person is quoted again. */
+    planTtlMs: setting(
+      15 * 60 * 1000,
+      "Product choice: prices are read live, so a quote goes stale",
+      false,
+    ),
+    /** Characters of page text the extraction model is shown. */
+    pageTextChars: setting(
+      6_000,
+      "Product choice: enough for a product page, bounded for cost",
+      false,
+    ),
+  },
+  proof: {
+    /** Sessions of captures on different days before a product can be judged (docs/ENGINES.md §8). */
+    baselineSessions: setting(3, "docs/PHASE_09: 3 sessions on different days", true),
+    /** Captures in one session. */
+    capturesPerSession: setting(3, "docs/ENGINES.md §8: k = 3", true),
+    /** Two sessions closer than this are the same day to the person, not different days. */
+    minSessionGapHours: setting(12, "Product choice: sessions on different days", false),
+    /** A check-in is due this often once tracking has started. */
+    checkInEveryDays: setting(7, "Product choice: weekly", false),
+    minWindowDays: setting(7, "Product choice: a shorter claim is not measurable", false),
+    maxWindowDays: setting(180, "Product choice: the session cookie lasts 180 days", false),
+    /** Spacing of the five Skin Simulation intensities for the phantom (docs/ENGINES.md §9). */
+    phantomIntensities: setting([0, 0.25, 0.5, 0.75, 1], "docs/ENGINES.md §9", true),
+  },
+  look: {
+    /** Request strengths for a look's lip and blush (0-100). Starting values, not calibrated. */
+    lipColourIntensity: setting(70, "Product choice; Phase 8 chain-quality experiment", false),
+    blushColourIntensity: setting(40, "Product choice; Phase 8 chain-quality experiment", false),
+    /**
+     * Thresholds used for labels only when an engine reply does not echo them (it does). They
+     * equal the engines' own values (services/engines/mira_engines/config.py).
+     */
+    garmentVerifyDeFallback: setting(6, "docs/ENGINES.md §7.1", false),
+    lipVerifyDeFallback: setting(3, "docs/ENGINES.md §7.2", false),
+    identityMaxFallback: setting(0.08, "docs/ENGINES.md §7.3", false),
+    /** Longest chain shown by default until the chain-quality experiment decides (F-row). */
+    defaultChainLength: setting(7, "Phase 8 chain-quality experiment pending", false),
+    /** Video lengths and resolutions offered. */
+    videoDurationSec: setting<5 | 10>(5, "Cheapest length (docs/YOUCAM_API.md §3)", false),
+    videoResolution: setting<"480" | "720" | "1080">("480", "Cheapest resolution", false),
+  },
+  twin: {
+    /**
+     * HD skin concerns read when building a profile. Skin Analysis is priced in tiers by concern
+     * count (HD: 1-4 = 12, 5-8 = 16, 9-12 = 20 units, read live 2026-11-01), so eight is the most
+     * that stays in the 16-unit tier. The set serves the phases that read them: pores, wrinkles,
+     * texture, acne, oiliness and redness for Proof (Phase 9); redness and acne for the coverage
+     * rule (ENGINES §4.3); dark circles for the concealer pass (Phase 6); skin type for finish.
+     * Age spots and eye bags are left out to stay in the tier; Phase 6 can request them as a
+     * separate, quoted step.
+     */
+    skinConcerns: setting(
+      [
+        "hd_pore",
+        "hd_wrinkle",
+        "hd_texture",
+        "hd_acne",
+        "hd_oiliness",
+        "hd_redness",
+        "hd_dark_circle",
+        "hd_skin_type",
+      ] as readonly string[],
+      "docs/ENGINES.md §4.3, §8; feature-cost tiers (docs/FACTS.md F2)",
+      false,
+    ),
+    /**
+     * Face Attributes features read: five stays in the 10-unit tier (1-5 features). They are the
+     * ratios identity drift compares (docs/ENGINES.md §7.3) and the proportions the profile shows.
+     */
+    faceFeatures: setting(
+      [
+        "faceAspectRatio",
+        "horizontalThird",
+        "verticalFifth",
+        "eyeAspectRatio",
+        "noseWidthToMouthWidth",
+      ] as readonly string[],
+      "docs/ENGINES.md §7.3; feature-cost tiers",
+      false,
+    ),
+    /** Extra face captures taken seconds apart, so s_w can be estimated (docs/ENGINES.md §8, k = 3). */
+    repeatCaptures: setting(2, "docs/UX_FLOWS.md §3; docs/ENGINES.md §8 default k = 3", true),
+    /** The face must fill more than this share of the photo's width for Skin Analysis. */
+    minFaceWidthShare: setting(
+      0.6,
+      "docs/YOUCAM_API.md §3 (face wider than 60% of the image)",
+      true,
+    ),
+    /**
+     * How long a photo that is waiting for a run (the full-body and hand captures, which a later
+     * phase reads) is held before MIRA deletes it. A photo a run reads is deleted when that run
+     * ends. The bucket's one-day lifecycle rule is the backstop (docs/SECURITY_PRIVACY.md §1).
+     */
+    heldPhotoMinutes: setting(120, "product choice (D32): the length of one session", true),
   },
   plan: {
     /** A quote is honoured for this long; afterwards the plan must be re-quoted. */
@@ -47,7 +183,31 @@ export const CONFIG = {
     /** Poll backoff for features without webhooks. */
     pollInitialMs: setting(2_000, "Product choice; CASTING measured 16.5–28 s per try-on", false),
     pollMaxMs: setting(15_000, "Product choice", false),
+    /**
+     * How long a run's generated images stay after it ends, so a person can look and press Save.
+     * The photos they uploaded are deleted at once; only YouCam's results wait (D35).
+     */
+    reviewWindowMs: setting(
+      10 * 60_000,
+      "Product choice (D35); well inside the 2 h result URLs",
+      false,
+    ),
+    /** How long a claimed but unconfirmed submit is waited for before it is called unknown. */
+    submitLeaseMs: setting(2 * 60_000, "Product choice (D35): longer than one create call", false),
     pollGiveUpMs: setting(10 * 60_000, "Product choice; well inside the 24 h retention", false),
+    /**
+     * YouCam allows 250 requests per 300 s per key and per IP (docs/FACTS.md F11). The client
+     * stays under it with headroom for other callers sharing the key or the IP.
+     */
+    requestsPerWindow: setting(200, "docs/FACTS.md F11 (250 per 300 s), minus 20% headroom", false),
+    rateWindowSeconds: setting(300, "docs/FACTS.md F11", true),
+    /** A call that would have to wait longer than this fails as retryable instead of blocking. */
+    rateMaxWaitSeconds: setting(5, "Product choice", false),
+    /** Result URLs work for 2 hours (docs/FACTS.md F4); chained steps stop trusting one 5 minutes early. */
+    resultUrlHours: setting(2, "docs/FACTS.md F4", true),
+    resultUrlSafetyMinutes: setting(5, "Product choice", false),
+    /** A create or poll that fails in a retryable way is retried this many times before the node fails. */
+    maxRetries: setting(4, "Product choice", false),
     featureCostCacheHours: setting(24, "phases/PHASE_03 'cost cache refreshed daily'", true),
   },
   retention: {

@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Photo Background Change
   description: "# Overview\nThe AI Photo Background Change API enhances images by isolating the subject from the original background, enabling a wide range of applications including product-focused use cases in business.\n\nThis API enables developers to replace the background using custom prompts or predefined templates.\n\n**Sample Usage**\n\nBefore:\n![](https://yce.makeupar.com/assets/images/sod/banner/change/yce-topbanner-dt-before.jpg)\n\nAfter:\n![](https://yce.makeupar.com/assets/images/sod/banner/change/yce-topbanner-dt-after.jpg)\n\n\nBefore:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_change_bg_s5_poster_before_0753db3e02.jpg)\n\nAfter:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_change_bg_s5_poster_after_7fb288fde2.jpg)\n\n---\n\n## Integration Guide\n\n**1. Upload Image**\n\nRequest upload URLs and file IDs via:\n\n```\nPOST /s2s/v2.0/file\n```\n\nUpload the image using the returned URL.\nAlternatively, provide a publicly accessible image URL hosted on your own storage.\n\n\n**2. Prepare a background description prompt or select a background template.**\n\n```\nGET /s2s/v2.0/task/template/bg-replace\n```\n\nRetrieve the list of predefined background templates and select one using its template_id. When using prompt which is the default, the background will be generated based on the provided prompt. When using template, the background will be generated from the predefined template specified by template_id, and the prompt parameter will be ignored.\n\n\n**3. Execute Analysis Task**\n\n```\nPOST /s2s/v2.0/task/bg-replace\n```\n\nSubmit the task using file IDs or image URLs as input, along with the desired background prompt.\nThe response returns a task_id for tracking and retrieving the result.\n\n\n**4. Retrieve Task Result**\n\n```\nGET /s2s/v2.0/task/bg-replace/{task_id}\n```\n\nUse the task ID to track status and obtain results.\n\n[Webhooks](../develop/webhook.md) can be configured to receive asynchronous notifications on task completion with a success or error status. Polling is also supported by repeatedly calling the task endpoint until the status is updated from running to success or error.\n\nUsage is only charged when the task completes successfully.\n\n---\n\n## File Specs & Errors\n\n* Supported Formats & Dimensions\n\n|AI Feature|Supported Dimensions|Supported File Size|Supported Formats|\n|  ----  | ----  | ----  | ----  |\n| AI Photo Background Change | The length of the longer side shall not exceed 4096 pixels. | < 10MB | jpg/jpeg/png |\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n| exceed_max_filesize |\tThe input file size exceeds the maximum allowed limit. |\n| size_mismatch_on_input_image_and_mask | The input image size must match the input mask image dimensions. |\n| invalid_parameter | Invalid parameter value. The request parameter is missing, in an invalid format, or contains an unsupported value.|\n\n* Environment & Dependency\n\n| Sample Code Language / Tool | Recommended Runtime Versions |\n|---|---|\n| cURL | - bash >= 3.2</br>   - curl >= 7.58 (modern TLS/HTTP support)</br>   - jq >= 1.6 (robust JSON parsing) |\n| Node.js (JavaScript) | Node >= 18 (for global fetch) |\n| JavaScript | - Chrome / Edge >= 80</br>   - Firefox >= 74</br>   - Safari >= 13.1 |\n| PHP | PHP >= 7.4 (for modern TLS/compat), ext-curl (recommended) or allow_url_fopen=On + ext-openssl, ext-json |\n| Python | Python >= 3.10 (for f-strings), requests >= 2.20.0 |\n| Java | Java 11+ (for HttpClient), Jackson Databind >= 2.12.0 |\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Photo Background Change V2.0 | 4 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -42,12 +42,12 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
-          $ref: '#/components/responses/TemplateResponse'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+        "200":
+          $ref: "#/components/responses/TemplateResponse"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
   /s2s/v2.0/task/bg-replace:
     post:
       summary: Run an AI photo Background Change V2 task.
@@ -74,7 +74,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - $ref: "#/components/schemas/BasicRunTaskV2"
                 - type: object
                   properties:
                     type:
@@ -107,23 +107,23 @@ paths:
                         use the id of a template.
                       example: nature_cherryblossom
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/bg-replace/{task_id}:
     get:
       summary: Check an AI photo Background Change V2 task status.
@@ -140,18 +140,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -201,10 +201,10 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -327,12 +327,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   responses:
     TemplateResponse:
       description: Successful retrieval of styles
@@ -351,7 +351,7 @@ components:
                   templates:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Template'
+                      $ref: "#/components/schemas/Template"
                   next_token:
                     type: string
                     example: 73a3c9e69b89

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "outputs": [],
+      "inputs": ["$TURBO_DEFAULT$", "../../apps/web/app/**", "../../apps/web/src/**"]
+    }
+  }
+}

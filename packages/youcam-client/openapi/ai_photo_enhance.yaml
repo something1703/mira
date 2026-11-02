@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Photo Enhance
   description: "# Overview\nAI Photo Enhance uses advanced AI and deep learning to analyze image details and improve resolution, making low-resolution images clear & fix motion blur.\n * No More Pixelation: Eliminate pixelation for smoother, more defined images.\n * Fix Blurry Photos: Remove blurriness to reveal sharper, crisper details.\n * Enhance Quality: Bring out finer details, making every part of your image stand out.\n * Sharpen Images: Increase sharpness for clearer and more vivid images.\n * Improve Clarity: Boost overall clarity to make your photos look fresh and professional.\n * Face Enhancement: Refine facial features for more lifelike, enhanced portraits in motional images.\n\nBefore sample:\n![AI Photo Enhance](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_s5_poster_1_0779bbdbdb.jpg \"AI Photo Enhance\")\n\nAfter sample:\n![AI Photo Enhance](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_s5_poster_2_a2e15250ef.jpg \"AI Photo Enhance\")\n\n\nBefore sample:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_s2_poster_1_4cd6425807.jpg)\n\nAfter sample:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_s2_poster_2_7674281362.jpg)\n\n---\n\n## File Specs & Errors\n* Supported Formats & Dimensions\n\n| AI Feature | Supported Dimensions | Supported File Size | Supported Formats |\n| ---- | ---- | ----  | ---- |\n| AI Photo Enhance | long side <= 4096 | < 10MB | jpg/jpeg/png |\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n| exceed_max_filesize |\tInput file size exceeds the maximum limit |\n| invalid_parameter |\tInvalid parameter value |\n| error_download_image\t| Download source image error |\n| error_decode_image\t| Decode source image error |\n| error_nsfw_content_detected\t| NSFW content detected in source image |\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Photo Enhance V1.0 | 2 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -35,7 +35,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - $ref: "#/components/schemas/BasicRunTaskV2"
                 - type: object
                   required:
                     - scale
@@ -49,23 +49,23 @@ paths:
                         - 4
                       example: 1
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/responses/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/responses/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/enhance/{task_id}:
     get:
       summary: Check an AI Photo Enhance task status.
@@ -82,18 +82,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -213,7 +213,7 @@ components:
           example: 200
           description: Response status
         data:
-          $ref: '#/components/schemas/BasicFileResponse'
+          $ref: "#/components/schemas/BasicFileResponse"
     BasicRunTaskV2SrcFileUrl:
       title: Run task with src file url
       type: object
@@ -237,8 +237,8 @@ components:
     BasicRunTaskV2:
       title: BasicRunTaskV2
       anyOf:
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -280,12 +280,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results:
-              $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+              $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   responses:
     InvalidParameters:
       description: Invalid request parameters

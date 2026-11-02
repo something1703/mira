@@ -1,6 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
+const WORKFLOWS_PORT = Number(process.env.E2E_WORKFLOWS_PORT ?? 4120);
+const WEBHOOK_PORT = Number(process.env.E2E_WEBHOOK_PORT ?? 4130);
+const ENGINES_PORT = Number(process.env.E2E_ENGINES_PORT ?? 4140);
+const AGENT_PORT = Number(process.env.E2E_AGENT_PORT ?? 4150);
+/** A throwaway secret for the test servers only. */
+const WEBHOOK_SECRET = `whsec_${Buffer.from("e2e-only-secret-not-a-real-one").toString("base64")}`;
 
 /** Playwright always runs against mock mode (docs/TESTING.md). */
 export default defineConfig({
@@ -12,17 +18,77 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
+    // A synthetic camera (a test pattern) answers getUserMedia, so the plain-camera steps can run
+    // without hardware. Camera Kit itself is replaced by a fake script in the tests that need it.
+    launchOptions: {
+      args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"],
+    },
   },
   projects: [
     { name: "desktop-light", use: { ...devices["Desktop Chrome"], colorScheme: "light" } },
     { name: "desktop-dark", use: { ...devices["Desktop Chrome"], colorScheme: "dark" } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
-  webServer: {
-    command: `pnpm exec next dev --port ${PORT}`,
-    url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    env: { MIRA_MODE: "mock", NEXT_PUBLIC_MIRA_MODE: "mock" },
-  },
+  webServer: [
+    {
+      command: `pnpm exec next dev --port ${PORT}`,
+      url: `http://localhost:${PORT}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+      env: {
+        MIRA_MODE: "mock",
+        NEXT_PUBLIC_MIRA_MODE: "mock",
+        MIRA_WORKFLOWS_URL: `http://localhost:${WORKFLOWS_PORT}`,
+        MIRA_WEBHOOK_URL: `http://localhost:${WEBHOOK_PORT}`,
+        MIRA_AGENT_URL: `http://localhost:${AGENT_PORT}`,
+      },
+    },
+    {
+      // The public webhook path: web proxies to this service, which forwards to workflows.
+      command: "pnpm --filter @mira/webhook exec tsx src/main.ts",
+      url: `http://localhost:${WEBHOOK_PORT}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+      env: {
+        MIRA_MODE: "mock",
+        PORT: String(WEBHOOK_PORT),
+        MIRA_WORKFLOWS_URL: `http://localhost:${WORKFLOWS_PORT}`,
+        YOUCAM_WEBHOOK_SECRET: WEBHOOK_SECRET,
+      },
+    },
+    {
+      // The run viewer reads mira-workflows; it runs in mock mode with a synthetic YouCam.
+      command: "pnpm --filter @mira/workflows exec tsx src/main.ts",
+      url: `http://localhost:${WORKFLOWS_PORT}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+      // A small session cap so one demo run (40 units) brings the "units left" banner up.
+      env: {
+        MIRA_MODE: "mock",
+        PORT: String(WORKFLOWS_PORT),
+        MIRA_SESSION_UNIT_CAP: "45",
+        MIRA_ENGINES_URL: `http://localhost:${ENGINES_PORT}`,
+      },
+    },
+    {
+      // Ask MIRA, and the shade-range reader (saved pages in mock mode). Its model is the mock one.
+      command: "pnpm --filter @mira/agent exec tsx src/main.ts",
+      url: `http://localhost:${AGENT_PORT}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+      env: {
+        MIRA_MODE: "mock",
+        PORT: String(AGENT_PORT),
+        MIRA_WORKFLOWS_URL: `http://localhost:${WORKFLOWS_PORT}`,
+      },
+    },
+    {
+      // The measurement engines: Build Twin derives colour and the repeat-capture spread here.
+      command: `uv run --frozen uvicorn mira_engines.api:app --host 127.0.0.1 --port ${ENGINES_PORT}`,
+      cwd: "../../services/engines",
+      url: `http://localhost:${ENGINES_PORT}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 90_000,
+    },
+  ],
 });

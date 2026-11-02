@@ -16,22 +16,22 @@
 ## Tasks
 
 ### Experiments first
-- [ ] **Noise floor pilot:** consenting team members capture 3 times per session on at least 3 different days. Compute s_w and s_d per concern; set `PRIOR_SD_DAY` from the pooled result; record per Fitzpatrick band where you have data, and say where you do not.
-- [ ] **Phantom monotonicity:** for each concern MIRA tracks, run the 5-intensity phantom on at least 2 faces; record ρ and range; mark concerns where visualisation is disabled.
+- [ ] _(protocol written, not run: `experiments/noise-floor/`, 432 units)_ **Noise floor pilot:** consenting team members capture 3 times per session on at least 3 different days. Compute s_w and s_d per concern; set `PRIOR_SD_DAY` from the pooled result; record per Fitzpatrick band where you have data, and say where you do not.
+- [ ] _(protocol written, not run: `experiments/phantom/`, 960 units)_ **Phantom monotonicity:** for each concern MIRA tracks, run the 5-intensity phantom on at least 2 faces; record ρ and range; mark concerns where visualisation is disabled.
 
 ### Workflow
-- [ ] Claim extraction with schema; "no claim found" path lets the person choose concern and window; claims mapped only to concerns Skin Analysis measures.
-- [ ] Baseline: 3 sessions on different days, 3 captures each; noise floor computed and stored.
-- [ ] Phantom per concern, cached per person.
-- [ ] Check-in graph: 3 captures → 3 analyses → session mean → change words → verdict → optional visualisation render.
-- [ ] Reminders: Cloud Scheduler creates in-app reminders; offer a calendar file (.ics) the person downloads themselves. MIRA sends no messages on the person's behalf.
-- [ ] Confound guard: ask at each check-in whether anything else in the routine changed; if yes, show the confound warning.
-- [ ] Measured review: at window end, the person may publish an anonymised outcome to `efficacy_outcomes`.
+- [x] Claim extraction with schema; "no claim found" path lets the person choose concern and window; claims mapped only to concerns Skin Analysis measures. _(the words must be on the page; a window must be one the page's own sentence gives, F56)_
+- [x] Baseline: 3 sessions on different days, 3 captures each; noise floor computed and stored.
+- [x] Phantom per concern, cached per person.
+- [x] Check-in graph: 3 captures → 3 analyses → session mean → change words → verdict → optional visualisation render. _(the visualisation is a separate quoted run on a fresh photo, D40 (3))_
+- [x] Reminders: Cloud Scheduler creates in-app reminders; offer a calendar file (.ics) the person downloads themselves. MIRA sends no messages on the person's behalf. _(derived due dates and the .ics; no scheduler is needed until deploy, D40 (4))_
+- [x] Confound guard: ask at each check-in whether anything else in the routine changed; if yes, show the confound warning.
+- [x] Measured review: at window end, the person may publish an anonymised outcome to `efficacy_outcomes`.
 
 ### UI
-- [ ] Every state in UX_FLOWS §8.
-- [ ] Timeline chart: series, noise band, check-in whiskers, claim window rule (Design System §10).
-- [ ] Visualisations always labelled as visualisations, never as predictions.
+- [x] Every state in UX_FLOWS §8.
+- [x] Timeline chart: series, noise band, check-in whiskers, claim window rule (Design System §10). _(with a table for screen readers)_
+- [x] Visualisations always labelled as visualisations, never as predictions.
 
 ## Tests
 
@@ -41,9 +41,9 @@
 
 ## Definition of done
 
-- [ ] Pilot and phantom results recorded with sample sizes and limits stated.
-- [ ] One full proof cycle demonstrated with real data (an acute effect, such as oil-blotting for oiliness, is acceptable for the demo if it registers; if it does not, show the honest "within your day-to-day variation" verdict instead).
-- [ ] Every state implemented and tested.
+- [ ] Pilot and phantom results recorded with sample sizes and limits stated. _(protocols only, F58)_
+- [ ] One full proof cycle demonstrated with real data (an acute effect, such as oil-blotting for oiliness, is acceptable for the demo if it registers; if it does not, show the honest "within your day-to-day variation" verdict instead). _(a full mock cycle runs, F57; a real one needs the deploy, a person and days)_
+- [x] Every state implemented and tested.
 
 ## Demo moment
 

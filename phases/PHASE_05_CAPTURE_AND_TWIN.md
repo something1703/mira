@@ -17,24 +17,24 @@
 ## Tasks
 
 ### Capture
-- [ ] Load the Camera Kit script after defining `YMKAsyncInit`; mount `#YMK-module` inside the Ring; map `faceQualityChanged` to the four Ring ticks and one instruction line.
-- [ ] Modes: `comprehensive` for the main face capture; `hdskincare` with `videoQuality` 1080p or higher for HD; fall back to SD with the "Low camera resolution" state when HD is impossible.
-- [ ] Two repeat face captures a few seconds apart, for the same-session noise estimate.
-- [ ] Full-body capture with guidance to wear a plain, light top (avoids the try-on failure ShadeSpan documented).
-- [ ] Optional hand and hair captures; skip buttons.
-- [ ] Upload alternative on every step, with the same quality checks run server-side.
-- [ ] Every state in UX_FLOWS §3, including permission denied, unsupported browser, each failing check, YouCam quality errors with "No units were used."
+- [x] Load the Camera Kit script after defining `YMKAsyncInit`; mount `#YMK-module` inside the Ring; map `faceQualityChanged` to the four Ring ticks and one instruction line. _(built to the documented contract and tested against a fake SDK; real device unconfirmed, FACTS F33)_
+- [x] Modes: `comprehensive` for the main face capture; `hdskincare` with `videoQuality` 1080p or higher for HD; fall back to SD with the "Low camera resolution" state when HD is impossible. _(D31: one face capture in `hdskincare`, `comprehensive` is the standard-detail fallback)_
+- [x] Two repeat face captures a few seconds apart, for the same-session noise estimate.
+- [x] Full-body capture with guidance to wear a plain, light top (avoids the try-on failure ShadeSpan documented).
+- [x] Optional hand and hair captures; skip buttons.
+- [ ] Upload alternative on every step, with the same quality checks run server-side. _(open: the file type, size and pixel checks are done server-side (F35); face size, lighting and angle are YouCam's, which cost no units on failure, and the face-crop helper is not built)_
+- [ ] Every state in UX_FLOWS §3, including permission denied, unsupported browser, each failing check, YouCam quality errors with "No units were used." _(open: all states built and tested except "Glasses or fringe": Camera Kit reports no obstruction, so the advice is shown on the step and, after a failed measure, on the profile)_
 
 ### Build Twin workflow
-- [ ] Graph: skin-analysis (HD concerns needed by later phases, chosen to stay in one unit tier), skin-tone-analysis, face attributes, fitzpatrick, hair detectors in parallel; noise-floor engine; write twin; cleanup.
-- [ ] Face-crop helper so the face fills more than 60% of the width before skin analysis.
-- [ ] Metrics written with IDs, units, sources and confidence.
-- [ ] Partial results: failed groups marked "Not measured" with the mapped reason and a retry.
+- [x] Graph: skin-analysis (HD concerns needed by later phases, chosen to stay in one unit tier), skin-tone-analysis, face attributes, fitzpatrick, hair detectors in parallel; noise-floor engine; write twin; cleanup.
+- [ ] Face-crop helper so the face fills more than 60% of the width before skin analysis. _(not built: needs a face detector model, F35)_
+- [x] Metrics written with IDs, units, sources and confidence.
+- [x] Partial results: failed groups marked "Not measured" with the mapped reason and a retry. _(retry = take that group's photos again; uploaded photos are deleted when a run ends, so a retry cannot reuse them)_
 
 ### Profile and privacy
-- [ ] Profile screen: Skin, Colouring (swatches on the mat), Face, Hair; every state in UX_FLOWS §4.
-- [ ] Privacy screen: every stored number, deletion history, Download my data, Delete my profile (confirm dialog), every state in UX_FLOWS §11.
-- [ ] Delete removes Firestore twin, saved looks, proofs and saved images.
+- [x] Profile screen: Skin, Colouring (swatches on the mat), Face, Hair; every state in UX_FLOWS §4.
+- [x] Privacy screen: every stored number, deletion history, Download my data, Delete my profile (confirm dialog), every state in UX_FLOWS §11.
+- [x] Delete removes Firestore twin, saved looks, proofs and saved images.
 
 ## Tests
 
@@ -46,7 +46,7 @@
 
 - [ ] A real phone completes capture → profile in live mode; record time and pass rate over 10 attempts in `docs/FACTS.md`.
 - [ ] All UX_FLOWS §3, §4, §11 states implemented and tested.
-- [ ] Images verifiably deleted after the run.
+- [x] Images verifiably deleted after the run. _(storage listed empty after each run in the mock store; the Cloud Storage emulator check waits for the live adapter)_
 
 ## Demo moment
 

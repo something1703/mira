@@ -277,7 +277,7 @@ info:
 
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -310,25 +310,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NecklaceRunTaskV2'
+              $ref: "#/components/schemas/NecklaceRunTaskV2"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/2d-vto/necklace/{task_id}:
     get:
       summary: Check the status of a AI 2D Virtual Try On Necklace task.
@@ -345,18 +345,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -372,25 +372,25 @@ components:
         - anyOf:
             - allOf:
                 - title: Run task with src file url & srcmsk file url & ref file urls
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-                - $ref: '#/components/schemas/2dVtoRunTaskV2SrcmskFileUrl'
-                - $ref: '#/components/schemas/2dVtoRunTaskV2RefFileUrls'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+                - $ref: "#/components/schemas/2dVtoRunTaskV2SrcmskFileUrl"
+                - $ref: "#/components/schemas/2dVtoRunTaskV2RefFileUrls"
             - allOf:
                 - title: Run task with src file url & srcmsk file url & ref file IDs
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-                - $ref: '#/components/schemas/2dVtoRunTaskV2SrcmskFileUrl'
-                - $ref: '#/components/schemas/2dVtoRunTaskV2RefFileIds'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+                - $ref: "#/components/schemas/2dVtoRunTaskV2SrcmskFileUrl"
+                - $ref: "#/components/schemas/2dVtoRunTaskV2RefFileIds"
             - allOf:
                 - title: Run task with src file ID & srcmsk file ID & ref file urls
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-                - $ref: '#/components/schemas/2dVtoRunTaskV2SrcmskFileId'
-                - $ref: '#/components/schemas/2dVtoRunTaskV2RefFileUrls'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+                - $ref: "#/components/schemas/2dVtoRunTaskV2SrcmskFileId"
+                - $ref: "#/components/schemas/2dVtoRunTaskV2RefFileUrls"
             - allOf:
                 - title: Run task with src file ID & srcmsk file ID & ref file IDs
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-                - $ref: '#/components/schemas/2dVtoRunTaskV2SrcmskFileId'
-                - $ref: '#/components/schemas/2dVtoRunTaskV2RefFileIds'
-        - $ref: '#/components/schemas/2dVtoRunTaskV2SrcInfo'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+                - $ref: "#/components/schemas/2dVtoRunTaskV2SrcmskFileId"
+                - $ref: "#/components/schemas/2dVtoRunTaskV2RefFileIds"
+        - $ref: "#/components/schemas/2dVtoRunTaskV2SrcInfo"
         - type: object
           required:
             - object_infos
@@ -672,12 +672,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   responses:
     InvalidApiKey:
       description: Invalid or missing API key

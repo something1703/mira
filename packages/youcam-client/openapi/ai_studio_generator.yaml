@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Studio Generator
   description: "# Overview\nEmbrace the excellence of studio kike AI Portrait Generator. Transform your selfie into a studio-quality portrait in a flash​.\n* Studio-Free Convenience: No need for a photographer or studio visits—create studio-quality artistic photos anytime, anywhere​\n* Quick Photo Transformation: Fast processing for instant high-quality artistic photo results, ideal for quick updates\n* High-Quality Artistic Output: Delivers professional-standard artistic photos with clear details, perfect lighting, just like you've taken the photos in a studio \n\nUse cases:\n![AI Studio Generator](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_web_AI_studio_S1_img_19b627b6af.jpg \"AI Studio Generator\")\n\n![AI Studio Generator](https://bcw-media.s3.ap-northeast-1.amazonaws.com/yce_web_AI_studio_S2_img_01_2e318817e9.jpg \"AI Studio Generator\")\n\n\nSuggestions for How to Shoot:\n![Suggestions for How to Shoot](https://bcw-media.s3.ap-northeast-1.amazonaws.com/AI_Hair_Extension_recommendation_ba24bd5d92.png \"Suggestions for How to Shoot\")\n\n\n---\n\n## File Specs & Errors\n\n* Supported Formats & Dimensions\n\n|AI Feature|Supported Dimensions|Supported File Size|Supported Formats|\n|  ----  | ----  | ----  | ----  |\n|AI Studio|Please ensure the input image has one face, a short side of at least 200 pixels, and a long side no greater than 1920 pixels; the engine will select the largest face if multiple are present, and the output resolution will not exceed 960×1280 (W×H)|< 10MB|jpg/jpeg/png|\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n|error_below_min_image_size\t|Input image resolution is too small|\n|error_exceed_max_image_size\t|Input image resolution is too large|\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Studio Generator V3.0 | 1 unit for 2 images * |\n\n    > *If the number of images or video duration isn’t evenly divisible, units round up.\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -42,24 +42,24 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
+        "200":
           description: Successful retrieval of styles
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateResponseSchema'
-        '400':
+                $ref: "#/components/schemas/TemplateResponseSchema"
+        "400":
           description: Invalid request parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidParametersSchema'
-        '401':
+                $ref: "#/components/schemas/InvalidParametersSchema"
+        "401":
           description: Invalid API Key or Inactive API Key or Expired API Key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidApiKeySchema'
+                $ref: "#/components/schemas/InvalidApiKeySchema"
   /s2s/v2.0/task/ai-studio:
     post:
       summary: Run an AI Studio task.
@@ -76,29 +76,29 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RunWithSingleTemplateAndSrcUrl'
-                - $ref: '#/components/schemas/RunWithOutputCntCustom200'
+                - $ref: "#/components/schemas/RunWithSingleTemplateAndSrcUrl"
+                - $ref: "#/components/schemas/RunWithOutputCntCustom200"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunErrorSchema'
-        '401':
+                  - $ref: "#/components/schemas/RunErrorSchema"
+        "401":
           description: Invalid API Key or Inactive API Key or Expired API Key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidApiKeySchema'
-        '429':
+                $ref: "#/components/schemas/InvalidApiKeySchema"
+        "429":
           description: Too many requests within a given amount of time
           content:
             application/json:
@@ -120,30 +120,30 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseMultiResV2'
-        '400':
+                $ref: "#/components/schemas/TaskStatusResponseMultiResV2"
+        "400":
           description: Invalid task id
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidTaskIdSchema'
-        '401':
+                $ref: "#/components/schemas/InvalidTaskIdSchema"
+        "401":
           description: Invalid API Key or Inactive API Key or Expired API Key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidApiKeySchema'
-        '500':
+                $ref: "#/components/schemas/InvalidApiKeySchema"
+        "500":
           description: The task has no response in the expected time
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskTimeoutSchema'
+                $ref: "#/components/schemas/TaskTimeoutSchema"
 components:
   schemas:
     Template:
@@ -175,7 +175,7 @@ components:
             templates:
               type: array
               items:
-                $ref: '#/components/schemas/Template'
+                $ref: "#/components/schemas/Template"
             next_token:
               type: string
               example: 73a3c9e69b89
@@ -183,8 +183,8 @@ components:
     RunWithSingleTemplateAndSrcUrl:
       title: RunWithSingleTemplateAndSrcUrl
       allOf:
-        - $ref: '#/components/schemas/RunWithSingleTemplate'
-        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: "#/components/schemas/RunWithSingleTemplate"
+        - $ref: "#/components/schemas/BasicRunTaskV2"
     RunWithSingleTemplate:
       title: RunWithSingleTemplate
       type: object
@@ -220,8 +220,8 @@ components:
     BasicRunTaskV2:
       title: BasicRunTaskV2
       anyOf:
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     RunWithOutputCntCustom200:
       type: object
       required:
@@ -328,12 +328,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results:
-              $ref: '#/components/schemas/TaskStatusResponseBodyMultiUrlResultsV2'
+              $ref: "#/components/schemas/TaskStatusResponseBodyMultiUrlResultsV2"
     InvalidParametersSchema:
       type: object
       properties:

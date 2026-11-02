@@ -12,6 +12,8 @@ export const ID_PREFIXES = [
   "trc",
   "prf",
   "lk",
+  "del",
+  "up",
 ] as const;
 export type IdPrefix = (typeof ID_PREFIXES)[number];
 
@@ -30,3 +32,4 @@ export const RenderId = idOf("rnd");
 export const UserId = idOf("usr");
 export const SessionId = idOf("ses");
 export const TraceId = idOf("trc");
+export const ProofId = idOf("prf");

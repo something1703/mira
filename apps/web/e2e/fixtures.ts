@@ -1,0 +1,608 @@
+import {
+  ProofRecord,
+  type Verdict,
+  LookResult,
+  Run,
+  RunNode,
+  ShadeResult,
+  Twin,
+  type LookStep,
+  type Metric,
+  type TwinGroup,
+  type ShadeOutcome,
+} from "@mira/schemas";
+import { placeholderPng } from "@mira/fixtures/placeholder";
+import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
+
+export const WORKFLOWS = `http://localhost:${process.env.E2E_WORKFLOWS_PORT ?? 4120}`;
+
+export interface Who {
+  userId: string;
+  sessionId: string;
+}
+
+/** The anonymous session in the browser's cookie (src/session.ts): `<base64url json>.<mac>`. */
+export async function sessionOf(context: BrowserContext, page: Page): Promise<Who> {
+  if (!(await context.cookies()).some((c) => c.name === "mira_session")) await page.goto("/");
+  const cookie = (await context.cookies()).find((c) => c.name === "mira_session");
+  if (!cookie) throw new Error("no session cookie");
+  const body = JSON.parse(
+    Buffer.from(cookie.value.split(".")[0] ?? "", "base64url").toString(),
+  ) as {
+    u: string;
+    s: string;
+  };
+  return { userId: body.u, sessionId: body.s };
+}
+
+const AT = "2026-11-01T09:00:05.000Z";
+const SRC = (feature: string, version = "v2.0") => ({ feature, version, taskRunId: "run_e2eseed" });
+const stamp = { measuredAt: AT, confidence: "n/a" as const };
+
+const num = (
+  id: string,
+  value: number,
+  unit: string,
+  feature: string,
+  version?: string,
+): Metric => ({
+  ...stamp,
+  id,
+  kind: "number",
+  value,
+  unit,
+  source: SRC(feature, version),
+});
+
+export const SKIN_METRICS: Metric[] = [
+  num("skin.hd_pore.whole", 41.5, "raw score", "skin-analysis", "v2.1"),
+  num("skin.hd_redness.whole", 33, "raw score", "skin-analysis", "v2.1"),
+  num("skin.hd_dark_circle.left_eye", 28.25, "raw score", "skin-analysis", "v2.1"),
+];
+export const COLOUR_METRICS: Metric[] = [
+  {
+    ...stamp,
+    id: "colour.skin",
+    kind: "colour",
+    lab: [64.1, 14.2, 24.9],
+    hex: "#C79A78",
+    source: SRC("skin-tone-analysis"),
+  },
+  {
+    ...stamp,
+    id: "colour.lip",
+    kind: "colour",
+    lab: [41, 33, 18],
+    hex: "#A5504F",
+    source: SRC("skin-tone-analysis"),
+  },
+  num("colour.skin_ita", 41.8, "°", "engine:colour/lab", "0.1.0"),
+  {
+    ...stamp,
+    id: "colour.skin_ita_band",
+    kind: "category",
+    value: "light",
+    source: SRC("engine:colour/lab", "0.1.0"),
+  },
+  {
+    ...stamp,
+    id: "colour.fitzpatrick_band",
+    kind: "category",
+    value: "III",
+    source: SRC("fitzpatrick-scale-analyzer"),
+  },
+];
+export const FACE_METRICS: Metric[] = [
+  num("face.face_aspect_ratio.1", 1.31, "ratio", "face-attr-analysis"),
+  num("face.horizontal_third.1", 0.33, "ratio", "face-attr-analysis"),
+  num("face.horizontal_third.2", 0.34, "ratio", "face-attr-analysis"),
+];
+export const HAIR_METRICS: Metric[] = [
+  {
+    ...stamp,
+    id: "hair.type",
+    kind: "category",
+    value: "wavy",
+    source: SRC("hair-type-detection"),
+  },
+  {
+    ...stamp,
+    id: "hair.length",
+    kind: "category",
+    value: "shoulder",
+    source: SRC("hair-length-detection"),
+  },
+];
+
+const measured: TwinGroup = { status: "measured", missing: [], at: AT };
+export interface TwinOptions {
+  synthetic?: boolean;
+  noiseFloors?: boolean;
+  groups?: Partial<Record<"skin" | "colouring" | "face" | "hair", TwinGroup>>;
+  metrics?: Metric[];
+}
+
+/** A valid profile for the screens' states. Built through the real schema, so a drift fails here. */
+export function makeTwin(userId: string, o: TwinOptions = {}): Twin {
+  const metrics = o.metrics ?? [
+    ...SKIN_METRICS,
+    ...COLOUR_METRICS,
+    ...FACE_METRICS,
+    ...HAIR_METRICS,
+  ];
+  return Twin.parse({
+    userId,
+    createdAt: AT,
+    updatedAt: AT,
+    metrics: Object.fromEntries(metrics.map((m) => [m.id, m])),
+    groups: { skin: measured, colouring: measured, face: measured, hair: measured, ...o.groups },
+    faceRatios: { horizontal_third: [0.33, 0.34, 0.33] },
+    noiseFloors: o.noiseFloors
+      ? {
+          "skin.hd_pore.whole": {
+            sessions: 1,
+            capturesPerSession: 3,
+            sW: 1.4,
+            sD: null,
+            sDSource: "unknown",
+            se: null,
+            mdc: null,
+          },
+        }
+      : {},
+    captureMeta: {
+      mode: "hd",
+      source: "camera",
+      repeatsCaptured: o.noiseFloors ? 2 : 0,
+      qualityChecksPassed: true,
+    },
+    runIds: [],
+    synthetic: o.synthetic ?? false,
+  });
+}
+
+export async function seedTwin(request: APIRequestContext, twin: Twin): Promise<void> {
+  const res = await request.post(`${WORKFLOWS}/internal/dev/twin`, { data: twin });
+  expect(res.status()).toBe(201);
+}
+
+export async function setCap(request: APIRequestContext, who: Who, cap: number): Promise<void> {
+  const res = await request.post(`${WORKFLOWS}/internal/dev/session-cap`, {
+    data: { sessionId: who.sessionId, cap },
+  });
+  expect(res.ok()).toBe(true);
+}
+
+/** A JPEG header with the given size: what the server's checks read. Not a picture of anyone. */
+export function jpegBytes(width: number, height: number, salt: number): Buffer {
+  const be16 = (n: number) => [(n >> 8) & 0xff, n & 0xff];
+  return Buffer.from([
+    0xff,
+    0xd8,
+    0xff,
+    0xc0,
+    0x00,
+    0x11,
+    0x08,
+    ...be16(height),
+    ...be16(width),
+    0x03,
+    0x01,
+    0x22,
+    0x00,
+    0x02,
+    0x11,
+    0x01,
+    0x03,
+    0x11,
+    0x01,
+    0xff,
+    0xd9,
+    salt & 0xff,
+    (salt >> 8) & 0xff,
+  ]);
+}
+
+let counter = 0;
+/** A fresh upload (distinct bytes, so never a saved result) as the signed-in person. */
+export async function uploadPhoto(page: Page, name = "face"): Promise<string> {
+  counter += 1;
+  const res = await page.request.post("/api/uploads?kind=face", {
+    headers: { "content-type": "image/jpeg" },
+    data: jpegBytes(1200, 1600, (Date.now() % 60000) + counter),
+  });
+  expect(res.status(), `upload ${name}`).toBe(201);
+  return ((await res.json()) as { key: string }).key;
+}
+
+/** Quotes and then builds, as the screen does: a build must carry the total the person saw. */
+export async function buildFor(
+  page: Page,
+  face: string,
+): Promise<{ status: number; runId?: string; total: number }> {
+  const capture = { face, mode: "hd", source: "upload", qualityChecksPassed: null };
+  const quote = await page.request.post("/api/twin/quote", { data: { capture } });
+  const total = ((await quote.json()) as { quote: { total: number } }).quote.total;
+  const build = await page.request.post("/api/twin/build", {
+    data: { capture, confirmedTotal: total },
+  });
+  const body = (await build.json()) as { runId?: string };
+  return { status: build.status(), ...(body.runId ? { runId: body.runId } : {}), total };
+}
+
+const hexOf = (i: number) => `#${(0xc0a080 + i * 0x101010).toString(16).toUpperCase()}`;
+
+/** One shade's outcome for a crafted result. Verified by default, with a blend that grows by rank. */
+export function outcome(i: number, over: Partial<ShadeOutcome> = {}): ShadeOutcome {
+  return {
+    shadeId: `s${String(i)}`,
+    name: `Shade ${String(i)}`,
+    hex: hexOf(i),
+    verdict: "verified",
+    blendDe: 0.8 + i * 0.6,
+    renderNode: `render-${String(i)}`,
+    preDe: 1 + i,
+    ...over,
+  };
+}
+
+export function shadeResult(
+  outcomes: ShadeOutcome[],
+  over: Partial<ShadeResult> = {},
+): ShadeResult {
+  const best = outcomes.find((o) => o.verdict === "verified");
+  return ShadeResult.parse({
+    rangeId: "sample-warm",
+    finish: "satin",
+    finishReason: "no_skin_type",
+    coverage: "light",
+    coverageReason: "default_light",
+    tZoneNote: false,
+    outcomes,
+    ...(best ? { bestShadeId: best.shadeId } : {}),
+    noClosePick: best === undefined,
+    closestLabel: "blends_closely",
+    checkedFree: 20,
+    thresholds: { matchDe: 2, closeDe: 3.5, calibrated: false },
+    ...over,
+  });
+}
+
+/**
+ * A finished shade run as `/api/runs/:id` would return it, for states the mock server cannot be
+ * made to produce (a drifting render, a failed one). It goes through the real Run and RunNode
+ * schemas, so a change to either breaks the test instead of silently passing.
+ */
+export function shadeRunView(userId: string, runId: string, result: ShadeResult | undefined) {
+  const at = "2026-11-01T09:00:00.000Z";
+  const run = Run.parse({
+    id: runId,
+    type: "match_shade",
+    userId,
+    sessionId: "ses_crafted0001",
+    status: result ? "succeeded" : "failed",
+    planId: "plan_crafted001",
+    quote: {
+      lines: [],
+      total: 0,
+      sessionUnitsLeft: 100,
+      overCap: false,
+      pricing: { source: "feature-cost", pricedAt: at },
+    },
+    unitsSpent: 0,
+    traceId: "trc_crafted0001",
+    recorded: false,
+    startedAt: at,
+    endedAt: at,
+  });
+  const node = (id: string, extra: object = {}) =>
+    RunNode.parse({
+      id,
+      runId,
+      kind: "system",
+      label: "step.rank_shades",
+      status: "done",
+      dependsOn: [],
+      ...extra,
+    });
+  const nodes = [
+    ...(result?.outcomes ?? []).map((o) =>
+      node(o.renderNode ?? "render-1", {
+        kind: "youcam",
+        feature: "makeup-vto",
+        label: "step.render_shade",
+      }),
+    ),
+    node("assemble", {
+      params: {
+        shades: (result?.outcomes ?? []).map((o) => ({ id: o.shadeId, name: o.name, hex: o.hex })),
+      },
+      ...(result
+        ? { output: result }
+        : {
+            status: "failed",
+            error: { code: "nothing_measured", retryable: false, unitsCharged: 0 },
+          }),
+    }),
+  ];
+  return { run, nodes, ledger: [], synthetic: false };
+}
+
+/** Serves a crafted run, and a placeholder picture for every preview, instead of the real routes. */
+export async function serveCraftedRun(
+  page: Page,
+  userId: string,
+  runId: string,
+  result: ShadeResult | undefined,
+  options: { previewsGone?: boolean } = {},
+): Promise<void> {
+  await page.route(`**/api/runs/${runId}`, (route) =>
+    route.fulfill({ json: shadeRunView(userId, runId, result) }),
+  );
+  await page.route(`**/api/runs/${runId}/images/*`, (route) =>
+    options.previewsGone
+      ? route.fulfill({ status: 404, json: { error: "image_gone" } })
+      : route.fulfill({
+          contentType: "image/png",
+          body: Buffer.from(placeholderPng({ hex: "#C79A78" })),
+        }),
+  );
+}
+
+// ---- Look: crafted results and runs ----
+
+/** The hair colour a profile needs for makeup suggestions; the shared fixtures leave it out. */
+export const HAIR_COLOUR: Metric = {
+  ...stamp,
+  id: "colour.hair",
+  kind: "colour",
+  lab: [22, 6, 9],
+  hex: "#42280E",
+  source: SRC("skin-tone-analysis"),
+};
+
+/** A profile with everything a look needs: skin, lip and hair colour, and the face ratios. */
+export const lookTwin = (userId: string): Twin =>
+  makeTwin(userId, {
+    metrics: [...SKIN_METRICS, ...COLOUR_METRICS, HAIR_COLOUR, ...FACE_METRICS, ...HAIR_METRICS],
+  });
+
+export function lookStep(id: LookStep["id"], over: Partial<LookStep> = {}): LookStep {
+  return { id, node: id, verdict: "unchecked", ...over };
+}
+
+/** A finished look with every step made and checked, unless overridden. */
+export function lookResult(over: Partial<LookResult> = {}): LookResult {
+  return LookResult.parse({
+    steps: [
+      lookStep("outfit", { verdict: "verified", de: 2.4 }),
+      lookStep("makeup", { verdict: "verified", de: 1.1 }),
+      lookStep("hair"),
+      lookStep("venue"),
+    ],
+    identity: { verdict: "verified", drift: 0.02, max: 0.08 },
+    plate: "venue",
+    withheld: [],
+    video: { status: "not_requested" },
+    thresholds: { garmentDe: 6, lipDe: 3, identityMax: 0.08, calibrated: false },
+    ...over,
+  });
+}
+
+/** A look run as `/api/runs/:id` returns it, in the state the test needs. */
+export function lookRunView(
+  userId: string,
+  runId: string,
+  result: LookResult | undefined,
+  options: { status?: Run["status"]; running?: string[] } = {},
+) {
+  const at = "2026-11-01T09:00:00.000Z";
+  const run = Run.parse({
+    id: runId,
+    type: "compose_look",
+    userId,
+    sessionId: "ses_crafted0001",
+    status: options.status ?? (result ? "succeeded" : "failed"),
+    planId: "plan_crafted001",
+    quote: {
+      lines: [],
+      total: 0,
+      sessionUnitsLeft: 100,
+      overCap: false,
+      pricing: { source: "feature-cost", pricedAt: at },
+    },
+    unitsSpent: 0,
+    traceId: "trc_crafted0001",
+    recorded: false,
+    startedAt: at,
+    endedAt: at,
+  });
+  const node = (id: string, extra: object = {}) =>
+    RunNode.parse({
+      id,
+      runId,
+      kind: "youcam",
+      label: `step.try_${id === "outfit" ? "outfit" : id}`,
+      feature: "cloth-v4",
+      status: options.running?.includes(id) ? "running" : "done",
+      dependsOn: [],
+      ...extra,
+    });
+  const ids = result ? result.steps.map((s) => s.id as string) : (options.running ?? ["outfit"]);
+  const nodes = [
+    ...ids.map((id) => node(id)),
+    ...(result?.video?.status === "done"
+      ? [node("video", { feature: "image-to-video/youcam" })]
+      : []),
+    ...(options.running?.includes("video")
+      ? [node("video", { feature: "image-to-video/youcam" })]
+      : []),
+    ...(result
+      ? [
+          node("assemble", {
+            kind: "system",
+            label: "step.put_look_together",
+            feature: "look-assemble",
+            output: result,
+          }),
+        ]
+      : []),
+  ];
+  return { run, nodes, ledger: [], synthetic: false };
+}
+
+/** Serves a crafted look run and a picture for every step in place of the real routes. */
+export async function serveCraftedLook(
+  page: Page,
+  userId: string,
+  runId: string,
+  result: LookResult | undefined,
+  options: { status?: Run["status"]; running?: string[]; withheld?: boolean } = {},
+): Promise<void> {
+  await page.route(`**/api/runs/${runId}`, (route) =>
+    route.fulfill({ json: lookRunView(userId, runId, result, options) }),
+  );
+  await page.route(`**/api/runs/${runId}/images/*`, (route) =>
+    options.withheld
+      ? route.fulfill({ status: 404, json: { error: "image_withheld" } })
+      : route.fulfill({
+          contentType: "image/png",
+          body: Buffer.from(placeholderPng({ hex: "#C79A78" })),
+        }),
+  );
+}
+
+// ---- Proof: crafted records ----
+
+const DAY = 86_400_000;
+const iso = (ms: number) => new Date(ms).toISOString();
+
+export interface ProofOptions {
+  status?: ProofRecord["status"];
+  /** Days ago each baseline session happened (default 20, 18, 16). */
+  baselineDaysAgo?: number[];
+  /** Days ago the person started using the product. */
+  startedDaysAgo?: number;
+  windowDays?: number;
+  mdc?: number | null;
+  /** Check-ins: days ago, mean score, and the verdict they landed in. */
+  checkIns?: {
+    daysAgo: number;
+    scores: [number, number, number];
+    verdict: Verdict["state"];
+    words: Verdict["words"];
+  }[];
+  phantom?: "usable" | "unusable";
+  confound?: boolean;
+  reviewed?: boolean;
+}
+
+const mean = (s: readonly number[]) => s.reduce((n, x) => n + x, 0) / s.length;
+
+/** A proof in the state the test needs, built through the real schema. */
+export function makeProof(userId: string, id: string, o: ProofOptions = {}): ProofRecord {
+  const now = Date.now();
+  const base = o.baselineDaysAgo ?? [20, 18, 16];
+  const baseScores: [number, number, number][] = [
+    [58.1, 59.4, 57.6],
+    [60.2, 58.8, 59.9],
+    [57.9, 59.1, 58.7],
+  ];
+  const sessions: ProofRecord["sessions"] = base.map((d, i) => {
+    const scores = baseScores[i % 3] ?? baseScores[0] ?? [58, 58, 58];
+    return {
+      at: iso(now - d * DAY),
+      scores: [...scores],
+      mean: mean(scores),
+      runId: `run_baseline${String(i)}abc`,
+      kind: "baseline" as const,
+    };
+  });
+  const baselineMean = mean(sessions.slice(0, 3).map((s) => s.mean));
+  const verdicts: Verdict[] = [];
+  for (const [i, c] of (o.checkIns ?? []).entries()) {
+    const m = mean(c.scores);
+    sessions.push({
+      at: iso(now - c.daysAgo * DAY),
+      scores: [...c.scores],
+      mean: m,
+      runId: `run_checkin${String(i)}abc`,
+      kind: "check_in",
+    });
+    const startedAgo = o.startedDaysAgo ?? 14;
+    verdicts.push({
+      at: iso(now - c.daysAgo * DAY),
+      day: Math.max(0, Math.round(startedAgo - c.daysAgo)),
+      windowDays: o.windowDays ?? 28,
+      baseline: baselineMean,
+      now: m,
+      delta: m - baselineMean,
+      mdc: o.mdc === undefined ? 3.3 : o.mdc,
+      words: c.words,
+      phrase:
+        c.words === "clear"
+          ? "a clear change"
+          : c.words === "small"
+            ? "a small change above your day-to-day variation"
+            : c.words === "opposite"
+              ? "changed, but not in the direction the product claims"
+              : c.words === "n/a"
+                ? "not enough sessions yet to know your day-to-day variation"
+                : "within your day-to-day variation",
+      state: c.verdict,
+    });
+  }
+  const mdc = o.mdc === undefined ? 3.3 : o.mdc;
+  const complete = sessions.filter((s) => s.kind === "baseline").length >= 3;
+  return ProofRecord.parse({
+    id,
+    userId,
+    product: { name: "Sample pore serum", url: "https://shop.example/serum" },
+    claim: {
+      concern: "pore",
+      windowDays: o.windowDays ?? 28,
+      text: "Pores look visibly smaller in 4 weeks.",
+      source: "page",
+    },
+    status: o.status ?? (complete ? "ready" : "baseline"),
+    createdAt: iso(now - 21 * DAY),
+    ...(o.startedDaysAgo === undefined ? {} : { startedAt: iso(now - o.startedDaysAgo * DAY) }),
+    sessions,
+    ...(complete
+      ? {
+          noiseFloor: {
+            sessions: 3,
+            capturesPerSession: 3,
+            sW: 0.9,
+            sD: mdc === null ? null : 0.8,
+            sDSource: mdc === null ? "unknown" : "estimated",
+            se: mdc === null ? null : 1.2,
+            mdc,
+          },
+        }
+      : {}),
+    ...(o.phantom
+      ? {
+          phantom: {
+            usable: o.phantom === "usable",
+            rho: o.phantom === "usable" ? -1 : 0.2,
+            scoreRange: 12,
+            reason: o.phantom === "usable" ? "ok" : "not_monotone",
+            intensities: [0, 0.25, 0.5, 0.75, 1],
+            fittedDelta: [0, -3, -6, -9, -12],
+            scores: [60, 57, 54, 51, 48],
+            mdc: 3.3,
+            fittedAt: iso(now - 15 * DAY),
+          },
+        }
+      : {}),
+    verdicts,
+    confound: o.confound ? { flagged: true, at: iso(now - 3 * DAY) } : { flagged: false },
+    ...(o.reviewed ? { reviewPublishedAt: iso(now - DAY) } : {}),
+  });
+}
+
+export async function seedProof(request: APIRequestContext, proof: ProofRecord): Promise<void> {
+  const res = await request.post(`${WORKFLOWS}/internal/dev/proof`, { data: proof });
+  expect(res.status(), "seed proof").toBe(201);
+}

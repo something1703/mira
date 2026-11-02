@@ -1,0 +1,18 @@
+{
+  "id": "sample-lips",
+  "brand": "Sample brand",
+  "sample": true,
+  "lips": [
+    { "id": "L01", "name": "Sample rose", "hex": "#B5566A" },
+    { "id": "L02", "name": "Sample brick", "hex": "#A34A3A" },
+    { "id": "L03", "name": "Sample berry", "hex": "#8A2F52" },
+    { "id": "L04", "name": "Sample coral", "hex": "#D9695A" },
+    { "id": "L05", "name": "Sample nude", "hex": "#C0877A" },
+    { "id": "L06", "name": "Sample wine", "hex": "#6B2237" }
+  ],
+  "blushes": [
+    { "id": "B01", "name": "Sample peach", "hex": "#E0907C" },
+    { "id": "B02", "name": "Sample petal", "hex": "#D98C9C" },
+    { "id": "B03", "name": "Sample clay", "hex": "#C27A66" }
+  ]
+}

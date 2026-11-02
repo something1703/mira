@@ -42,11 +42,28 @@
       },
       "additionalProperties": {}
     },
+    "inputs": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "cacheKey": {
       "type": "string"
     },
-    "fileId": {
-      "type": "string"
+    "files": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "taskId": {
       "type": "string"
@@ -79,6 +96,15 @@
     "resultRef": {
       "type": "string"
     },
+    "resultUrl": {
+      "type": "string"
+    },
+    "resultUrlExpiresAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "output": {},
     "audit": {
       "type": "object",
       "properties": {
@@ -145,6 +171,16 @@
         "retryable": {
           "type": "boolean"
         },
+        "guidance": {
+          "type": "string",
+          "enum": [
+            "retake",
+            "retry",
+            "other_garment",
+            "contact_support",
+            "none"
+          ]
+        },
         "unitsCharged": {
           "type": "number",
           "const": 0
@@ -165,6 +201,20 @@
     "optional": {
       "default": false,
       "type": "boolean"
+    },
+    "tolerant": {
+      "default": false,
+      "type": "boolean"
+    },
+    "submitting": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "submittedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
     },
     "startedAt": {
       "type": "string",

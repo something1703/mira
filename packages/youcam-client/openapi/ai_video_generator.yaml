@@ -121,7 +121,7 @@ info:
         > *If the number of images or video duration isn’t evenly divisible, units round up.
 
     ---
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -171,12 +171,12 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
-          $ref: '#/components/responses/TemplateResponse'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+        "200":
+          $ref: "#/components/responses/TemplateResponse"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
   /s2s/v2.0/task/image-to-video:
     post:
       summary: Run an Image to Video task.
@@ -195,7 +195,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RunWithSingleTemplateAndSrcUrl'
+                - $ref: "#/components/schemas/RunWithSingleTemplateAndSrcUrl"
                 - type: object
                   required:
                     - dst_duration
@@ -219,23 +219,23 @@ paths:
                         richer details. Automatically select best mode by style
                         if not provide.
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/image-to-video/{task_id}:
     get:
       summary: Check the status of the Image to Video task.
@@ -252,18 +252,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VidTaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/VidTaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
   /s2s/v2.0/task/image-to-video/youcam:
     post:
       summary: Run an AI Image to Video Generator V2 task.
@@ -290,7 +290,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - $ref: "#/components/schemas/BasicRunTaskV2"
                 - type: object
                   required:
                     - resolution
@@ -300,10 +300,10 @@ paths:
                       type: string
                       description: To select the output resolution used in inference.
                       enum:
-                        - '480'
-                        - '720'
-                        - '1080'
-                      example: '480'
+                        - "480"
+                        - "720"
+                        - "1080"
+                      example: "480"
                     dst_duration:
                       type: integer
                       description: To select the output duration used in inference.
@@ -334,23 +334,23 @@ paths:
                       enum:
                         - youcam-video-v2
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/image-to-video/youcam/{task_id}:
     get:
       summary: Check the status of a AI Image to Video Generator V2 task.
@@ -367,18 +367,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VidTaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/VidTaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
   /s2s/v2.0/task/text-to-video/youcam:
     post:
       summary: Run an AI Text To Video task.
@@ -483,14 +483,14 @@ paths:
                         | **1080P** | 4:3 | 1648*1248 |
 
                         | **1080P** | 3:4 | 1248*1648 |
-                      default: '16:9'
+                      default: "16:9"
                       enum:
-                        - '16:9'
-                        - '9:16'
-                        - '1:1'
-                        - '4:3'
-                        - '3:4'
-                      example: '16:9'
+                        - "16:9"
+                        - "9:16"
+                        - "1:1"
+                        - "4:3"
+                        - "3:4"
+                      example: "16:9"
                     dst_duration:
                       type: integer
                       description: Duration of the generated video (seconds).
@@ -511,23 +511,23 @@ paths:
                         - true
                         - false
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/text-to-video/youcam/{task_id}:
     get:
       summary: Check the status of a AI Text To Video task.
@@ -544,18 +544,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -617,15 +617,15 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     RunWithSingleTemplateAndSrcUrl:
       title: RunWithSingleTemplateAndSrcUrl
       allOf:
-        - $ref: '#/components/schemas/RunWithSingleTemplate'
-        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: "#/components/schemas/RunWithSingleTemplate"
+        - $ref: "#/components/schemas/BasicRunTaskV2"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -748,12 +748,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/VidTaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/VidTaskStatusResponseBodySingleUrlResultsV2"
     TaskStatusResponseBodySingleUrlResultsV2:
       type: object
       properties:
@@ -779,12 +779,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   responses:
     TemplateResponse:
       description: Successful retrieval of styles
@@ -803,7 +803,7 @@ components:
                   templates:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Template'
+                      $ref: "#/components/schemas/Template"
                   next_token:
                     type: string
                     example: 73a3c9e69b89

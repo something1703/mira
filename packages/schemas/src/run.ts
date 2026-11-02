@@ -75,6 +75,8 @@ export const NodeError = z.object({
   /** YouCam's own code or message, kept for the run viewer; never shown raw to a person. */
   upstream: z.string().optional(),
   retryable: z.boolean(),
+  /** What the person can do about it; the UI picks the button and copy from this and `code`. */
+  guidance: z.enum(["retake", "retry", "other_garment", "contact_support", "none"]).optional(),
   /** Failed tasks cost nothing (docs/YOUCAM_API.md §1); recorded so the UI can say so. */
   unitsCharged: z.literal(0),
 });
@@ -90,18 +92,43 @@ export const RunNode = z.object({
   feature: z.string().optional(),
   version: z.string().optional(),
   params: z.record(z.string(), z.unknown()).default({}),
+  /**
+   * What the node reads, by role (`src`, `ref`, `src0`…). Each is a blob key in this run's
+   * storage (`blob:runs/…`), a previous node's output (`node:<id>`), or a public URL (`url:…`).
+   */
+  inputs: z.record(z.string(), z.string()).default({}),
   cacheKey: z.string().optional(),
-  fileId: z.string().optional(),
+  /** YouCam file IDs by input role, stored before the task is created ("upload once"). */
+  files: z.record(z.string(), z.string()).default({}),
   taskId: z.string().optional(),
   status: NodeStatus,
   unitsReserved: z.number().int().nonnegative().default(0),
   unitsCommitted: z.number().int().nonnegative().default(0),
+  /** Blob key of the copied result image. Result URLs expire after 2 hours (F4). */
   resultRef: z.string().optional(),
+  /** The YouCam result URL and when it stops working, for chaining without a re-upload (D12). */
+  resultUrl: z.string().optional(),
+  resultUrlExpiresAt: z.iso.datetime().optional(),
+  /** Parsed non-image output (analyser JSON, engine results). Numbers only, never images. */
+  output: z.unknown().optional(),
   audit: Audit.optional(),
   error: NodeError.optional(),
   attempts: z.number().int().nonnegative().default(0),
   /** Optional nodes (e.g. video) can be removed in the QuoteSheet without breaking the graph. */
   optional: z.boolean().default(false),
+  /**
+   * A tolerant node runs once every dependency has finished, whether or not they succeeded, and
+   * reads what is there. The Twin write uses it so a failed analyser leaves a partial profile
+   * instead of nothing (docs/UX_FLOWS.md §4).
+   */
+  tolerant: z.boolean().default(false),
+  /**
+   * Set just before the task is created and cleared once its id is stored. A node found with this
+   * and no task id may already be running at YouCam, so it is never submitted again (AGENTS.md §2.3).
+   */
+  submitting: z.iso.datetime().optional(),
+  /** When YouCam accepted the task; the give-up clock starts here, not at the first attempt. */
+  submittedAt: z.iso.datetime().optional(),
   startedAt: z.iso.datetime().optional(),
   endedAt: z.iso.datetime().optional(),
 });
@@ -121,6 +148,8 @@ export const Run = z.object({
   recorded: z.boolean(),
   startedAt: z.iso.datetime(),
   endedAt: z.iso.datetime().optional(),
+  /** Set once the run's images and YouCam tasks have been deleted (AGENTS.md §2.9). */
+  cleanedAt: z.iso.datetime().optional(),
   outputs: z.record(z.string(), z.unknown()).default({}),
 });
 export type Run = z.infer<typeof Run>;

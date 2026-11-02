@@ -4,6 +4,8 @@ This file records what MIRA relies on from Perfect Corp's YouCam API and what ea
 
 ## 1. Basics
 
+> **Confirmed live, 2026-11-01** (one background-removal task, 1 unit, and the free read calls; recorded as `packages/fixtures/recorded/sod/`). The flow below works as documented: `POST /s2s/v2.0/file` returns `file_id` and a PUT request; the PUT succeeds with exactly the returned headers (including `Content-Length`) and no `Authorization`; `POST /s2s/v2.0/task/sod` with `src_file_id` returns a task id; polling returns `success` with `results.url` after about 2 s; the URL downloads at once (a transparent-background PNG); `POST /s2s/v2.0/task/delete` succeeds on the finished task and a later `GET` answers `InvalidTaskId`; units were charged once, on success, equal to the quote (1040 to 1039). `GET /s2s/v1.0/client/credit` accepts the API key as the Bearer token and returns `amount_dec` and `expiry`. `feature-cost` pages with `page_size=20` (103 rows, 7 requests). **Not yet exercised live:** failures, webhooks, a 429, the other features, and every `_confirm_` item below.
+
 - **Auth:** `Authorization: Bearer <YOUCAM_API_KEY>`, server-side only (MIRA policy; the docs also allow client use). 401 bodies vary by feature: `{"error":"Invalid API key"}` or `error_code` ∈ `InvalidApiKey`, `InactiveApiKey`, `ExpiredApiKey`.
 - **Base URL:** `https://yce-api-01.makeupar.com`. The docs list exactly one API server, with no regional hosts. Sample upload and result URLs point at US S3 buckets. The hackathon page's "India link" could not be inspected (Devpost returned 403) and is probably a sign-up link, not an API host _(confirm with the organisers)_.
 - **Everything is asynchronous:**
@@ -30,7 +32,7 @@ This file records what MIRA relies on from Perfect Corp's YouCam API and what ea
 - **Feature cost:** `GET /s2s/v2.0/credit/feature-cost?page_size≤20&starting_token=` (free, paged) returns `result.skus[] = {description, amount, unit: result_image|second, proc_unit, run_task_url}`. Map an SKU to a feature by the path after `/task/` in `run_task_url`. **This endpoint is the only price source** (AGENTS.md §2.4); the unit numbers below are for planning only.
 - **Rate limit:**
   - 250 requests per 300 s per IP **and** per API key (about 0.83 rps sustained, 5 QPS bursts); over that returns `429 {"error":"Too many requests"}`.
-  - **Every poll counts**, so the Cloud Tasks queues share one budget below this.
+  - **Every poll counts**, so the Cloud Tasks queues share one budget below this. Queue rates alone cannot promise it (one submit is up to four calls, and cleanup deletes and balance reads count), so the client also enforces a sliding window of 200 requests per 300 s on every request it sends (`packages/youcam-client/src/rate-limit.ts`, D29). The per-IP half of the limit is shared with anything else behind the same address.
   - No concurrency limit on running tasks is documented _(confirm)_.
 
 ### 1.1 Webhooks
@@ -61,7 +63,7 @@ Paths are under `https://yce-api-01.makeupar.com`. "Units" are from each bundle'
 | AI Skin Simulation | `POST /s2s/v2.0/task/skin-simulation` | 0–1 each: `wrinkle, radiance, oiliness, acne, eye_bags, dark_circle, spots, pores, texture, redness` (note the plurals) | 1–4 concerns 4; 5–10 6 | `results.url` |
 | AI Makeup VTO | `POST /s2s/v2.0/task/makeup-vto` | `effects[]`; categories `skin_smooth, foundation, concealer, lip_color, blush, bronzer, contour, eyebrows, eye_liner, eye_shadow, eyelashes, highlighter, lip_liner`. Input long side < 1920 | 1 | `results.url` |
 | AI Look VTO | `POST /s2s/v2.0/task/look-vto` | `template_id` from `GET /s2s/v2.0/task/template/look-vto` (free) | 2 | `results.url` |
-| AI Clothes VTO | `POST /s2s/v2.0/task/cloth-v4` (also `cloth` V2, `cloth-v3` V3, **all under `/s2s/v2.0/`**) | `ref_file_id`; `garment_category` ∈ `upper_body, lower_body, full_body, shoes, auto, outer` (`outer` is v4 only); `change_shoes`; `filter_multi_person` (v4) | V2/V3 2; **V4 not listed** _(confirm with feature-cost)_ | `results.url` |
+| AI Clothes VTO | `POST /s2s/v2.0/task/cloth-v4` (also `cloth` V2, `cloth-v3` V3, **all under `/s2s/v2.0/`**) | `ref_file_id`; `garment_category` ∈ `upper_body, lower_body, full_body, shoes, auto, outer` (`outer` is v4 only); `change_shoes`; `filter_multi_person` (v4) | V2/V3 2; **V4 is 2** _(measured on the live feature-cost list, 2026-11-01)_ | `results.url` |
 | Bag, hat, scarf | `POST /s2s/v2.0/task/{bag,hat,scarf}` | ref file + **`gender` required**; hat and scarf `style` also restyles **outfit and background** | 2 | `results.url` |
 | Shoes | `POST /s2s/v2.0/task/shoes-transfer` (V3; ref only) or `shoes` (V2; `gender`, `style`) | — | 2 | `results.url` |
 | Earrings, necklace, ring, bracelet, watch | `POST /s2s/v2.0/task/2d-vto/{earring,necklace,ring,bracelet,watch}` | `ref_file_ids[]`, `source_info{name, mask_name}`, `object_infos[{name, mask_name, parameter}]` | 1 (2 when stacked) | `results.url`. Errors are UPPER_CASE (`OBJECT_DETECTION_FAIL`, …) |
@@ -166,7 +168,7 @@ Paths are under `https://yce-api-01.makeupar.com`. "Units" are from each bundle'
 3. **CASTING: try-ons are slow.** One try-on took 16.5–28.0 s in their measurements, and YouCam publishes no latency figures. Run fan-outs in parallel within the rate limit and stream results.
 4. **CASTING and ShadeSpan: clothes try-on cost 2 units.** The bundle confirms this for V2 and V3. V4's cost comes from feature-cost.
 5. **Aloud: pin response shapes with fixtures from real runs.** Aloud reported errors arriving as stringified tuples; the docs don't mention it, and MIRA keeps defensive parsing.
-6. **New for MIRA: patch the bundles before generating types.** Many bundles mis-nest `results` (shown as `null` with the `$ref` hoisted), and `FileResponseV2` has the same bug. MIRA writes Zod schemas per feature from the bundles rather than generating types (D10).
+6. **New for MIRA: patch the bundles before generating types.** Many bundles mis-nest `results` (shown as `null` with the `$ref` hoisted), and `FileResponseV2` has the same bug. MIRA writes Zod schemas per feature from the bundles rather than generating types (D11).
 
 ## 8. Recording fixtures
 

@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Unit system
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -23,7 +23,7 @@ paths:
       security:
         - BearerAuthentication: []
       responses:
-        '200':
+        "200":
           description: Successful retrieval of unit info
           content:
             application/json:
@@ -64,8 +64,8 @@ paths:
                           type: integer
                           description: Unix timestamp of the expiry of this unit (ms)
                           example: 1704789135000
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /s2s/v1.0/client/credit/history:
     get:
       summary: View unit history
@@ -89,7 +89,7 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
+        "200":
           description: Successful retrieval of the unit usage history
           content:
             application/json:
@@ -193,10 +193,10 @@ paths:
                                   items:
                                     type: string
                                   example: '[ "hd_wrinkle", "hd_pore", "hd_texture" ]'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidAccessToken'
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidAccessToken"
   /s2s/v2.0/credit/feature-cost:
     get:
       summary: Get feature cost
@@ -225,7 +225,7 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
+        "200":
           description: Successful retrieval of the feature cost by sku
           content:
             application/json:
@@ -296,10 +296,10 @@ paths:
                       proc_unit: 1
                       run_task_url: >-
                         https://yce-api-01.makeupar.com/s2s/v2.0/task/skin-analysis
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
 components:
   securitySchemes:
     BearerAuthentication:

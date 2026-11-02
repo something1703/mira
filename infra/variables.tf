@@ -16,16 +16,52 @@ variable "image_tag" {
 }
 
 variable "max_instances" {
-  description = "Upper bound on Cloud Run instances per service; keeps demo spend predictable."
+  description = "Upper bound on Cloud Run instances per service (except workflows); keeps demo spend predictable."
   type        = number
   default     = 3
+}
+
+variable "workflows_max_instances" {
+  description = <<-EOT
+    Upper bound on mira-workflows instances. It stays at 1 because YouCam's 250 requests per 300 s
+    limit is counted by a sliding window inside each process (D29): with n instances MIRA could send
+    n times the limit. Raise it only after the limiter is shared between instances.
+  EOT
+  type        = number
+  default     = 1
+}
+
+variable "model_main" {
+  description = "Vertex model for the agent's main loop (D17). It is a preview ID: re-check before the final demo."
+  type        = string
+  default     = "gemini-3-flash-preview"
+}
+
+variable "model_small" {
+  description = "Vertex model for extraction (D17)."
+  type        = string
+  default     = "gemini-3-flash-preview"
+}
+
+variable "session_unit_cap" {
+  description = "YouCam units one session may spend."
+  type        = number
+  default     = 200
+}
+
+variable "deployment_daily_unit_cap" {
+  description = "YouCam units the whole deployment may spend in one UTC day, whoever asks (D35). A session cap alone resets with the cookie."
+  type        = number
+  default     = 400
 }
 
 variable "youcam_queue_rps" {
   description = <<-EOT
     Combined Cloud Tasks dispatch rate for YouCam calls. YouCam allows 250 requests per 300 s per
-    key (about 0.83 rps, docs/FACTS.md F11). A submit node makes 2 API calls (register + create),
-    a poll makes 1; the split below keeps the total under the limit with headroom.
+    key (about 0.83 rps, docs/FACTS.md F11). A submit makes 2 API calls (register + create), or 4
+    for the three-photo hair features, a poll makes 1, and cleanup and balance reads add more. These
+    queue rates are a coarse first guard; the exact guard is the client's own sliding window
+    (packages/youcam-client/src/rate-limit.ts, D29), which counts every request.
   EOT
   type        = object({ submit = number, poll = number })
   default     = { submit = 0.2, poll = 0.35 }

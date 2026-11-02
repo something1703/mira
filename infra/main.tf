@@ -3,9 +3,9 @@ locals {
     web       = { public = true, memory = "1Gi", cpu = "1", port = 8080 }
     agent     = { public = false, memory = "1Gi", cpu = "1", port = 8080 }
     workflows = { public = false, memory = "1Gi", cpu = "1", port = 8080 }
-    webhook   = { public = true, memory = "512Mi", cpu = "1", port = 8080 }
+    webhook   = { public = false, memory = "512Mi", cpu = "1", port = 8080 }
     engines   = { public = false, memory = "2Gi", cpu = "2", port = 8080 }
-    mcp       = { public = true, memory = "512Mi", cpu = "1", port = 8080 }
+    mcp       = { public = false, memory = "512Mi", cpu = "1", port = 8080 }
   }
 
   apis = [
@@ -35,6 +35,55 @@ locals {
   ]
 
   image = "${var.region}-docker.pkg.dev/${var.project_id}/mira"
+
+  # A Cloud Run service's address is fixed by its name, the project number and the region, so each
+  # service can be told where the others are without one service depending on another's output.
+  service_url = {
+    for name in keys(local.services) :
+    name => "https://mira-${name}-${data.google_project.this.number}.${var.region}.run.app"
+  }
+
+  # Settings each service reads, beyond the ones every service gets (see services.tf).
+  service_env = {
+    web = {
+      MIRA_WORKFLOWS_URL = local.service_url["workflows"]
+      MIRA_AGENT_URL     = local.service_url["agent"]
+      MIRA_WEBHOOK_URL   = local.service_url["webhook"]
+      MIRA_MCP_URL       = local.service_url["mcp"]
+    }
+    agent = {
+      MIRA_WORKFLOWS_URL  = local.service_url["workflows"]
+      MIRA_ENGINES_URL    = local.service_url["engines"]
+      MIRA_MODEL_PROVIDER = "vertex"
+      MIRA_MODEL_MAIN     = var.model_main
+      MIRA_MODEL_SMALL    = var.model_small
+      VERTEX_LOCATION     = var.region
+    }
+    workflows = {
+      MIRA_ENGINES_URL               = local.service_url["engines"]
+      YOUCAM_API_BASE_URL            = "https://yce-api-01.makeupar.com"
+      MIRA_SESSION_UNIT_CAP          = tostring(var.session_unit_cap)
+      MIRA_DEPLOYMENT_DAILY_UNIT_CAP = tostring(var.deployment_daily_unit_cap)
+    }
+    webhook = {
+      MIRA_WORKFLOWS_URL = local.service_url["workflows"]
+    }
+    mcp = {
+      MIRA_WORKFLOWS_URL = local.service_url["workflows"]
+      MIRA_ENGINES_URL   = local.service_url["engines"]
+    }
+    engines = {}
+  }
+
+  # Secrets each service reads, as environment variable name => Secret Manager secret.
+  service_secrets = {
+    web       = { MIRA_SESSION_SECRET = "mira-session-secret" }
+    agent     = { YOUCAM_API_KEY = "youcam-api-key", ANTHROPIC_API_KEY = "anthropic-api-key" }
+    workflows = { YOUCAM_API_KEY = "youcam-api-key", YOUCAM_WEBHOOK_SECRET = "youcam-webhook-secret" }
+    webhook   = { YOUCAM_WEBHOOK_SECRET = "youcam-webhook-secret" }
+    mcp       = { MIRA_MCP_TOKENS = "mira-mcp-tokens" }
+    engines   = {}
+  }
 }
 
 resource "google_project_service" "apis" {

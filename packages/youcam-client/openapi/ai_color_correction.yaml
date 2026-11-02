@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Color Correction
   description: "# Overview\nPerfect AI Color Correction let you automatically adjust\_saturation, temperature, and hue of photos with ease. Adjust white balance to correct color temperature, enhance saturation and make it vibrant, correct exposure level to balance brightness, remove color casts or tints, improve skin tones for a nature-looking portrait, enhance shadow and highlight details, remove noise and improve clarity, or even apply creative color grading effects all in one touch. With AI Color Correction, you can instantly generate 4 different color graded versions of your photos, each with unique color tones ranging from warm to cool within seconds.\n\nSample\nBefore:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/color_correction_topbanner_before_dt_100_45429e8625.jpg)\n\nAfter:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/color_correction_topbanner_after_dt_100_ef9f9c48ed.jpg)\n\n\n\nBefore:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/color_correction_s1_image_before_dt_fa73b5d41a.jpg)\n\nAfter\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/color_correction_s1_image_after_dt_a3e88a101b.jpg)\n\n\n---\n\n## File Specs & Errors\n* Supported Formats & Dimensions\n\n| AI Feature | Supported Dimensions | Supported File Size | Supported Formats |\n| ---- | ---- | ----  | ---- |\n| AI Color Correction | long side <= 4096 | < 10MB | jpg/jpeg/png |\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n| exceed_max_filesize |\tInput file size exceeds the maximum limit |\n| invalid_parameter |\tInvalid parameter value |\n| error_download_image\t| Download source image error |\n| error_decode_image\t| Decode source image error |\n| error_nsfw_content_detected\t| NSFW content detected in source image |\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Color Correction V1.0 | 2 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -30,24 +30,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BasicRunTaskV2'
+              $ref: "#/components/schemas/BasicRunTaskV2"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/responses/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
+                  - $ref: "#/components/responses/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
           description: Too many requests within a given amount of time
           content:
             application/json:
@@ -69,18 +69,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of an AI Photo Color Correction task status.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ColorizeTaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/ColorizeTaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   schemas:
     FileV1.1:
@@ -167,7 +167,7 @@ components:
           example: 200
           description: Response status
         data:
-          $ref: '#/components/schemas/BasicFileResponse'
+          $ref: "#/components/schemas/BasicFileResponse"
     BasicRunTaskV2SrcFileUrl:
       title: Run task with src file url
       type: object
@@ -191,8 +191,8 @@ components:
     BasicRunTaskV2:
       title: BasicRunTaskV2
       anyOf:
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-        - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+        - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -227,12 +227,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results:
-              $ref: '#/components/schemas/TaskStatusResponseBodyMultiUrlResultsV2'
+              $ref: "#/components/schemas/TaskStatusResponseBodyMultiUrlResultsV2"
       example:
         status: 200
         data:
@@ -400,25 +400,25 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/InvalidParametersSchema'
+            $ref: "#/components/schemas/InvalidParametersSchema"
     InvalidApiKey:
       description: Invalid API Key or Inactive API Key or Expired API Key
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/InvalidApiKeySchema'
+            $ref: "#/components/schemas/InvalidApiKeySchema"
     RunError:
       description: Failed execution of task
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/RunErrorSchema'
+            $ref: "#/components/schemas/RunErrorSchema"
     InvalidTaskId:
       description: Invalid task id
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/InvalidTaskIdSchema'
+            $ref: "#/components/schemas/InvalidTaskIdSchema"
     TooManyRequests:
       description: Too many requests within a given amount of time
     TaskTimeout:
@@ -426,7 +426,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/TaskTimeoutSchema'
+            $ref: "#/components/schemas/TaskTimeoutSchema"
   securitySchemes:
     BearerAuthenticationV2:
       type: http

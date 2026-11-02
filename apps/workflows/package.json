@@ -5,7 +5,7 @@
   "description": "mira-workflows: Graph runner, node lifecycle, unit ledger and result cache",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/main.ts",
+    "dev": "MIRA_DATA_DIR=../../.mira/workflows tsx watch --clear-screen=false src/main.ts",
     "build": "tsx ../../scripts/build-service.ts",
     "start": "node dist/main.js",
     "lint": "eslint .",
@@ -13,8 +13,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@mira/fixtures": "workspace:*",
     "@mira/runtime": "workspace:*",
-    "@mira/schemas": "workspace:*"
+    "@mira/schemas": "workspace:*",
+    "@mira/youcam-client": "workspace:*",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Hair Style Virtual Try-On
   description: "# Overview\nUsing the latest AI technology to try a wide variety of hairstyles, catering to both women and men, meeting different gender and style preference.\nDiscover a world of styles: curly, long, buzz cut, and more. Our AI-powered hair changer lets you experiment effortlessly. Find your ideal hairstyle now!\n\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/hair_style_v3_poster_bb1c7aad10.jpg)\n\n---\n\n## Integration Guide\n\n* API Playground\nYou can use the API Playground to test the AI Hairstyle Generator feature. This allows you to experiment with your ideas and gain a better understanding of the try-on process.\n\nAccess the API Playground at:\n<https://yce.makeupar.com/api-console/en/api-playground/ai-hair-style-generator/>\n\n---\n\n* API Workflow\nThis guide walks you through:\n\nWorkflow for AI Hairstyle Generator API:\n\n**Endpoint:** `/s2s/v2.1/task/hair-transfer`\n\n**Authentication Required:** `Authorization: Bearer YOUR_API_KEY`\n\n**Workflow Steps:**\n\n1. **Image Upload Preparation:**\n   - The process begins with preparing a selfie.\n\n2. **List predefined templates or using your own reference photo**\n    **Choose Reference Source**\nYou have two options for styling references:\n\n| Option | Use Case | Implementation Tip |\n|-------|-----------|---------------------|\n| **Predefined Templates** (`template_id`) | Quick start (e.g., \"Curly Bob\", \"Side-Swept Bangs\") | Call `/s2s/v2.1/task/template/hair-transfer` and pick `template_id`. |\n| **Custom Reference Image** (`ref_file_url` / `ref_file_id`) | User uploads own style photo or uses provided image link | Upload via same file API; <BR>Use `ref_file_url` if your reference image is already hosted online. |\n\n3. **Initiate AI Task and Obtain Task ID:**\n   - Send the uploaded image along with the style configuration via an HTTP POST request to `/s2s/v2.0/file`.\n   - Await a unique task ID in the response, which identifies this interaction.\n\n4. **Poll Task Status (Continuous Check):**\n   - Use the obtained `task_id` to periodically poll the task status using an HTTP GET request (e.g., `GET /task/${task_id}`).\n   - Continuously monitor for:\n     - `Task_status = \"success\"` (process completed).\n     - `Task_status = \"error\"` (resolve or retry if applicable).\n   - Update the workflow accordingly once the status transitions to success.\n\nThis structured workflow ensures efficient integration with user inputs, automated monitoring of tasks, and seamless retrieval of results.\n\n---\n\n* Authentication\n- Include your API key in the request header using **Bearer Token**:\n    ```\n    Authorization: Bearer YOUR_API_KEY\n    ```\nYou can find your API Key at https://yce.makeupar.com/api-console/en/api-keys/.\n\n---\n\n* API Usage Guide\n\nThis guide explains how to upload images, prepare reference images, and create virtual try-on tasks using the AI Hairstyle Generator API.\n\n***\n\n   * Step 1. Upload a File Using the File API or provide a valid image URL\n\nUse the **File API** (`/s2s/v2.0/file`) to upload a target user image.\n\nAlternatively, skip step 1 to 3 if you already have a public image URL.\n\n**Image Requirements:**\n\n*   Upload a high-resolution selfie photo.\n*   Ensure the photo clearly shows the entire body.\n*   Avoid backgrounds with multiple people or distracting objects.\n\n**Example Request:**\n\n```bash\ncurl --request POST \\\n  --url https://yce-api-01.makeupar.com/s2s/v2.0/file \\\n  --header 'Authorization: Bearer YOUR_API_KEY' \\\n  --header 'content-type: application/json' \\\n  --data '{\n    \"files\": [\n      {\n        \"content_type\": \"image/jpg\",\n        \"file_name\": \"selfie_01_3dbd1b6683.jpg\",\n        \"file_size\": 547541\n      }\n    ]\n  }'\n```\n\n***\n\n   * Step 2. Retrieve File API Response\n\nThe response includes:\n\n*   `file_id` for creating an AI task.\n*   `requests.url` for uploading the actual image file.\n\n**Sample Response:**\n\n```json\n{\n  \"status\": 200,\n  \"data\": {\n    \"files\": [\n      {\n        \"content_type\": \"image/jpg\",\n        \"file_name\": \"full_body_photo_01_3dbd1b6683.jpg\",\n        \"file_id\": \"SaGaqpDgKwFrVBgMpQMA3HY0LeqdT9/13W5TOD8/u/FfjK3xgCQ+hRt9MJXBFaud\",\n        \"requests\": [\n          {\n            \"method\": \"PUT\",\n            \"url\": \"https://yce-us.s3-accelerate.amazonaws.com/demo/ttl30/...signature...\",\n            \"headers\": {\n              \"Content-Length\": \"547541\",\n              \"Content-Type\": \"image/jpg\"\n            }\n          }\n        ]\n      }\n    ]\n  }\n}\n```\n\n***\n\n   * Step 3. Upload Image to Provided URL\n\nUse the `requests.url` from the File API response to upload the image:\n\n```bash\ncurl --location --request PUT 'https://yce-us.s3-accelerate.amazonaws.com/demo/ttl30/...signature...' \\\n  --header 'Content-Type: image/jpg' \\\n  --header 'Content-Length: 547541' \\\n  --data-binary @'./full_body_photo_01_3dbd1b6683.jpg'\n```\n\n***\n\n   * Step 4. Prepare a Reference Image\n\n     * 4.1 Fetch Predefined Image Templates\n\nUse the **Template API** (`/s2s/v2.1/task/template/hair-transfer`) to retrieve a list of predefined reference templates:\n\n```bash\ncurl --request GET \\\n  --url 'https://yce-api-01.makeupar.com/s2s/v2.1/task/template/hair-transfer?page_size=20&starting_token=73a3c9e69b89' \\\n  --header 'Authorization: Bearer YOUR_API_KEY'\n```\n\n     * 4.2 Upload a Reference Image\n\nYou can:\n\n*   Upload an reference image using the File API (`/s2s/v2.0/file`), or\n*   Provide a valid image URL.\n\n**Supported Images:**\n\n*   Another selfie photo as an reference image.\n\nRefer to **[File Specs and Errors](#section/overview/File-Specs-and-Errors)** for detailed specifications.\n\n***\n\n   * Step 5. Create an AI Hairstyle Generator Task\n\nUse the **AI Task API** (`/s2s/v2.1/task/hair-transfer`) to create a virtual try-on task.\n\n**Parameters:**\n\n*   For the user image: `src_file_id` or `src_file_url`.\n*   For the reference image: `ref_file_id`, `ref_file_url`, or `template_id`.\n\n**Example Request:**\n\n```bash\ncurl --request POST \\\n  --url https://yce-api-01.makeupar.com/s2s/v2.1/task/hair-transfer \\\n  --header 'Authorization: Bearer YOUR_API_KEY' \\\n  --header 'content-type: application/json' \\\n  --data '{\n    \"src_file_url\": \"https://plugins-media.makeupar.com/strapi/assets/selfie_03_cccd5d4803.jpeg\",\n    \"ref_file_url\": \"https://plugins-media.makeupar.com/strapi/assets/style_reference_full_body_01_5a000d999f.png\"\n  }'\n```\n\n**Sample Response:**\n\n```json\n{\n  \"status\": 200,\n  \"data\": {\n    \"task_id\": \"SaGaqpDgKwFrVBgMpQMA3HY0LeqdT9_13W5TOD8_u_GPi6NqQ3dhlmN-6ntFwhzT\"\n  }\n}\n```\n\n***\n\n   * Step 6. Poll for Task Result\n\nUse the task ID to check the status:\n\n```bash\ncurl --request GET \\\n  --url https://yce-api-01.makeupar.com/s2s/v2.1/task/hair-transfer/<YOUR_TASK_ID> \\\n  --header 'Authorization: Bearer YOUR_API_KEY' \\\n  --header 'content-type: application/json'\n```\n\n***\n\n   * Step 7. Retrieve Result\n\nA successful response includes a download URL for the result image:\n\n```json\n{\n  \"status\": 200,\n  \"data\": {\n    \"error\": null,\n    \"results\": {\n      \"url\": \"https://yce-us.s3-accelerate.amazonaws.com/demo/ttl30/...signature...\"\n    },\n    \"task_status\": \"success\"\n  }\n}\n```\n\nInvalid API Key error response:\n\n```json\n{\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"error_code\": \"InvalidAccessToken\"\n}\n```\n\n---\n\nUse cases:\nUse case:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/hair_style_v1_video_08513beb46.jpg)\n\nSuggestions for How to Shoot:\n![](https://bcw-media.s3.ap-northeast-1.amazonaws.com/AI_Hair_Extension_recommendation_ba24bd5d92.png)\n\n## File Specs & Errors\n* Supported Formats & Dimensions\n\n|AI Feature|Supported Dimensions|Supported File Size|Supported Formats|\n|  ----  | ----  | ----  | ----  |\n|AI Hairstyle Generator|long side <= 1024, face width >= 128, face pose: -10 < pitch < +10, -45 < yaw < +45, -15 < roll < +15, single face only, need to show full face|< 10MB|jpg/jpeg|\n\n* Error Codes\n\n|Error Code|Description|\n|  ----  | ----  |\n|error_no_shoulder\t|Shoulders are not visible in the source image\n|error_large_face_angle\t|The face angle in the uploaded image is too large\n|error_insufficient_landmarks\t|Cannot detect sufficient face or body landmarks in the source image\n|error_hair_too_short\t|Input hair is too short\n|error_face_pose\t|The face pose of source image is unsupported\n\n* Environment & Dependency\n\n| Sample Code Language / Tool | Recommended Runtime Versions |\n|---|---|\n| cURL | - bash >= 3.2</br>   - curl >= 7.58 (modern TLS/HTTP support)</br>   - jq >= 1.6 (robust JSON parsing) |\n| Node.js (JavaScript) | Node >= 18 (for global fetch) |\n| JavaScript | - Chrome / Edge >= 80</br>   - Firefox >= 74</br>   - Safari >= 13.1 |\n| PHP | PHP >= 7.4 (for modern TLS/compat), ext-curl (recommended) or allow_url_fopen=On + ext-openssl, ext-json |\n| Python | Python >= 3.10 (for f-strings), requests >= 2.20.0 |\n| Java | Java 11+ (for HttpClient), Jackson Databind >= 2.12.0 |\n\n---\n\n## FAQ\n**Q: Can I try on a custom hairstyle?**\n\n**A:** Absolutely, you can try on a custom hairstyle using your own reference photo. The AI Hairstyle Generator supports two methods for specifying the desired hairstyle:\n\n1. **Upload your own reference image**\n   You may upload a high-resolution selfie or style photo (e.g., someone wearing the target hairstyle) via the File API (`/s2s/v2.0/file`). After uploading, use the returned `file_id` or public URL as the reference source when creating the AI task.\n\n2. **Provide a valid image URL**\n   If your reference image is already hosted online (e.g., on your own server or CDN), you can directly supply its HTTPS URL in the request body under the field `ref_file_url`.\n\nWhen submitting the task via `/s2s/v2.1/task/hair-transfer`, include either:\n- `src_file_id` (your selfie) and `ref_file_id` (your custom reference image),\nor\n- `src_file_url` and `ref_file_url`.\n\nEnsure both images meet the specified requirements:\n- Supported format: JPG/JPEG only\n- File size under 10 MB\n- Long side ≤ 1024 pixels\n- Face width ≥ 128 pixels\n- Head pose within allowed range (pitch: −10° to +10°, yaw: −45° to +45°, roll: −15° to +15°)\n- Single face visible, full frontal view with clear hair visibility\n\nThis flexibility allows you to apply virtually any hairstyle from a photo reference, not just predefined templates.\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Hair Style Virtual Try-On V2.0 | 1 unit for Preset Mode <br> 2 units for Custom Mode |\n| AI Hair Style Virtual Try-On V2.1 | 2 units for Preset Mode <br> 2 units for Custom Mode |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -52,12 +52,12 @@ paths:
             Token for current page. Start with `null` for the first page, and
             use `next_token` from the previous response to start next page
       responses:
-        '200':
-          $ref: '#/components/responses/HairStyleTemplateResponse'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+        "200":
+          $ref: "#/components/responses/HairStyleTemplateResponse"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
   /s2s/v2.0/task/hair-style:
     post:
       summary: Run an AI Hairstyle Generator task.
@@ -84,25 +84,25 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RunWithSingleTemplateAndSrcUrl'
+                - $ref: "#/components/schemas/RunWithSingleTemplateAndSrcUrl"
       responses:
-        '200':
+        "200":
           description: Successful execution of the AI Hairstyle Generator task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/hair-style/{task_id}:
     get:
       summary: Check the status of a AI Hairstyle Generator task.
@@ -119,18 +119,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the AI Hairstyle Generator task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
   /s2s/v2.0/task/hair-transfer:
     post:
       summary: Run an AI Hairstyle Generator task with reference.
@@ -157,25 +157,25 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2WithRequiredRef'
+                - $ref: "#/components/schemas/BasicRunTaskV2WithRequiredRef"
       responses:
-        '200':
+        "200":
           description: Successful execution of the AI Hairstyle Generator task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/hair-transfer/{task_id}:
     get:
       summary: Check the status of a AI Hairstyle Generator task with reference.
@@ -192,18 +192,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the AI Hairstyle Generator task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
   /s2s/v2.1/task/template/hair-transfer:
     get:
       summary: List predefined templates v2.1.
@@ -212,15 +212,15 @@ paths:
       security:
         - BearerAuthenticationV2: []
       parameters:
-        - $ref: '#/components/parameters/TemplatePageSize'
-        - $ref: '#/components/parameters/TemplateStartingToken'
+        - $ref: "#/components/parameters/TemplatePageSize"
+        - $ref: "#/components/parameters/TemplateStartingToken"
       responses:
-        '200':
-          $ref: '#/components/responses/HairStyleTemplateResponse'
-        '400':
-          $ref: '#/components/responses/InvalidParameters'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+        "200":
+          $ref: "#/components/responses/HairStyleTemplateResponse"
+        "400":
+          $ref: "#/components/responses/InvalidParameters"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
   /s2s/v2.1/task/hair-transfer:
     post:
       summary: Run an AI Hairstyle Generator v2.1 task.
@@ -247,25 +247,25 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/RunHairTransferTaskV2.1'
+                - $ref: "#/components/schemas/RunHairTransferTaskV2.1"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.1/task/hair-transfer/{task_id}:
     get:
       summary: Check the status of a AI Hairstyle Generator v2.1 task.
@@ -282,18 +282,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -342,37 +342,37 @@ components:
                 - title: Run task with src file url & ref file url
                   required:
                     - ref_file_url
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-                - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrl'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+                - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrl"
             - allOf:
                 - title: Run task with src file url & ref file ID
                   required:
                     - ref_file_id
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-                - $ref: '#/components/schemas/BasicRunTaskV2RefFileId'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+                - $ref: "#/components/schemas/BasicRunTaskV2RefFileId"
             - allOf:
                 - title: Run task with src file ID & ref file url
                   required:
                     - ref_file_url
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-                - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrl'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+                - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrl"
             - allOf:
                 - title: Run task with src file ID & ref file ID
                   required:
                     - ref_file_id
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-                - $ref: '#/components/schemas/BasicRunTaskV2RefFileId'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+                - $ref: "#/components/schemas/BasicRunTaskV2RefFileId"
             - allOf:
                 - title: Run task with src file url and template
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-                - $ref: '#/components/schemas/RunHairTransferTaskV2.1Template'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+                - $ref: "#/components/schemas/RunHairTransferTaskV2.1Template"
             - allOf:
                 - title: Run task with src file ID and template
-                - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-                - $ref: '#/components/schemas/RunHairTransferTaskV2.1Template'
+                - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+                - $ref: "#/components/schemas/RunHairTransferTaskV2.1Template"
     HairStyleTemplate:
       allOf:
-        - $ref: '#/components/schemas/Template'
+        - $ref: "#/components/schemas/Template"
         - type: object
           properties:
             keep_users_color:
@@ -428,15 +428,15 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     RunWithSingleTemplateAndSrcUrl:
       title: RunWithSingleTemplateAndSrcUrl
       allOf:
-        - $ref: '#/components/schemas/RunWithSingleTemplate'
-        - $ref: '#/components/schemas/BasicRunTaskV2'
+        - $ref: "#/components/schemas/RunWithSingleTemplate"
+        - $ref: "#/components/schemas/BasicRunTaskV2"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -559,12 +559,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
     BasicRunTaskV2RefFileUrl:
       type: object
       properties:
@@ -588,26 +588,26 @@ components:
             - title: Run task with src file url & ref file url
               required:
                 - ref_file_url
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrl"
         - allOf:
             - title: Run task with src file url & ref file ID
               required:
                 - ref_file_id
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileId"
         - allOf:
             - title: Run task with src file ID & ref file url
               required:
                 - ref_file_url
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrl"
         - allOf:
             - title: Run task with src file ID & ref file ID
               required:
                 - ref_file_id
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileId"
   responses:
     HairStyleTemplateResponse:
       description: Successful retrieval of styles
@@ -626,7 +626,7 @@ components:
                   templates:
                     type: array
                     items:
-                      $ref: '#/components/schemas/HairStyleTemplate'
+                      $ref: "#/components/schemas/HairStyleTemplate"
                   next_token:
                     type: string
                     example: 73a3c9e69b89

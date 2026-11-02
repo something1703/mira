@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Nail Virtual Try-On
   description: "# Overview\nThe AI Nail Virtual Try On API offers an innovative way to enhance the online experience for customers interested in nail art. It allows shoppers to visualize a variety of nail styles virtually, from artificial and acrylic nails to press-on options and gel designs. With unlimited color and texture options, users can effortlessly explore different looks on both natural and synthetic nails. The platform enables personalized try-ons, letting individuals switch between styles and see before-and-after comparisons easily. This seamless integration streamlines product discovery and increases customer confidence by providing accurate, interactive previews before purchasing.\n\n## Integration Guide\nThis guide walks you through:\n\nWorkflow for AI Nail Virtual Try On API:\n\n**Authentication Required:** `Authorization: Bearer YOUR_API_KEY`\n\n**Workflow Steps:**\n\n1. **Image Upload Preparation:**\n    - The process begins with preparing a back of the hand image.\n    - Call the File API `/s2s/v2.0/file` to obtain the upload URL and associated `file_id`.\n    - Upload the back of the hand with nail image using the provided upload URL.\n\n2. **Nail Design Setup Options:**\n    - Begin by selecting a suitable nail color. You can also choose a custom shape according to your taste.\n\n3. **Initiate AI Task and Obtain Task ID:**\n    - Send the uploaded image(s) along with the chosen effect configuration via an HTTP POST request to `/s2s/v2.0/task/nail-vto`.\n    - Await a unique task ID in the response, which identifies this interaction.\n\n4. **Poll Task Status (Continuous Check):**\n    - Use the obtained `task_id` to periodically poll the task status using an HTTP GET request (e.g., `GET /s2s/v2.0/task/nail-vto/${task_id}`).\n    - Continuously monitor for:\n        - `Task_status = \"success\"` (process completed).\n        - `Task_status = \"error\"` (resolve or retry if applicable).\n    - Update the workflow accordingly once the status transitions to success.\n\nThis structured workflow ensures efficient integration with user inputs, automated monitoring of tasks, and seamless retrieval of results.\n\n---\n\n* API Playground\n\nInteractively explore and test the API using our official playground:\n\n**API Playground:**\n[http://yce.makeupar.com/api-console/en/api-playground/ai-nail-virtual-try-on/](http://yce.makeupar.com/api-console/en/api-playground/ai-nail-virtual-try-on/)\n\n---\n\n* Authentication\n- Include your API key in the request header using **Bearer Token**:\n    ```\n    Authorization: Bearer YOUR_API_KEY\n    ```\nYou can find your API Key at https://yce.makeupar.com/api-console/en/api-keys/.\n\n\n1. Upload an Image\n\n    You may upload a file directly to the server or provide a valid image URL in the VTO task payload.\n\n    * Upload Endpoint\n\n        ```\n        POST /s2s/v2.0/file\n        ```\n\n    Alternatively, skip this step if you already have a public image URL.\n\n---\n\n2. Prepare an effect template\n\n    * There are four distinct setup modes available for this purpose:\n        1. Customizing the color and aligning it with your current nail look\n        2. Utilizing a preset design and a specific shape to create your vision\n        3. Adding pressed-on nails and linking them with your existing original nail image\n        4. Providing image links for pressing-on nail products that match \n\n    * Effect Template JSON Schemas\n        ```\n        {\n            \"version\": \"1.0\",\n            \"effect_type\": \"nail_polish\", // valid values: ['nail_polish', 'press_on_nails']\n            \"effects\": [],\n            \"ref_file_ids\": []\n        }\n        ```\n\n        * Effect Format\n            - Nail Polish - Color\n            ```\n            {\n                \"sub_type\": \"color\",\n                \"finger\": \"index\", // valid values: ['thumb', 'index', 'middle', 'ring', 'pinky']\n                \"color\": \"#ff0000\",\n                \"texture\": \"cream\", // valid values: ['matte', 'cream', 'metallic', 'jelly', 'sheer', 'pearl', 'textured', 'shimmer_coarse', 'shimmer_fine']\n                \"transparency\": 0, // 0-100, for textures except metallic\n                \"reflection\": 0, // 0-100\n                \"contrast\": 0, // 0-100\n                \"roughness\": 0, // 0-100\n                \"shimmer_opacity\": 0, // 0-100, for texture pearl\n                \"shimmer_size\": 0, // 0-100, for texture shimmer_coarse and shimmer_fine\n                \"textured_size\": 0, // 0-100, for texture textured\n            }\n            ```\n\n            - Nail Polish - Design\n            ```\n            {\n                \"sub_type\": \"design\",\n                \"finger\": \"index\", // valid values: ['thumb', 'index', 'middle', 'ring', 'pinky']\n                \"ref_file_url\": \"\",  // Optional; Either ref_file_id or ref_file_url must be filled, but only one can be selected.\n                \"ref_file_index\": 0, // This field is optional unless uploading is selected. Index corresponding to ref_file_ids under the root node\n                \"texture\": \"cream\", // valid values: ['matte', 'cream', 'metallic', 'jelly', 'sheer', 'pearl', 'textured', 'shimmer_coarse', 'shimmer_fine']\n                \"transparency\": 0, // 0-100, only for textures except metallic\n                \"reflection\": 0, // 0-100\n                \"contrast\": 0, // 0-100\n                \"roughness\": 0, // 0-100\n                \"shimmer_opacity\": 0, // 0-100, for texture pearl\n                \"shimmer_size\": 0, // 0-100, for texture shimmer_coarse and shimmer_fine\n                \"textured_size\": 0, // 0-100, for texture textured\n            }\n\n            ```\n\n            - Press On Nails - Color\n            * You can find the latest shape values at: https://plugins-media.makeupar.com/wcm-saas/shapes/nails.json\n            ```\n            {\n                \"sub_type\": \"color\",\n                \"finger\": \"index\", // valid values: ['thumb', 'index', 'middle', 'ring', 'pinky']\n                \"shape\": \"square_oval\", // Please check the nails.json. valid values: ['square_oval','square_square','square_squoval','squoval_oval','squoval_square','squoval_squoval','oval_oval','oval_square','oval_squoval','almond_oval','almond_square','almond_squoval','stiletto_oval','stiletto_square','stiletto_squoval],\n                \"length\": 1.0, // 0.8-2.15, for shapes except original\n                \"color\": \"#ff0000\",\n                \"texture\": \"cream\", // valid values for other shapes: ['matte', 'cream', 'metallic']\n                \"reflection\": 0, // 0-100\n                \"contrast\": 0, // 0-100\n                \"roughness\": 0 // 0-100\n            }\n            ```\n\n            - Press on Nails - Design\n            ```\n            {\n                \"sub_type\": \"design\",\n                \"finger\": \"index\", // valid values: ['thumb', 'index', 'middle', 'ring', 'pinky']\n                \"ref_file_url\": \"\",  // Optional; Either ref_file_id or ref_file_url must be filled, but only one can be selected.\n                \"ref_file_index\": 0, // This field is optional unless uploading is selected. Index corresponding to ref_file_ids under the root node\n                \"texture\": \"cream\", // valid values: ['matte', 'cream', 'metallic']\n                \"reflection\": 0, // 0-100\n                \"contrast\": 0, // 0-100\n                \"roughness\": 0, // 0-100\n            }\n\n            ```\n\n   * Effect Template Design Logic\n\n        1. **Detect effect type** (`press_on_nails` vs `nail_polish`).\n        2. **Iterate over each entry in `effects`:**\n\n        *If `sub_type === \"color\"`* → map fields directly, fill missing texture‑related keys with defaults.\n        *If `sub_type === \"design\"`* →\n        - If the user gave a `ref_file_url`, keep it and **omit** `ref_file_index`.\n        - If the user supplied an index (`ref_file_index`), ensure `ref_file_ids` exists and the index is valid; then set `\"ref_file_id\": ref_file_ids[index]` (optional – some back‑ends expect the raw index, not id).\n\n        1. **Normalize numeric ranges** – clamp any out‑of‑range values to 0‑100 or length limits.\n        2. **Add missing optional keys** with defaults so the schema validator passes.\n        3. **Serialize** the final object as JSON (compact or pretty for debugging).\n\n   * Example Payload (ready to send)\n        ```\n        {\n        \"version\": \"1.0\",\n        \"src_file_url\": \"https://plugins-media.makeupar.com/strapi/assets/nail_user_photo_01_27d4260646.jpg\",\n        \"effect_type\": \"press_on_nails\",\n        \"ref_file_ids\": [\n            \"Ks3kh+1nPpVNm8iJb5374CWtBzkT4B44NPJwXbBKqVxfjK3xgCQ+hRt9MJXBFaud\",\n            \"+Z7PSjuzigvsc3S/Yli1A4WN7c3J6NJHFqK2iUlqD2BfjK3xgCQ+hRt9MJXBFaud\"\n        ],\n        \"effects\": [\n            {\n            \"sub_type\": \"design\",\n            \"finger\": \"thumb\",\n            \"texture\": \"cream\",\n            \"reflection\": 100,\n            \"contrast\": 50,\n            \"roughness\": 0,\n            \"ref_file_index\": 0\n            },\n            {\n            \"sub_type\": \"design\",\n            \"finger\": \"index\",\n            \"texture\": \"cream\",\n            \"reflection\": 100,\n            \"contrast\": 50,\n            \"roughness\": 0,\n            \"ref_file_index\": 1\n            },\n            {\n            \"sub_type\": \"design\",\n            \"finger\": \"middle\",\n            \"texture\": \"cream\",\n            \"reflection\": 100,\n            \"contrast\": 50,\n            \"roughness\": 0,\n            \"ref_file_url\": \"https://plugins-media.makeupar.com/strapi/assets/press_on_nail_06_3_9ce2ddc47a.png\"\n            },\n            {\n            \"sub_type\": \"design\",\n            \"finger\": \"pinky\",\n            \"texture\": \"cream\",\n            \"reflection\": 100,\n            \"contrast\": 50,\n            \"roughness\": 0,\n            \"ref_file_url\": \"https://plugins-media.makeupar.com/strapi/assets/press_on_nail_06_5_f6e46dd56f.png\"\n            },\n            {\n            \"sub_type\": \"design\",\n            \"finger\": \"ring\",\n            \"texture\": \"cream\",\n            \"reflection\": 100,\n            \"contrast\": 50,\n            \"roughness\": 0,\n            \"ref_file_url\": \"https://plugins-media.makeupar.com/strapi/assets/press_on_nail_06_4_2103ca8cac.png\"\n            }\n        ]\n        }\n        ```\n\n\n3. Create a Nail VTO Task and Poll for Results\n\n    Once you have an image and a complete effect payload, create a task. The API processes the request asynchronously. You must poll the task status until it reaches `success` or `error`.\n\n    * Create Task Endpoint\n\n        ```\n        POST /s2s/v2.0/task/nail-vto\n        ```\n\n    * Polling Endpoint\n\n        ```\n        GET /s2s/v2.0/task/nail-vto/{task_id}\n        ```\n\n---\n\n## File Specs & Errors\n\n* AI Nail Virtual Try-On Specification\n\n**Supported Nail View**\nA single nail image in a clear front view without obstruction.\n\n| Item | Supported Dimensions | Supported File Size | Supported Formats |\n| --- | --- | --- | --- |\n| Nail Design Image - Nail Polish | *   271 px ≤ Width ≤ 542 px<br>*   522 px ≤ Height ≤ 1044 px<br>*   At least 72ppi<br>The image will be applied from the center, and the virtual try-on effect will vary according to the length of user’s fingernails. | ≤ 1MB | png |\n| Nail Design Image - Press-On Nail | *   271 px ≤ Width ≤ 542 px<br>*   522 px ≤ Height ≤ 1044 px<br>*   0.5 ≤ Image aspect ratio (H/W) ≤ 3.5<br>*   At least 72ppi<br>The image’s content, shape, and length settings are all used to generate the virtual try-on effect.<br>Since the user’s fingernail width is detected to ensure proper image scaling, it is recommended to create separate images for each fingernail with the correct aspect ratio.<br>Please download a press-on nail design image sample, and refer to the image guidelines for further details. Download: [Nail_Design_Image_Guidelines.pdf](https://bcw-media.s3.ap-northeast-1.amazonaws.com/strapi/assets/You_Cam_API_AI_Nail_Virtual_Try_On_Press_on_Nail_Design_Image_Guidelines_a229b51750.pdf) | ≤ 1MB​ | png (with transparent background) |\n\nPress-on nail design image sample:\n\n![](https://plugins-media.makeupar.com/strapi/assets/thumbnail_press_on_nail_06_5_f6e46dd56f.png)\n\n[<img src=\"https://bcw-media.s3.ap-northeast-1.amazonaws.com/strapi/assets/youcamapi_press_on_nail_design_image_sample_de6bd64f20.png\" width=\"60\"/>](https://bcw-media.s3.ap-northeast-1.amazonaws.com/strapi/assets/youcamapi_press_on_nail_design_image_sample_de6bd64f20.png)\n\n---\n\n**Supported Hand View**\n\n| Item | Supported Dimensions | Supported File Size | Supported Formats |\n| --- | --- | --- | --- |\n| User Photo | *   Long side ≤ 2048<br>*   Short side ≥ 256 | ≤ 10MB | jpg/jpeg/png |\n* Support only one hand in the input image\n* The area of hand palm is better to be at least half of that of input image\n* The aspect ratio of the input image is better to be 1:1, 3:4, 4:3\n* The nails of fingers should not be occluded\n* It is better that there is no nail tip and nail polish on the nail\n\n![](https://plugins-media.makeupar.com/strapi/assets/thumbnail_nail_user_photo_02_fdba1848d6.jpg)\n\n---\n\n* Error Codes\n\n| Error Code | Description |\n|  ----  | ----  |\n| error_nail_too_small | The nail regions are too small. |\n| error_no_nail\t| No nails were detected in the source image. |\n\n\n* Environment & Dependency\n\n| Sample Code Language / Tool | Recommended Runtime Versions |\n|---|---|\n| cURL | - bash >= 3.2</br>   - curl >= 7.58 (modern TLS/HTTP support)</br>   - jq >= 1.6 (robust JSON parsing) |\n| Node.js (JavaScript) | Node >= 18 (for global fetch) |\n| JavaScript | - Chrome / Edge >= 80</br>   - Firefox >= 74</br>   - Safari >= 13.1 |\n| PHP | PHP >= 7.4 (for modern TLS/compat), ext-curl (recommended) or allow_url_fopen=On + ext-openssl, ext-json |\n| Python | Python >= 3.10 (for f-strings), requests >= 2.20.0 |\n| Java | Java 11+ (for HttpClient), Jackson Databind >= 2.12.0 |\n\n---\n\n## JS Camera Kit\n{% partial file=\"/_partials/js-camera-kit.md\" /%}\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Nail Virtual Try-On V1.0 | 1 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -35,25 +35,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NailVtoTaskRequest'
+              $ref: "#/components/schemas/NailVtoTaskRequest"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/nail-vto/{task_id}:
     get:
       summary: Check the status of a AI Nail Vto task.
@@ -70,18 +70,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -96,7 +96,7 @@ components:
       title: Nail VTO Task Request
       type: object
       allOf:
-        - $ref: '#/components/schemas/BasicRunTaskV2WithMultiRef'
+        - $ref: "#/components/schemas/BasicRunTaskV2WithMultiRef"
         - type: object
           required:
             - version
@@ -108,8 +108,8 @@ components:
               description: |
                 Version of the nail effect specification.
                 Defaults to `"1.0"` unless otherwise specified.
-              default: '1.0'
-              example: '1.0'
+              default: "1.0"
+              example: "1.0"
             effect_type:
               type: string
               enum:
@@ -120,18 +120,18 @@ components:
               type: array
               items:
                 anyOf:
-                  - $ref: '#/components/schemas/NailVtoNailPolishColorEffect'
-                  - $ref: '#/components/schemas/NailVtoNailPolishColorMetallicEffect'
-                  - $ref: '#/components/schemas/NailVtoNailPolishColorPearlEffect'
-                  - $ref: '#/components/schemas/NailVtoNailPolishColorShimmerEffect'
-                  - $ref: '#/components/schemas/NailVtoNailPolishColorTexturedEffect'
-                  - $ref: '#/components/schemas/NailVtoNailPolishDesignEffect'
-                  - $ref: '#/components/schemas/NailVtoNailPolishDesignMetallicEffect'
-                  - $ref: '#/components/schemas/NailVtoNailPolishDesignPearlEffect'
-                  - $ref: '#/components/schemas/NailVtoNailPolishDesignShimmerEffect'
-                  - $ref: '#/components/schemas/NailVtoNailPolishDesignTexturedEffect'
-                  - $ref: '#/components/schemas/NailVtoPressOnNailsColorEffect'
-                  - $ref: '#/components/schemas/NailVtoPressOnNailsDesignEffect'
+                  - $ref: "#/components/schemas/NailVtoNailPolishColorEffect"
+                  - $ref: "#/components/schemas/NailVtoNailPolishColorMetallicEffect"
+                  - $ref: "#/components/schemas/NailVtoNailPolishColorPearlEffect"
+                  - $ref: "#/components/schemas/NailVtoNailPolishColorShimmerEffect"
+                  - $ref: "#/components/schemas/NailVtoNailPolishColorTexturedEffect"
+                  - $ref: "#/components/schemas/NailVtoNailPolishDesignEffect"
+                  - $ref: "#/components/schemas/NailVtoNailPolishDesignMetallicEffect"
+                  - $ref: "#/components/schemas/NailVtoNailPolishDesignPearlEffect"
+                  - $ref: "#/components/schemas/NailVtoNailPolishDesignShimmerEffect"
+                  - $ref: "#/components/schemas/NailVtoNailPolishDesignTexturedEffect"
+                  - $ref: "#/components/schemas/NailVtoPressOnNailsColorEffect"
+                  - $ref: "#/components/schemas/NailVtoPressOnNailsDesignEffect"
     NailVtoNailPolishColorBaseEffect:
       type: object
       required:
@@ -174,7 +174,7 @@ components:
           maximum: 100
     NailVtoNailPolishColorEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishColorBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishColorBaseEffect"
         - title: Nail Polish - Color - General
           type: object
           required:
@@ -193,7 +193,7 @@ components:
               maximum: 100
     NailVtoNailPolishColorMetallicEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishColorBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishColorBaseEffect"
         - title: Nail Polish - Color - Metallic
           type: object
           properties:
@@ -203,7 +203,7 @@ components:
                 - metallic
     NailVtoNailPolishColorPearlEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishColorBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishColorBaseEffect"
         - title: Nail Polish - Color - Pearl
           type: object
           required:
@@ -224,7 +224,7 @@ components:
               maximum: 100
     NailVtoNailPolishColorShimmerEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishColorBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishColorBaseEffect"
         - title: Nail Polish - Color - Shimmer
           type: object
           required:
@@ -246,7 +246,7 @@ components:
               maximum: 100
     NailVtoNailPolishColorTexturedEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishColorBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishColorBaseEffect"
         - title: Nail Polish - Color - Textured
           type: object
           required:
@@ -322,7 +322,7 @@ components:
           maximum: 100
     NailVtoNailPolishDesignEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishDesignBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishDesignBaseEffect"
         - title: Nail Polish - Design - General
           type: object
           required:
@@ -341,7 +341,7 @@ components:
               maximum: 100
     NailVtoNailPolishDesignMetallicEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishDesignBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishDesignBaseEffect"
         - title: Nail Polish - Design - Metallic
           type: object
           properties:
@@ -351,7 +351,7 @@ components:
                 - metallic
     NailVtoNailPolishDesignPearlEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishDesignBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishDesignBaseEffect"
         - title: Nail Polish - Design - Pearl
           type: object
           required:
@@ -372,7 +372,7 @@ components:
               maximum: 100
     NailVtoNailPolishDesignShimmerEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishDesignBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishDesignBaseEffect"
         - title: Nail Polish - Design - Shimmer
           type: object
           required:
@@ -394,7 +394,7 @@ components:
               maximum: 100
     NailVtoNailPolishDesignTexturedEffect:
       allOf:
-        - $ref: '#/components/schemas/NailVtoNailPolishDesignBaseEffect'
+        - $ref: "#/components/schemas/NailVtoNailPolishDesignBaseEffect"
         - title: Nail Polish - Design - Textured
           type: object
           required:
@@ -580,20 +580,20 @@ components:
       anyOf:
         - allOf:
             - title: Run task with src file url & ref file urls
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrls'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrls"
         - allOf:
             - title: Run task with src file url & ref file IDs
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileIds'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileIds"
         - allOf:
             - title: Run task with src file ID & ref file urls
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrls'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrls"
         - allOf:
             - title: Run task with src file ID & ref file IDs
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileIds'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileIds"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -716,12 +716,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   responses:
     InvalidApiKey:
       description: Invalid or missing API key

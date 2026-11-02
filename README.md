@@ -2,7 +2,9 @@
 
 # MIRA — look, measured
 
-MIRA is a beauty-and-style platform built on Perfect Corp's YouCam API. It measures a person once, then helps them choose foundation, compose a complete look and check whether a skincare product is working. Every generated image is re-measured before anyone sees it.
+MIRA is a beauty-and-style platform built on Perfect Corp's YouCam API. It measures a person once, then helps them choose foundation, compose a complete look and check whether a skincare product is working. The design rule is that every generated image is re-measured before anyone sees it.
+
+> **Status:** the foundation, design system, YouCam client and unit ledger, measurement engines, and the capture and measured-profile flow (Phases 1 to 5) are built and tested in mock mode. Shade matching, the agent, Complete Look, Proof and the brand console (Phases 6 to 10) are not built yet, so the "re-measures every render" check, noise-floor progress tracking and the brand console below describe the design, not working features. See [`HANDOFF.md`](HANDOFF.md) for the exact state.
 
 Built for the **YouCam API Skin AI & eCommerce VTO Hackathon** (Perfect Corp × Devpost), eCommerce VTO track.
 
@@ -10,10 +12,10 @@ Built for the **YouCam API Skin AI & eCommerce VTO Hackathon** (Perfect Corp × 
 
 - **Try-on previews airbrush you by default.** `makeup-vto` applies skin smoothing at strength 50 unless told otherwise, so the shopper buys a product that never looked like the preview. MIRA renders unretouched.
 - **Nobody verifies a render.** A try-on can return the wrong garment colour, the wrong lip shade, or a subtly different face. MIRA re-measures every render and labels its fidelity.
-- **Skin scores move with lighting, not just skin.** MIRA measures each person's noise floor and only reports a change bigger than it.
+- **Skin scores move with lighting, not just skin.** MIRA measures each person's day-to-day variation (a same-session estimate first, then across days) and only reports a change bigger than it.
 - **Brands cannot see who their range fails.** The brand console shows which measured skin tones have no matching shade.
 
-## What it does
+## What it does (the plan; the Measured Twin is the part that exists today)
 
 | Module | What the shopper or brand gets | YouCam capabilities |
 | --- | --- | --- |
@@ -30,13 +32,15 @@ Needs Node 24+, pnpm 11 and [uv](https://docs.astral.sh/uv/) (it fetches Python 
 
 ```bash
 pnpm install
-pnpm dev:mock        # replays recorded YouCam responses; no API key, no cloud account
+pnpm dev:mock        # a synthetic YouCam stand-in; no API key, no cloud account
 open http://localhost:3000
 ```
 
-Mock mode is the default for judges. Every screen works; every result is labelled "recorded run".
+Mock mode needs no credentials. Every screen that exists works, and its results are labelled "sample results" because they are made-up numbers. They become a "recorded run" only once real YouCam responses have been recorded (D25). Screens for later phases land on a page that says they are not available yet.
 
 ## Run it live
+
+Live mode is **not available yet**: the Firestore, Cloud Tasks, Pub/Sub and Cloud Storage adapters are not built, so `pnpm dev` stops with a message saying so. The YouCam client itself has run one real task end to end (docs/FACTS.md F30).
 
 ```bash
 cp .env.example .env.local     # add YOUCAM_API_KEY and Google Cloud project settings
@@ -68,9 +72,21 @@ Full setup, including Google Cloud, is in [`phases/PHASE_01_FOUNDATION.md`](phas
 | `docs/DEMO_AND_SUBMISSION.md` | Demo script and Devpost checklist |
 | `phases/` | Ten build phases, each with tasks and a definition of done |
 | `apps/`, `services/`, `packages/` | The services and shared packages (layout in `AGENTS.md` §4; `packages/runtime` holds shared service plumbing) |
+| `skills/` | A Skill in the YouCam Skills format (`measured-shade-match`) |
 | `infra/` | Terraform, Dockerfiles and Cloud Build config |
 | `assets/brand/` | Logo set (lockup, mark, wordmark, favicon; light, dark, mono) |
 | `assets/design/` | Living UI reference page with screenshots in both themes |
+
+## For other agents
+
+MIRA's measurements are available to other agents through an MCP server (`packages/mira-mcp`). It
+has four read-only tools: `shade_match`, `measure_change`, `audit_render` and `explain_metric`. A
+caller needs a bearer token, and each token has a daily allowance of units. The tools return the
+numbers and the thresholds that decided them, and keep no image.
+
+`skills/measured-shade-match` is the same shade ranking as a Skill in the YouCam Skills format
+(`SKILL.md`, a script and an `api-fallback.yaml`). It has been tested against a local server; the
+Skills CLI's install command for it has not been tried.
 
 ## Honesty
 

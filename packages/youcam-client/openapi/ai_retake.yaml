@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: AI Retake
   description: "# Overview\nKeep the moment. Rebuild the faces. AI Retake lets you rebuild any group photo, one face at a time. Either for creating funny pictures of faces, or need a professional tool, we've got you covered.\n\n![](https://plugins-media.makeupar.com/smb/blog/post/2025-01-14/3d504686-8057-418e-a0cb-eba3d47ea42c.jpg)\n\n## Integration Guide\n* How to implement AI Retake\n\n   * Step 1: Upload source and reference images\n\n      1. Request upload URLs from the API:\n\n        ```\n        POST https://yce-api-01.makeupar.com/s2s/v2.0/file\n        Authorization: Bearer YOUR_API_KEY\n        Content-Type: application/json\n        ```\n\n        Body:\n\n        ```json\n        {\n            \"files\": [\n            {\n                \"file_name\": \"target.jpg\",\n                \"file_size\": 123456,\n                \"content_type\": \"image/jpeg\"\n            }\n            ]\n        }\n        ```\n        1. The response provides a pre-signed **upload URL** and a `file_id`.\n        2. Upload your file with an HTTP PUT request to the given URL.\n        3. Store the `file_id` for later use. Repeat this for both **target** and **reference** images.\n\n      2. Upload the actual file to the **upload URL**.\n\n---\n\n   * Step 2: Pre-process the source and reference images (face detection)\n\n        1. Create a pre-process task:\n\n        ```\n        POST https://yce-api-01.makeupar.com/s2s/v2.0/task/retake/pre-process\n        Authorization: Bearer YOUR_API_KEY\n        Content-Type: application/json\n        ```\n\n        Body:\n\n        ```json\n        {\n            \"request_id\": 1,\n            \"payload\": {\n            \"file_sets\": {\n                \"src_ids\": [\"TARGET_FILE_ID\"]\n            },\n            \"actions\": [\n                { \"id\": 0 }\n            ]\n            }\n        }\n        ```\n        1. The API returns a `task_id`.\n        2. Poll task status at:\n\n        ```\n        GET https://yce-api-01.makeupar.com/s2s/v2.0/task/retake/pre-process?task_id=TASK_ID\n        ```\n        1. When finished, you receive a list of detected faces with bounding boxes.\n\n---\n\n   * Step 3: Run the AI Retake task\n        1. Define which reference image will substitute each source image\n        The `face_mapping` array defines how faces in the **Source Image** are replaced by the face from the **Reference Image**. It acts as a link list connecting detected faces in the source to specific reference image. \n        \n        Only one face replacement is supported per request. All non-target faces must be set to `{\"index\": -1, \"position\": -1}`. Attempting to replace more than one face will return `error_change_too_many_faces`. Requests that return this error are not charged. Only the first detected face in the Reference Image is supported, so index must always be 0.\n\n        * Parameters\n            \n            | Parameter\t| Type\t| Description |\n            | -- | -- | -- |\n            | position\t| integer\t| Index of the detected face in the Source Image (e.g., 0, 1, 2).\n            | index\t| integer\t| Reference face index. Currently, only the first detected face is supported, so this value must be 0.\n            \n        * Rules\n          * Single Face Replacement: Only one source face can be mapped to a reference face per request.\n          * Skip a Face: Set both index and position to -1.\n          * Reference Face Index: Only the first detected face in the Reference Image is supported, so index is always 0.\n            \n        * Example\n\n            Scenario\n            * Reference Image: 1 image containing a single supported face.\n            * Source Image: 4 detected faces (Face 0, Face 1, Face 2, Face 3).\n            * Goal: Replace Face 2 only and leave Face 0, Face 1 and Face 3 unchanged.\n            ```            \n                \"face_mapping\": [\n                    {\n                        \"index\": -1, // Skip replacing\n                        \"position\": -1 // Skip replacing\n                    },\n                    {\n                        \"index\": -1, // Skip replacing\n                        \"position\": -1 // Skip replacing\n                    },\n                    {\n                        \"index\": 0, // Always use the first reference image\n                        \"position\": 2 // Apply to the third detected face in source\n                    },\n                    {\n                        \"index\": -1, // Skip replacing\n                        \"position\": -1 // Skip replacing\n                    },\n                ]\n            ```\n        1. Send the main task request:\n\n        ```\n        POST https://yce-api-01.makeupar.com/s2s/v2.0/task/retake\n        Authorization: Bearer YOUR_API_KEY\n        Content-Type: application/json\n        ```\n\n        Body:\n\n        ```json\n        {\n          \"request_id\": 2,\n          \"payload\"   : {\n            \"file_sets\": {\n              \"src_ids\": [\"TARGET_FILE_ID\"   ],\n              \"ref_ids\": [\"REFERENCE_FILE_ID\"]\n            },\n            \"actions\"  : [\n              {\n                \"id\"    : 0,\n                \"params\": {\n                  \"face_mapping\": [\n                    {\"index\": -1, \"position\": -1},\n                    {\"index\": -1, \"position\": -1},\n                    {\"index\":  0, \"position\":  2},\n                    {\"index\": -1, \"position\": -1}\n                  ]\n                }\n              }\n            ]\n          }\n        }\n        ```\n        1. The response returns a `task_id`.\n\n---\n\n   * Step 4: Poll task status and retrieve result\n        It’s necessary to implement a timed loop that queries the task status at regular intervals within the allowed polling window.\n        1. Poll at:\n\n        ```\n        GET https://yce-api-01.makeupar.com/s2s/v2.0/task/retake?task_id=TASK_ID\n        ```\n        2. When `status` is `success`, the response contains a URL for the generated image.\n        3. Download or display the image from that URL.\n\n---\n\n   * Step 5: Integrate into your platform\n\n        * On a **web frontend**, you can directly implement this with JavaScript using fetch or Axios.\n        * On a **backend** (Node.js, Python, Java, PHP, etc.), you can use the same endpoints with standard HTTP libraries.\n        * Implement retry and error handling since the tasks run asynchronously.\n\n---\n\n    * Debugging Guide\n\n        1. **Why are some faces not detected in my source image**\n            </br>**Why:** Reason: The face must be clearly visible, not covered or obstructed, and large enough within the image\n            </br>**Solution:** Try taking a photo where the face appears larger and is clearly visible without any covering or obstruction\n\n---\n\n## Inputs & Outputs\n\n* Real-world examples:\n\n![](https://plugins-media.makeupar.com/smb/blog/post/2025-01-14/9aeab2bb-28aa-48f5-ab86-2edd897ad908.jpg)\n\n![](https://plugins-media.makeupar.com/smb/blog/post/2025-07-02/webp_0196a9d4-1430-4121-9680-5e81b58b66ac.webp)\n\n\n## File Specs & Errors\n* Supported Formats & Dimensions\n\n| AI Feature | Supported Dimensions | Supported File Size | Supported Formats |\n| ---- | ---- | ---- | ---- |\n| AI Retake | Input and output: the long side must be less than or equal to 4096 pixels | < 10MB | jpg/jpeg/png |\n\n\n* Error Codes\n\n| Error Code | Description |\n| ------------------ | ----------- |\n| exceed_max_filesize | The input file size exceeds the maximum limit |\n| invalid_parameter | The parameter value is invalid |\n| error_download_image | There was an error downloading the source image |\n| error_download_mask | There was an error downloading the mask image |\n| error_decode_image | There was an error decoding the source image |\n| error_decode_mask | There was an error decoding the mask image |\n| error_download_video | There was an error downloading the source video |\n| error_decode_video | There was an error decoding the source video |\n| error_nsfw_content_detected | NSFW content was detected in the source image |\n| error_no_face | No face was detected in the source image |\n| error_pose | Failed to detect pose in the source image |\n| error_face_parsing | Failed to perform face parsing on the source image |\n| error_inference | An error occurred in the inference pipeline |\n| exceed_nsfw_retry_limits | Retry limits exceeded to avoid generating NSFW image |\n| error_upload | There was an error uploading the result image |\n| error_multiple_people | People count exceeds the maximum limit |\n| error_no_shoulder | Shoulders are not visible in the source image |\n| error_large_face_angle | The face angle in the uploaded image is too large |\n| error_unsupport_ratio | The aspect ratio of the input image is unsupported |\n| error_change_too_many_faces | Only one face replacement is supported per request. All non-target faces must be set to {\"index\": -1, \"position\": -1}. Attempting to replace more than one face will return the error. |\n| unknown_internal_error | Other internal errors |\n\n---\n\n## Unit Consumption\n\n| AI Feature | Unit Consumed |\n|---|---|\n| AI Retake V2.0 | 1 |\n\n---\n"
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -45,25 +45,25 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2'
+                - $ref: "#/components/schemas/BasicRunTaskV2"
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/retake/pre-process/{task_id}:
     get:
       summary: Check the status of a AI Retake face detection task.
@@ -82,13 +82,13 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/TaskStatusResponsePreProcessBase'
+                  - $ref: "#/components/schemas/TaskStatusResponsePreProcessBase"
                   - type: object
                     properties:
                       data:
@@ -125,12 +125,12 @@ paths:
                                           - 0
                                           - 100
                                           - 100
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
   /s2s/v2.0/task/retake:
     post:
       summary: Run an AI Retake task.
@@ -159,7 +159,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/BasicRunTaskV2WithMultiRequiredRef'
+                - $ref: "#/components/schemas/BasicRunTaskV2WithMultiRequiredRef"
                 - type: object
                   required:
                     - face_mapping
@@ -197,23 +197,23 @@ paths:
                               keep this face unchanged.
                             example: 0
       responses:
-        '200':
+        "200":
           description: Successful execution of the task
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BasicRunTaskResponseV2'
-        '400':
+                $ref: "#/components/schemas/BasicRunTaskResponseV2"
+        "400":
           description: Failed execution of task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/RunError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+                  - $ref: "#/components/schemas/RunError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /s2s/v2.0/task/retake/{task_id}:
     get:
       summary: Check the status of a AI Retake task.
@@ -232,18 +232,18 @@ paths:
             example: grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
           description: ID of task to check
       responses:
-        '200':
+        "200":
           description: Successful check of the task status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskStatusResponseV2'
-        '400':
-          $ref: '#/components/responses/InvalidTaskId'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
-        '500':
-          $ref: '#/components/responses/TaskTimeout'
+                $ref: "#/components/schemas/TaskStatusResponseV2"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
+        "500":
+          $ref: "#/components/responses/TaskTimeout"
 components:
   securitySchemes:
     BearerAuthenticationV2:
@@ -277,10 +277,10 @@ components:
       anyOf:
         - title: Run task with src file url
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
         - title: Run task with src file ID
           allOf:
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
     BasicRunTaskResponseV2:
       type: object
       properties:
@@ -403,7 +403,7 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
@@ -442,26 +442,26 @@ components:
             - title: Run task with src file url & ref file urls
               required:
                 - ref_file_urls
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrls'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrls"
         - allOf:
             - title: Run task with src file url & ref file IDs
               required:
                 - ref_file_ids
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileUrl'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileIds'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileUrl"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileIds"
         - allOf:
             - title: Run task with src file ID & ref file urls
               required:
                 - ref_file_urls
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileUrls'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileUrls"
         - allOf:
             - title: Run task with src file ID & ref file IDs
               required:
                 - ref_file_ids
-            - $ref: '#/components/schemas/BasicRunTaskV2SrcFileId'
-            - $ref: '#/components/schemas/BasicRunTaskV2RefFileIds'
+            - $ref: "#/components/schemas/BasicRunTaskV2SrcFileId"
+            - $ref: "#/components/schemas/BasicRunTaskV2RefFileIds"
     TaskStatusResponseV2:
       type: object
       properties:
@@ -480,12 +480,12 @@ components:
                 - error
               description: Status of this task
             error:
-              $ref: '#/components/schemas/EngineErrorCode'
+              $ref: "#/components/schemas/EngineErrorCode"
             error_message:
               type: string
               description: Detailed description of error
             results: null
-      $ref: '#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2'
+      $ref: "#/components/schemas/TaskStatusResponseBodySingleUrlResultsV2"
   responses:
     InvalidApiKey:
       description: Invalid or missing API key

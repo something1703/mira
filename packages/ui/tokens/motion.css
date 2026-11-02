@@ -1,0 +1,18 @@
+/*
+ * MIRA motion tokens (docs/DESIGN_SYSTEM.md §8). The reading sweep is the only animation that
+ * starts without a person's action. Under prefers-reduced-motion every duration is 0.
+ */
+:root {
+  --mira-motion-micro: 120ms;
+  --mira-motion-state: 200ms;
+  --mira-motion-reading: 600ms;
+  --mira-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --mira-motion-micro: 0ms;
+    --mira-motion-state: 0ms;
+    --mira-motion-reading: 0ms;
+  }
+}

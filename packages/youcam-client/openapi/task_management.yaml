@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Task Management
-  version: ''
+  version: ""
   termsOfService: https://www.makeupar.com/perfectbeauty/youcam/terms-of-service-api
   contact:
     email: YouCamOnlineEditor_API@perfectcorp.com
@@ -35,7 +35,7 @@ paths:
                   example: >-
                     grH0CvsgXuAIHLUzD0V1Ol34hoet3R1tvdbtiVHrDb6_UqCLKIejAIajwxrhOAfe
       responses:
-        '200':
+        "200":
           description: The task and its files were deleted
           content:
             application/json:
@@ -46,15 +46,15 @@ paths:
                     type: integer
                     description: Response status
                     example: 200
-        '400':
+        "400":
           description: Failed to delete the task
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/responses/DeleteTaskError'
-        '401':
-          $ref: '#/components/responses/InvalidApiKey'
+                  - $ref: "#/components/responses/DeleteTaskError"
+        "401":
+          $ref: "#/components/responses/InvalidApiKey"
 components:
   responses:
     DeleteTaskError:

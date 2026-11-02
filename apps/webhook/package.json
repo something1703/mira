@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@mira/runtime": "workspace:*",
-    "@mira/schemas": "workspace:*"
+    "@mira/schemas": "workspace:*",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

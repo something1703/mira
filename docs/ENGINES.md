@@ -50,6 +50,7 @@ After `makeup-vto` renders shade s with `skin_smooth: 0`:
 1. Re-measure the render with `skin-tone-analysis` → Lab_r.
 2. **Blend** = ΔE00(Lab_r, Lab_k): how much the foundation changed the skin's colour. Lower is a closer match. This, not the catalogue hex, ranks the final results.
 3. **Direction check**: the signs of ΔL* and Δb* between Lab_r and Lab_k should agree with the signs between Lab_s and Lab_k. If not, the render is labelled "not checked".
+4. The engine labels the blend on the same lines as the pre-rank (`blends_closely` at or below `MATCH_DE`, `close` at or below `CLOSE_DE`, else `not_close`), so callers never compare against a threshold of their own.
 
 ### 4.3 Finish and coverage
 

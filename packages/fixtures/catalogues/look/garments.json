@@ -1,0 +1,47 @@
+{
+  "sample": true,
+  "garments": [
+    {
+      "id": "gar_sample01",
+      "name": "Sample saree, marigold",
+      "kind": "outfit",
+      "category": "full_body",
+      "hex": "#E3A12B"
+    },
+    {
+      "id": "gar_sample02",
+      "name": "Sample lehenga, deep red",
+      "kind": "outfit",
+      "category": "full_body",
+      "hex": "#9E1F2D"
+    },
+    {
+      "id": "gar_sample03",
+      "name": "Sample kurta, ivory",
+      "kind": "outfit",
+      "category": "upper_body",
+      "hex": "#EFE6D2"
+    },
+    {
+      "id": "gar_sample04",
+      "name": "Sample gown, emerald",
+      "kind": "outfit",
+      "category": "full_body",
+      "hex": "#1F7A57"
+    },
+    {
+      "id": "gar_sample05",
+      "name": "Sample juttis, gold",
+      "kind": "shoes",
+      "category": "shoes",
+      "hex": "#B88A2E"
+    },
+    {
+      "id": "gar_sample06",
+      "name": "Sample clutch, maroon",
+      "kind": "bag",
+      "category": "auto",
+      "hex": "#6A1B2B"
+    }
+  ]
+}
