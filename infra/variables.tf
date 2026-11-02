@@ -78,7 +78,7 @@ variable "warm_services" {
 }
 
 variable "billing_account_id" {
-  description = "Billing account ID (e.g. 019877-AF3D95-373629). When set, creates a budget alert; null skips it."
+  description = "Billing account ID (format XXXXXX-XXXXXX-XXXXXX). When set, creates a budget alert; null skips it."
   type        = string
   default     = null
 }
