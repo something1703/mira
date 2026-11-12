@@ -17,6 +17,8 @@ export interface ReadingProps {
   unit?: string;
   /** What was measured, e.g. "Visible pores". */
   caption: string;
+  /** One plain sentence on what the number means, written by the renderer. */
+  meaning?: string;
   /** Confidence words: "within your day-to-day variation", "above it". */
   confidence?: string;
   band?: NoiseBand;
@@ -32,6 +34,7 @@ export function Reading({
   value,
   unit,
   caption,
+  meaning,
   confidence,
   band,
   reason,
@@ -63,6 +66,7 @@ export function Reading({
           <span className="mira-band__mark" style={{ left: pct(band.mark) }} />
         </div>
       ) : null}
+      {meaning ? <p className="mira-small mira-reading-meaning">{meaning}</p> : null}
       {confidence ? <p className="mira-small mira-muted">{confidence}</p> : null}
     </div>
   );

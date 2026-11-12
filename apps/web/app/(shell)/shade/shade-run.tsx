@@ -29,6 +29,7 @@ import {
   finishWhy,
   readsLike,
 } from "../../../src/shade/copy";
+import { DE_KEY, blendSentence, blendTitle } from "../../../src/readings";
 import { flash } from "../../../src/shell/flash";
 import { later } from "../../../src/routes";
 
@@ -320,6 +321,16 @@ function Results({
               }
             />
           )}
+          {lead.verdict === "verified" && lead.blendDe !== undefined ? (
+            <div className="shade__meaning">
+              <p className="mira-title">{blendTitle(lead.blendDe, result.thresholds)}</p>
+              <p>{blendSentence(lead.blendDe, result.thresholds)}</p>
+              <p className="mira-small mira-muted">
+                Measured on the preview, not the bottle: MIRA re-measured your skin after the
+                foundation was applied. {DE_KEY}
+              </p>
+            </div>
+          ) : null}
           <p className="mira-body">
             {lead.name}, rendered in {FINISH_WORD[result.finish]} finish with{" "}
             {COVERAGE_WORD[result.coverage]} coverage.
@@ -371,6 +382,11 @@ function Results({
                         : { detail: `blends within ΔE ${ΔE(o.blendDe ?? 0)}` })}
                     />
                   )}
+                  {o.verdict === "verified" && o.blendDe !== undefined ? (
+                    <span className="shade__row-meaning mira-small">
+                      {blendSentence(o.blendDe, result.thresholds)}
+                    </span>
+                  ) : null}
                 </span>
               </li>
             ))}

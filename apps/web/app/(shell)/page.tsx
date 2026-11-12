@@ -4,6 +4,7 @@ import { spendsRealUnits } from "../../src/mode";
 import { profileState } from "../../src/profile-state";
 import { later } from "../../src/routes";
 import { Journey } from "../../src/shell/Journey";
+import { ProofPair } from "../../src/shell/ProofPair";
 
 /** Welcome (docs/UX_FLOWS.md §1): what MIRA is, the three steps, and where the person is. */
 export default async function Welcome({
@@ -30,6 +31,8 @@ export default async function Welcome({
       </header>
 
       <Journey measured={measured} />
+
+      {measured ? null : <ProofPair />}
 
       {measured ? (
         <p className="home__more">

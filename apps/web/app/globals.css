@@ -1663,3 +1663,94 @@ input[type="file"] {
   border: 1px solid var(--mira-rule);
   border-radius: 12px;
 }
+
+/* ---------- Plain-language keys beside numbers ---------- */
+.profile__key {
+  margin: 0 0 var(--mira-space-4);
+  padding: var(--mira-space-3) var(--mira-space-4);
+  border-left: 3px solid var(--mira-accent);
+  background: var(--mira-raised);
+  color: var(--mira-ink-2);
+  max-width: 70ch;
+}
+.profile__chip .mira-small {
+  max-width: 22ch;
+}
+.shade__meaning {
+  display: grid;
+  gap: var(--mira-space-2);
+  margin: var(--mira-space-4) 0;
+  padding: var(--mira-space-4);
+  border: 1px solid var(--mira-rule);
+  border-radius: var(--mira-radius-panel);
+  background: var(--mira-raised);
+  max-width: 70ch;
+}
+.shade__meaning p {
+  margin: 0;
+}
+.shade__row-meaning {
+  display: block;
+  margin-top: var(--mira-space-1);
+  color: var(--mira-ink-2);
+}
+
+/* ---------- Home: the proof pair ---------- */
+.proof-pair {
+  display: grid;
+  gap: var(--mira-space-4);
+  margin-top: var(--mira-space-7);
+  padding-top: var(--mira-space-6);
+  border-top: 1px solid var(--mira-rule);
+}
+.proof-pair h2,
+.proof-pair p {
+  margin: 0;
+  max-width: 62ch;
+}
+.proof-pair__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mira-space-4);
+  max-width: 760px;
+}
+.proof-pair figure {
+  margin: 0;
+  display: grid;
+  gap: var(--mira-space-2);
+  min-width: 0;
+}
+.proof-pair img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--mira-radius-panel);
+  background: var(--mira-mat);
+}
+.proof-pair figure.is-best img {
+  outline: 3px solid var(--mira-accent);
+  outline-offset: 3px;
+}
+.proof-pair figcaption {
+  display: grid;
+  gap: var(--mira-space-1);
+}
+.proof-pair__tag {
+  color: var(--mira-ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.proof-pair figure.is-best .proof-pair__tag {
+  color: var(--mira-accent);
+}
+.proof-pair__name {
+  display: flex;
+  align-items: center;
+  gap: var(--mira-space-2);
+}
+.proof-pair__chip {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--mira-radius-swatch);
+  box-shadow: inset 0 0 0 1px var(--mira-rule);
+}

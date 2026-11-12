@@ -480,6 +480,10 @@
 .mira-reading-block p {
   margin: 0;
 }
+.mira-reading-block .mira-reading-meaning {
+  margin-top: var(--mira-space-1);
+  color: var(--mira-ink-2);
+}
 .mira-band {
   position: relative;
   height: 8px;

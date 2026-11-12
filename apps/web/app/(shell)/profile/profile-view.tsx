@@ -19,6 +19,7 @@ import {
   reasonCopy,
   retryLabel,
 } from "../../../src/profile/copy";
+import { SKIN_SCORE_KEY, meaningOf } from "../../../src/readings";
 import { later } from "../../../src/routes";
 
 const ORDER: readonly TwinGroupName[] = ["skin", "colouring", "face", "hair"];
@@ -46,6 +47,9 @@ function Readings({ twin, group }: { twin: Twin; group: TwinGroupName }) {
   const others = metrics.filter((m) => m.kind !== "colour");
   return (
     <>
+      {group === "skin" && others.length > 0 ? (
+        <p className="mira-small profile__key">{SKIN_SCORE_KEY}</p>
+      ) : null}
       {colours.length > 0 ? (
         <ul className="profile__chips" aria-label="Measured colours">
           {colours.map((m) => (
@@ -55,6 +59,9 @@ function Readings({ twin, group }: { twin: Twin; group: TwinGroupName }) {
               </span>
               <span className="profile__chip-name">{captionOf(m.id)}</span>
               <span className="mira-caption mira-figures">{m.hex}</span>
+              {m.id === "colour.skin" ? (
+                <span className="mira-small mira-muted">{meaningOf(m)}</span>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -62,12 +69,14 @@ function Readings({ twin, group }: { twin: Twin; group: TwinGroupName }) {
       <div className="profile__grid">
         {others.map((m) => {
           const f = formatMetric(m);
+          const meaning = meaningOf(m);
           return (
             <Reading
               key={m.id}
               caption={captionOf(m.id)}
               value={f.value}
               {...(f.unit ? { unit: f.unit } : {})}
+              {...(meaning ? { meaning } : {})}
               confidence={confidenceWords(m, twin.noiseFloors[m.id])}
             />
           );
